@@ -1,8 +1,8 @@
+use crate::types::AudioSample;
+use crossbeam_channel::Sender;
 use std::thread::sleep;
 use std::time::Duration;
-use wasapi::{get_default_device, initialize_mta, Direction, StreamMode};
-use crossbeam_channel::Sender;
-use crate::types::AudioSample;
+use wasapi::{Direction, StreamMode, get_default_device, initialize_mta};
 
 pub fn start_capture_audio(tx: Sender<AudioSample>) {
     initialize_mta().ok().unwrap();
@@ -15,7 +15,10 @@ pub fn start_capture_audio(tx: Sender<AudioSample>) {
         autoconvert: false,
         buffer_duration_hns: bytes_per_frame as i64,
     };
-    audio_client.initialize_client(&format, &Direction::Capture, &mode).ok().unwrap();
+    audio_client
+        .initialize_client(&format, &Direction::Capture, &mode)
+        .ok()
+        .unwrap();
 
     let capture = audio_client.get_audiocaptureclient().ok().unwrap();
     audio_client.start_stream().unwrap();

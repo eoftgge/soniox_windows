@@ -2,14 +2,14 @@ use std::error::Error;
 use std::thread;
 
 use crossbeam_channel::unbounded;
-use hound::{WavSpec, WavWriter, SampleFormat};
-use wasapi::{initialize_mta, get_default_device, Direction};
+use hound::{SampleFormat, WavSpec, WavWriter};
 use soniox_windows::stream::start_capture_audio;
+use wasapi::{Direction, get_default_device, initialize_mta};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let (tx, rx) = unbounded::<Vec<u8>>();
     thread::spawn(move || start_capture_audio(tx));
-    
+
     initialize_mta().ok().unwrap();
     let device = get_default_device(&Direction::Render).ok().unwrap();
     let audio_client = device.get_iaudioclient().ok().unwrap();
@@ -32,7 +32,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
 
     let mut writer = WavWriter::create("system_audio.wav", spec)?;
-    println!("Запись, формат: {} Hz, {} ch, {} bits", sample_rate, channels, bits_per_sample);
+    println!(
+        "Запись, формат: {} Hz, {} ch, {} bits",
+        sample_rate, channels, bits_per_sample
+    );
 
     // for buf in rx.iter() {
     //     if bits_per_sample == 32 {
