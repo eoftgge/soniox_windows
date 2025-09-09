@@ -8,6 +8,9 @@ hound = "3.5.1"
 crossbeam-channel = "0.5.15"
 wasapi = "0.19.0"
 thiserror = "2.0.16"
-tungstenite = "0.27.0"
+tungstenite = { version = "0.27.0", features = ["native-tls"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.143"
+tokio-tungstenite = { version = "0.27.0", features = ["native-tls"] }
+tokio = { version = "1.47.1", features = ["full"] }
+futures-util = "0.3.31"

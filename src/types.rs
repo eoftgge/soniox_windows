@@ -1,15 +1,15 @@
 use serde::{Deserialize, Serialize};
 
-pub type AudioSample = Vec<u8>;
+pub type AudioSample = Vec<f32>;
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Serialize, Default)]
 pub struct SonioxTranslationObject {
     pub r#type: String,
     pub language_a: String,
     pub language_b: String,
 }
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Serialize, Default)]
 #[serde(default)]
 pub struct SonioxTranscriptionRequest {
     pub api_key: String,
@@ -27,24 +27,24 @@ pub struct SonioxTranscriptionRequest {
     pub translation: Option<SonioxTranslationObject>,
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Deserialize, Default)]
 #[serde(default)]
 pub struct SonioxTranscriptionToken {
     pub text: String,
-    pub start_ms: Option<u32>,
-    pub end_ms: Option<u32>,
-    pub confidence: u32,
+    pub start_ms: Option<f64>,
+    pub end_ms: Option<f64>,
+    pub confidence: f64,
     pub is_final: bool,
     pub speaker: Option<String>,
     pub language: Option<String>,
     pub source_language: Option<String>,
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Deserialize, Default)]
 #[serde(default)]
 pub struct SonioxTranscriptionResponse {
     pub tokens: Vec<SonioxTranscriptionToken>,
-    pub final_audio_proc_ms: u32,
-    pub total_audio_proc_ms: u32,
+    pub final_audio_proc_ms: f64,
+    pub total_audio_proc_ms: f64,
     pub finished: Option<bool>,
 }

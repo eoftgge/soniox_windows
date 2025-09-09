@@ -13,7 +13,7 @@ pub fn start_capture_audio(tx: Sender<AudioSample>) {
 
     let mode = StreamMode::PollingShared {
         autoconvert: false,
-        buffer_duration_hns: bytes_per_frame as i64,
+        buffer_duration_hns: 1_000_000,
     };
     audio_client
         .initialize_client(&format, &Direction::Capture, &mode)
@@ -24,42 +24,20 @@ pub fn start_capture_audio(tx: Sender<AudioSample>) {
     audio_client.start_stream().unwrap();
 
     loop {
-        match capture.get_next_packet_size() {
-            Ok(Some(frames)) => {
-                if frames == 0 {
-                    sleep(Duration::from_millis(5));
-                    continue;
-                }
-                let bytes = (frames as usize).saturating_mul(bytes_per_frame);
-                let mut buf = vec![0u8; bytes];
+        let frames = match capture.get_next_packet_size().unwrap() {
+            Some(f) if f > 0 => f,
+            _ => { sleep(Duration::from_millis(5)); continue; }
+        };
 
-                let (frames_read, _info) = capture.read_from_device(&mut buf).unwrap();
-                let bytes_read = (frames_read as usize).saturating_mul(bytes_per_frame);
-                buf.truncate(bytes_read);
+        let mut buf = vec![0u8; frames as usize * bytes_per_frame];
+        let _ = capture.read_from_device(&mut buf).unwrap();
 
-                tx.send(buf).unwrap();
-            }
-            Ok(None) => {
-                if let Ok(pad_frames) = audio_client.get_current_padding() {
-                    if pad_frames == 0 {
-                        sleep(Duration::from_millis(5));
-                        continue;
-                    }
-                    let bytes = (pad_frames as usize).saturating_mul(bytes_per_frame);
-                    let mut buf = vec![0u8; bytes];
-                    let (frames_read, _info) = capture.read_from_device(&mut buf).ok().unwrap();
-                    let bytes_read = (frames_read as usize).saturating_mul(bytes_per_frame);
-                    buf.truncate(bytes_read);
-                    tx.send(buf).unwrap();
-                } else {
-                    sleep(Duration::from_millis(5));
-                    continue;
-                }
-            }
-            Err(e) => {
-                eprintln!("get_next_packet_size error: {:?}", e);
-                sleep(Duration::from_millis(10));
-            }
-        }
+        // float32 стерео
+        let float_buf: Vec<f32> = buf
+            .chunks_exact(4)
+            .map(|b| f32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+            .collect();
+
+        let _ = tx.send(float_buf);
     }
 }
