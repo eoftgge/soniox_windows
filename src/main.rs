@@ -1,15 +1,10 @@
-pub mod stream;
-pub mod errors;
-pub mod types;
-pub mod wav;
-
 use std::error::Error;
 use std::thread;
 
 use crossbeam_channel::unbounded;
 use hound::{WavSpec, WavWriter, SampleFormat};
 use wasapi::{initialize_mta, get_default_device, Direction};
-use crate::stream::start_capture_audio;
+use soniox_windows::stream::start_capture_audio;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let (tx, rx) = unbounded::<Vec<u8>>();
