@@ -1,4 +1,6 @@
-mod stream;
+pub mod stream;
+pub mod errors;
+pub mod types;
 
 use std::error::Error;
 use std::time::{Duration, Instant};
