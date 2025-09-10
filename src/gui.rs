@@ -61,11 +61,22 @@ impl App for SubtitlesApp {
             .show(ctx, |ui| {
                 let rect = ui.max_rect();
                 let text = &self.text;
-                let font_size = 24.0;
                 let x_offset = 10.0;
                 let y_offset = rect.height() - 50.0;
                 let pos = egui::pos2(x_offset, y_offset);
+                let max_width = ui.available_width() - 20.0;
+                let mut font_size = 24.0;
 
+                let galley = ui.painter().layout_no_wrap(
+                    text.clone(),
+                    egui::FontId::proportional(font_size),
+                    Color32::WHITE,
+                );
+
+
+                if galley.size().x > max_width {
+                    font_size = font_size * max_width / galley.size().x;
+                }
                 let offsets = [
                     egui::vec2(-1.0, -1.0),
                     egui::vec2(-1.0, 1.0),
