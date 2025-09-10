@@ -4,3 +4,4 @@ pub mod soniox;
 pub mod stream;
 pub mod types;
 pub mod wav;
+pub mod windows;

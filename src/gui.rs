@@ -2,48 +2,20 @@ use crossbeam_channel::Receiver;
 use eframe::epaint::Color32;
 use eframe::{App, Frame, egui};
 use egui::Visuals;
-use raw_window_handle::HasWindowHandle;
 use std::time::Duration;
-use windows::Win32::Foundation::HWND;
-use windows::Win32::UI::WindowsAndMessaging::{
-    GWL_EXSTYLE, GetWindowLongW, SetWindowLongW, WS_EX_LAYERED, WS_EX_TRANSPARENT,
-};
-
-fn make_window_click_through(hwnd: HWND) {
-    unsafe {
-        let ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
-        SetWindowLongW(
-            hwnd,
-            GWL_EXSTYLE,
-            ex_style | WS_EX_LAYERED.0 as i32 | WS_EX_TRANSPARENT.0 as i32,
-        );
-    }
-}
-
-fn set_click_through(frame: &eframe::Frame) {
-    use raw_window_handle::RawWindowHandle;
-
-    match frame.window_handle() {
-        Ok(handle) => {
-            let raw = handle.as_raw();
-            if let RawWindowHandle::Win32(win32) = raw {
-                let hwnd = HWND(win32.hwnd.get() as *mut _);
-                make_window_click_through(hwnd);
-            }
-        }
-        _ => {}
-    }
-}
+use crate::windows::initialize_windows;
 
 pub struct SubtitlesApp {
     rx: Receiver<String>,
     text: String,
+    initialized_windows: bool,
 }
 
 impl SubtitlesApp {
     pub fn new(rx: Receiver<String>) -> Self {
         Self {
             rx,
+            initialized_windows: false,
             text: "... Wait ...".into(),
         }
     }
@@ -51,7 +23,9 @@ impl SubtitlesApp {
 
 impl App for SubtitlesApp {
     fn update(&mut self, ctx: &egui::Context, frame: &mut Frame) {
-        set_click_through(frame);
+        if !self.initialized_windows {
+            initialize_windows(frame);
+        }
         while let Ok(new_text) = self.rx.try_recv() {
             self.text = new_text;
         }
