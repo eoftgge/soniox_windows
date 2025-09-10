@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"]
 use std::error::Error;
 use std::thread;
 
