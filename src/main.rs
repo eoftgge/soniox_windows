@@ -38,7 +38,8 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
             .with_position([100., (1920 - 1200) as f32]),
         ..Default::default()
     };
-
+    
+    log::info!("Starting application");
     eframe::run_native(
         "Subtitle Live",
         native_options,

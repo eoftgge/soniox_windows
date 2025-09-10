@@ -21,6 +21,7 @@ pub fn start_capture_audio(tx: Sender<AudioSample>) -> Result<(), SonioxWindowsE
     let capture = audio_client.get_audiocaptureclient()?;
     audio_client.start_stream()?;
 
+    log::info!("Started audio stream!");
     loop {
         let frames = match capture.get_next_packet_size()? {
             Some(f) if f > 0 => f,
