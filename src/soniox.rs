@@ -1,6 +1,6 @@
 use std::f32;
 use futures_util::StreamExt;
-use crossbeam_channel::Receiver;
+use crossbeam_channel::{Receiver, Sender};
 use futures_util::SinkExt;
 use tokio_tungstenite::connect_async;
 use tungstenite::client::IntoClientRequest;
@@ -46,7 +46,7 @@ fn create_request(api_key: String) -> SonioxTranscriptionRequest {
     }
 }
 
-pub async fn start_soniox_stream(rx: Receiver<AudioSample>, api_key: String) -> Result<(), SonioxWindowsErrors> {
+pub async fn start_soniox_stream(rx: Receiver<AudioSample>, api_key: String, tx_text: Sender<String>) -> Result<(), SonioxWindowsErrors> {
     let request = create_request(api_key);
     let bytes = serde_json::to_vec(&request)?;
     let url = "wss://stt-rt.soniox.com/transcribe-websocket".into_client_request()?;
@@ -75,7 +75,7 @@ pub async fn start_soniox_stream(rx: Receiver<AudioSample>, api_key: String) -> 
             Message::Text(txt) => {
                 let v: SonioxTranscriptionResponse = serde_json::from_str(&txt)?;
                 let s = render_transcription(&v);
-                println!("Transcription response: {}", s);
+                let _ = tx_text.send(s);
             }
             _ => {}
         }

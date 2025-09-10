@@ -14,3 +14,6 @@ serde_json = "1.0.143"
 tokio-tungstenite = { version = "0.27.0", features = ["native-tls"] }
 tokio = { version = "1.47.1", features = ["full"] }
 futures-util = "0.3.31"
+egui = "0.32.2"
+eframe = { version = "0.32.2", features = ["wgpu"] }
+windows = { version = "0.62.0", features = ["Win32_UI_WindowsAndMessaging"] }
