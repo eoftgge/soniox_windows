@@ -14,5 +14,5 @@ pub enum SonioxWindowsErrors {
     #[error("{0}")]
     Env(#[from] env::VarError),
     #[error("{0}")]
-    Internal(&'static str)
+    Internal(&'static str),
 }

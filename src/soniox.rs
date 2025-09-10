@@ -72,10 +72,8 @@ pub async fn start_soniox_stream(
                 .flat_map(|s| s.to_le_bytes())
                 .collect();
 
-            let result = write
-                .send(Message::Binary(Bytes::from(pcm16)))
-                .await;
-            
+            let result = write.send(Message::Binary(Bytes::from(pcm16))).await;
+
             if let Err(err) = result {
                 log::error!("error during sent binary -> {:?}", err);
             }
@@ -86,7 +84,7 @@ pub async fn start_soniox_stream(
             log::error!("error during sent empty binary -> {:?}", err);
         }
     });
-    
+
     log::info!("Started Soniox stream!");
     log::info!("Starting to listen websocket stream Soniox...");
     while let Some(msg) = read.next().await {

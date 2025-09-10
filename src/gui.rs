@@ -1,9 +1,9 @@
+use crate::windows::initialize_windows;
 use crossbeam_channel::Receiver;
 use eframe::epaint::Color32;
 use eframe::{App, Frame, egui};
 use egui::Visuals;
 use std::time::Duration;
-use crate::windows::initialize_windows;
 
 pub struct SubtitlesApp {
     rx: Receiver<String>,

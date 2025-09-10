@@ -1,12 +1,14 @@
+use crate::errors::SonioxWindowsErrors;
 use crate::types::AudioSample;
 use crossbeam_channel::Sender;
 use std::thread::sleep;
 use std::time::Duration;
 use wasapi::{Direction, StreamMode, get_default_device, initialize_mta};
-use crate::errors::SonioxWindowsErrors;
 
 pub fn start_capture_audio(tx: Sender<AudioSample>) -> Result<(), SonioxWindowsErrors> {
-    initialize_mta().ok().or_else(|_| Err(SonioxWindowsErrors::Internal("")))?;
+    initialize_mta()
+        .ok()
+        .or_else(|_| Err(SonioxWindowsErrors::Internal("")))?;
     let device = get_default_device(&Direction::Render)?;
     let mut audio_client = device.get_iaudioclient()?;
     let format = audio_client.get_mixformat()?;
