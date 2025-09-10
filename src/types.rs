@@ -15,8 +15,8 @@ pub struct SonioxTranscriptionRequest {
     pub api_key: String,
     pub model: String,
     pub audio_format: String,
-    pub num_channels: Option<u32>, // required for raw audio
-    pub sample_rate: Option<u32>, // required for raw audio
+    pub num_channels: Option<u32>,   // required for raw audio
+    pub sample_rate: Option<u32>,    // required for raw audio
     pub language_hints: Vec<String>, // required
     pub context: Option<String>,
     pub enable_speaker_diarization: Option<bool>,

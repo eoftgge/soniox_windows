@@ -30,8 +30,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         ..Default::default()
     };
 
-    let _ = eframe::run_native("Subtitle Live", native_options, Box::new(move |_| {
-        Ok(Box::new(app))
-    }));
+    let _ = eframe::run_native(
+        "Subtitle Live",
+        native_options,
+        Box::new(move |_| Ok(Box::new(app))),
+    );
     Ok(())
 }

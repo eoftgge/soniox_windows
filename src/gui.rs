@@ -73,7 +73,6 @@ impl App for SubtitlesApp {
                     Color32::WHITE,
                 );
 
-
                 if galley.size().x > max_width {
                     font_size = font_size * max_width / galley.size().x;
                 }
@@ -94,7 +93,6 @@ impl App for SubtitlesApp {
                     );
                 }
 
-                // Белый основной текст
                 ui.painter().text(
                     pos,
                     egui::Align2::LEFT_TOP,

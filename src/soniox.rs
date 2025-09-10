@@ -1,13 +1,13 @@
-use std::f32;
-use futures_util::StreamExt;
+use crate::errors::SonioxWindowsErrors;
+use crate::types::{AudioSample, SonioxTranscriptionRequest, SonioxTranscriptionResponse};
 use crossbeam_channel::{Receiver, Sender};
 use futures_util::SinkExt;
+use futures_util::StreamExt;
+use std::f32;
 use tokio_tungstenite::connect_async;
 use tungstenite::client::IntoClientRequest;
 use tungstenite::{Bytes, Message, Utf8Bytes};
-use wasapi::{get_default_device, initialize_mta, Direction};
-use crate::errors::SonioxWindowsErrors;
-use crate::types::{AudioSample, SonioxTranscriptionRequest, SonioxTranscriptionResponse};
+use wasapi::{Direction, get_default_device, initialize_mta};
 
 fn render_transcription(resp: &SonioxTranscriptionResponse) -> String {
     let mut final_text = String::new();
@@ -46,25 +46,36 @@ fn create_request(api_key: String) -> SonioxTranscriptionRequest {
     }
 }
 
-pub async fn start_soniox_stream(rx: Receiver<AudioSample>, api_key: String, tx_text: Sender<String>) -> Result<(), SonioxWindowsErrors> {
+pub async fn start_soniox_stream(
+    rx: Receiver<AudioSample>,
+    api_key: String,
+    tx_text: Sender<String>,
+) -> Result<(), SonioxWindowsErrors> {
     let request = create_request(api_key);
     let bytes = serde_json::to_vec(&request)?;
     let url = "wss://stt-rt.soniox.com/transcribe-websocket".into_client_request()?;
     let (ws_stream, _) = connect_async(url).await?;
 
     let (mut write, mut read) = ws_stream.split();
-    write.send(Message::Text(Utf8Bytes::try_from(bytes).unwrap())).await?;
+    write
+        .send(Message::Text(Utf8Bytes::try_from(bytes).unwrap()))
+        .await?;
 
     tokio::spawn(async move {
         while let Ok(buf) = rx.recv() {
-            if buf.is_empty() { break; }
+            if buf.is_empty() {
+                break;
+            }
             let pcm16: Vec<u8> = buf
                 .iter()
                 .map(|&s| (s.clamp(-1.0, 1.0) * i16::MAX as f32) as i16)
                 .flat_map(|s| s.to_le_bytes())
                 .collect();
 
-            write.send(Message::Binary(Bytes::from(pcm16))).await.unwrap();
+            write
+                .send(Message::Binary(Bytes::from(pcm16)))
+                .await
+                .unwrap();
         }
 
         write.send(Message::Binary(Bytes::new())).await.unwrap();

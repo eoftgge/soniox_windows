@@ -26,7 +26,10 @@ pub fn start_capture_audio(tx: Sender<AudioSample>) {
     loop {
         let frames = match capture.get_next_packet_size().unwrap() {
             Some(f) if f > 0 => f,
-            _ => { sleep(Duration::from_millis(5)); continue; }
+            _ => {
+                sleep(Duration::from_millis(5));
+                continue;
+            }
         };
 
         let mut buf = vec![0u8; frames as usize * bytes_per_frame];
