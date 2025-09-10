@@ -8,4 +8,6 @@ pub enum SonioxWindowsErrors {
     Websocket(#[from] tungstenite::Error),
     #[error("{0}")]
     Json(#[from] serde_json::Error),
+    #[error("{0}")]
+    Internal(&'static str)
 }
