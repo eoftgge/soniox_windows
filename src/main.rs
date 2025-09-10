@@ -11,6 +11,8 @@ use soniox_windows::types::AudioSample;
 
 #[tokio::main]
 async fn main() -> Result<(), SonioxWindowsErrors> {
+    simple_logger::SimpleLogger::new().init().unwrap();
+
     let api_key = std::env::var("SONIOX_APIKEY")?;
     let (tx, rx) = unbounded::<AudioSample>();
     let (tx_text, rx_text) = unbounded::<String>();
@@ -38,7 +40,7 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
             .with_position([100., (1920 - 1200) as f32]),
         ..Default::default()
     };
-    
+
     log::info!("Starting application");
     eframe::run_native(
         "Subtitle Live",
