@@ -96,7 +96,9 @@ impl App for SubtitlesApp {
                 });
             });
 
-        ctx.request_repaint_after(Duration::from_millis(100));
+
+
+        ctx.request_repaint_after(Duration::from_millis(10));
     }
 
     fn on_exit(&mut self, _gl: Option<&Context>) {
