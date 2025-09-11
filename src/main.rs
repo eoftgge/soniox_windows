@@ -17,7 +17,7 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
     let (tx_audio, rx_audio) = unbounded_channel::<AudioMessage>();
     let (tx_subs, rx_subs) = unbounded_channel::<String>();
     let app = SubtitlesApp::new(rx_subs, tx_audio.clone());
-    thread::spawn(move || {
+    tokio::task::spawn_blocking(move || {
         if let Err(err) = start_capture_audio(tx_audio) {
             log::error!("{}", err);
         }
