@@ -20,7 +20,7 @@ fn modify_text(text: &str) -> String {
 }
 
 fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
-    let trimmed = trim_text_to_fit(text, 64);
+    let trimmed = trim_text_to_fit(text, 50);
     let modified = modify_text(&trimmed);
     let outline_color = Color32::BLACK;
     let text_color = Color32::YELLOW;
@@ -70,7 +70,7 @@ impl SubtitlesApp {
         Self {
             rx,
             initialized_windows: false,
-            text: "... Wait ...".into(),
+            text: "... waiting for the sound ...".into(),
         }
     }
 }
