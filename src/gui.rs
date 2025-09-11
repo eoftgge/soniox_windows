@@ -5,6 +5,54 @@ use eframe::{App, Frame, egui};
 use egui::Visuals;
 use std::time::Duration;
 
+fn trim_text_to_fit(text: &str, max_chars: usize) -> String {
+    if text.chars().count() > max_chars {
+        let tail: String = text.chars().rev().take(max_chars).collect();
+        tail.chars().rev().collect()
+    } else {
+        text.to_string()
+    }
+}
+
+fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
+    let trimmed = trim_text_to_fit(text, 64);
+    let outline_color = Color32::BLACK;
+    let text_color = Color32::YELLOW;
+    let thickness = 2.0;
+
+    let painter = ui.painter();
+    let rect = ui.ctx().screen_rect();
+    let pos = rect.left_bottom() + egui::vec2(10., -40.);
+    let font = egui::FontId::proportional(font_size);
+    let offsets = [
+        egui::vec2(-thickness, 0.0),
+        egui::vec2(thickness, 0.0),
+        egui::vec2(0.0, -thickness),
+        egui::vec2(0.0, thickness),
+        egui::vec2(-thickness, -thickness),
+        egui::vec2(-thickness, thickness),
+        egui::vec2(thickness, -thickness),
+        egui::vec2(thickness, thickness),
+    ];
+
+    for offset in offsets {
+        painter.text(
+            pos + offset,
+            egui::Align2::LEFT_BOTTOM,
+            &trimmed,
+            font.clone(),
+            outline_color,
+        );
+    }
+    painter.text(
+        pos,
+        egui::Align2::LEFT_BOTTOM,
+        &trimmed,
+        egui::FontId::proportional(font_size),
+        text_color,
+    );
+}
+
 pub struct SubtitlesApp {
     rx: Receiver<String>,
     text: String,
@@ -33,47 +81,9 @@ impl App for SubtitlesApp {
         egui::CentralPanel::default()
             .frame(egui::Frame::default().fill(Color32::TRANSPARENT))
             .show(ctx, |ui| {
-                let rect = ui.max_rect();
-                let text = &self.text;
-                let x_offset = 10.0;
-                let y_offset = rect.height() - 50.0;
-                let pos = egui::pos2(x_offset, y_offset);
-                let max_width = ui.available_width() - 20.0;
-                let mut font_size = 24.0;
-
-                let galley = ui.painter().layout_no_wrap(
-                    text.clone(),
-                    egui::FontId::proportional(font_size),
-                    Color32::WHITE,
-                );
-
-                if galley.size().x > max_width {
-                    font_size = font_size * max_width / galley.size().x;
-                }
-                let offsets = [
-                    egui::vec2(-1.0, -1.0),
-                    egui::vec2(-1.0, 1.0),
-                    egui::vec2(1.0, -1.0),
-                    egui::vec2(1.0, 1.0),
-                ];
-
-                for offset in &offsets {
-                    ui.painter().text(
-                        pos + *offset,
-                        egui::Align2::LEFT_TOP,
-                        text,
-                        egui::FontId::proportional(font_size),
-                        Color32::BLACK,
-                    );
-                }
-
-                ui.painter().text(
-                    pos,
-                    egui::Align2::LEFT_TOP,
-                    text,
-                    egui::FontId::proportional(font_size),
-                    Color32::YELLOW,
-                );
+                ui.vertical_centered(|ui| {
+                    draw_text_with_shadow(ui, &self.text, 24.0);
+                });
             });
 
         ctx.request_repaint_after(Duration::from_millis(100));
