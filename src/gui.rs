@@ -1,9 +1,11 @@
 use crate::windows::initialize_windows;
-use crossbeam_channel::Receiver;
 use eframe::epaint::Color32;
 use eframe::{App, Frame, egui};
 use egui::Visuals;
 use std::time::Duration;
+use eframe::glow::Context;
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use crate::types::AudioMessage;
 
 fn trim_text_to_fit(text: &str, max_chars: usize) -> String {
     if text.chars().count() > max_chars {
@@ -60,15 +62,17 @@ fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
 }
 
 pub struct SubtitlesApp {
-    rx: Receiver<String>,
+    rx_subs: UnboundedReceiver<String>,
     text: String,
     initialized_windows: bool,
+    tx_audio: UnboundedSender<AudioMessage>,
 }
 
 impl SubtitlesApp {
-    pub fn new(rx: Receiver<String>) -> Self {
+    pub fn new(rx_subs: UnboundedReceiver<String>, tx_audio: UnboundedSender<AudioMessage>) -> Self {
         Self {
-            rx,
+            rx_subs,
+            tx_audio,
             initialized_windows: false,
             text: "... waiting for the sound ...".into(),
         }
@@ -80,7 +84,7 @@ impl App for SubtitlesApp {
         if !self.initialized_windows {
             initialize_windows(frame);
         }
-        while let Ok(new_text) = self.rx.try_recv() {
+        while let Ok(new_text) = self.rx_subs.try_recv() {
             self.text = new_text;
         }
 
@@ -93,6 +97,10 @@ impl App for SubtitlesApp {
             });
 
         ctx.request_repaint_after(Duration::from_millis(100));
+    }
+
+    fn on_exit(&mut self, _gl: Option<&Context>) {
+        let _ = self.tx_audio.send(AudioMessage::Stop);
     }
 
     fn clear_color(&self, _visuals: &Visuals) -> [f32; 4] {

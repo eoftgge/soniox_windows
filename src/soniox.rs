@@ -1,9 +1,9 @@
 use crate::errors::SonioxWindowsErrors;
-use crate::types::{AudioSample, SonioxTranscriptionRequest, SonioxTranscriptionResponse};
-use crossbeam_channel::{Receiver, Sender};
+use crate::types::{AudioMessage, SonioxTranscriptionRequest, SonioxTranscriptionResponse};
 use futures_util::SinkExt;
 use futures_util::StreamExt;
 use std::f32;
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio_tungstenite::connect_async;
 use tungstenite::client::IntoClientRequest;
 use tungstenite::{Bytes, Message, Utf8Bytes};
@@ -47,9 +47,9 @@ fn create_request(api_key: String) -> SonioxTranscriptionRequest {
 }
 
 pub async fn start_soniox_stream(
-    rx: Receiver<AudioSample>,
     api_key: String,
-    tx_text: Sender<String>,
+    tx_subs: UnboundedSender<String>,
+    mut rx_audio: UnboundedReceiver<AudioMessage>,
 ) -> Result<(), SonioxWindowsErrors> {
     let request = create_request(api_key);
     let bytes = serde_json::to_vec(&request)?;
@@ -62,21 +62,30 @@ pub async fn start_soniox_stream(
         .await?;
 
     tokio::spawn(async move {
-        while let Ok(buf) = rx.recv() {
-            if buf.is_empty() {
-                break;
-            }
-            let pcm16: Vec<u8> = buf
-                .iter()
-                .map(|&s| (s.clamp(-1.0, 1.0) * i16::MAX as f32) as i16)
-                .flat_map(|s| s.to_le_bytes())
-                .collect();
+        while let Some(message) = rx_audio.recv().await {
+            match message {
+                AudioMessage::Audio(buffer) => {
+                    if buffer.is_empty() {
+                        break;
+                    }
+                    let pcm16: Vec<u8> = buffer
+                        .iter()
+                        .map(|&s| (s.clamp(-1.0, 1.0) * i16::MAX as f32) as i16)
+                        .flat_map(|s| s.to_le_bytes())
+                        .collect();
 
-            let result = write.send(Message::Binary(Bytes::from(pcm16))).await;
+                    let result = write.send(Message::Binary(Bytes::from(pcm16))).await;
 
-            if let Err(err) = result {
-                log::error!("error during sent binary -> {:?}", err);
+                    if let Err(err) = result {
+                        log::error!("error during sent binary -> {:?}", err);
+                    }
+                },
+                AudioMessage::Stop => {
+                    let _ = write.send(Message::Binary(Bytes::new())).await;
+                    return;
+                }
             }
+
         }
 
         let result = write.send(Message::Binary(Bytes::new())).await;
@@ -92,7 +101,7 @@ pub async fn start_soniox_stream(
             Message::Text(txt) => {
                 let v: SonioxTranscriptionResponse = serde_json::from_str(&txt)?;
                 let s = render_transcription(&v);
-                let _ = tx_text.send(s);
+                let _ = tx_subs.send(s);
             }
             _ => {}
         }

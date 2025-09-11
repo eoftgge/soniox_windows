@@ -2,6 +2,12 @@ use serde::{Deserialize, Serialize};
 
 pub type AudioSample = Vec<f32>;
 
+#[derive(Debug)]
+pub enum AudioMessage {
+    Audio(AudioSample),
+    Stop,
+}
+
 #[derive(Debug, Serialize, Default)]
 pub struct SonioxTranslationObject {
     pub r#type: String,

@@ -1,11 +1,11 @@
 use crate::errors::SonioxWindowsErrors;
-use crate::types::AudioSample;
-use crossbeam_channel::Sender;
+use crate::types::AudioMessage;
+use tokio::sync::mpsc::UnboundedSender;
 use std::thread::sleep;
 use std::time::Duration;
 use wasapi::{Direction, StreamMode, get_default_device, initialize_mta};
 
-pub fn start_capture_audio(tx: Sender<AudioSample>) -> Result<(), SonioxWindowsErrors> {
+pub fn start_capture_audio(tx_audio: UnboundedSender<AudioMessage>) -> Result<(), SonioxWindowsErrors> {
     initialize_mta()
         .ok()
         .or_else(|_| Err(SonioxWindowsErrors::Internal("")))?;
@@ -33,13 +33,18 @@ pub fn start_capture_audio(tx: Sender<AudioSample>) -> Result<(), SonioxWindowsE
             }
         };
 
-        let mut buf = vec![0u8; frames as usize * bytes_per_frame];
-        let _ = capture.read_from_device(&mut buf)?;
+        let mut buffer = vec![0u8; frames as usize * bytes_per_frame];
+        let _ = capture.read_from_device(&mut buffer)?;
 
-        let float_buf: Vec<f32> = buf
+        let final_buffer: Vec<f32> = buffer
             .chunks_exact(4)
             .map(|b| f32::from_le_bytes([b[0], b[1], b[2], b[3]]))
             .collect();
-        let _ = tx.send(float_buf);
+        let result = tx_audio.send(AudioMessage::Audio(final_buffer));
+
+        if result.is_err() {
+            log::info!("Audio thread terminated");
+            break Ok(());
+        }
     }
 }

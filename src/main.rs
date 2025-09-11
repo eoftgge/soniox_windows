@@ -1,29 +1,29 @@
 #![windows_subsystem = "windows"]
 use std::thread;
 
-use crossbeam_channel::unbounded;
+use tokio::sync::mpsc::unbounded_channel;
 use eframe::egui::ViewportBuilder;
 use soniox_windows::errors::SonioxWindowsErrors;
 use soniox_windows::gui::SubtitlesApp;
 use soniox_windows::soniox::start_soniox_stream;
 use soniox_windows::audio::start_capture_audio;
-use soniox_windows::types::AudioSample;
+use soniox_windows::types::AudioMessage;
 
 #[tokio::main]
 async fn main() -> Result<(), SonioxWindowsErrors> {
     simple_logger::SimpleLogger::new().init().unwrap();
 
     let api_key = std::env::var("SONIOX_APIKEY")?;
-    let (tx, rx) = unbounded::<AudioSample>();
-    let (tx_text, rx_text) = unbounded::<String>();
-    let app = SubtitlesApp::new(rx_text);
+    let (tx_audio, rx_audio) = unbounded_channel::<AudioMessage>();
+    let (tx_subs, rx_subs) = unbounded_channel::<String>();
+    let app = SubtitlesApp::new(rx_subs, tx_audio.clone());
     thread::spawn(move || {
-        if let Err(err) = start_capture_audio(tx) {
+        if let Err(err) = start_capture_audio(tx_audio) {
             log::error!("{}", err);
         }
     });
     tokio::spawn(async move {
-        if let Err(err) = start_soniox_stream(rx, api_key, tx_text).await {
+        if let Err(err) = start_soniox_stream(api_key, tx_subs, rx_audio).await {
             log::error!("{}", err);
         }
     });
