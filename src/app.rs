@@ -135,7 +135,7 @@ impl SubtitlesApp {
             })),
             initialized_windows: false,
             show_viewport_subtitles: Arc::new(AtomicBool::new(true)),
-            show_viewport_settings: Arc::new(AtomicBool::new(true)),
+            show_viewport_settings: Arc::new(AtomicBool::new(false)),
             text: Arc::new(Mutex::new("... waiting for the sound ...".into())),
         }
     }
