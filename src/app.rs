@@ -1,7 +1,9 @@
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use crate::utils_windows::initialize_windows;
 use eframe::epaint::Color32;
 use eframe::{App, Frame, egui};
-use egui::Visuals;
+use egui::{ViewportBuilder, ViewportId, Visuals};
 use std::time::Duration;
 use eframe::glow::Context;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
@@ -62,10 +64,11 @@ fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
 }
 
 pub struct SubtitlesApp {
+    tx_audio: UnboundedSender<AudioMessage>,
     rx_subs: UnboundedReceiver<String>,
     text: String,
     initialized_windows: bool,
-    tx_audio: UnboundedSender<AudioMessage>,
+    show_viewport: Arc<AtomicBool>,
 }
 
 impl SubtitlesApp {
@@ -74,6 +77,7 @@ impl SubtitlesApp {
             rx_subs,
             tx_audio,
             initialized_windows: false,
+            show_viewport: Arc::new(AtomicBool::new(true)),
             text: "... waiting for the sound ...".into(),
         }
     }
@@ -96,8 +100,25 @@ impl App for SubtitlesApp {
                 });
             });
 
+        if self.show_viewport.load(Ordering::Relaxed) {
+            let show_viewport = Arc::clone(&self.show_viewport);
+            ctx.show_viewport_deferred(
+                ViewportId::from_hash_of("settings_sublive"),
+                ViewportBuilder::default()
+                    .with_title("Settings")
+                    .with_inner_size([300., 300.])
+                    .with_resizable(true),
+                move |ctx, _| {
+                    egui::CentralPanel::default().show(ctx, |ui| {
+                        ui.label("testing separate window")
+                    });
 
-
+                    if ctx.input(|i| i.viewport().close_requested()) {
+                        show_viewport.store(false, Ordering::Relaxed);
+                    }
+                }
+            );
+        }
         ctx.request_repaint_after(Duration::from_millis(10));
     }
 
