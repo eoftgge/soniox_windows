@@ -1,5 +1,5 @@
 pub mod errors;
-pub mod gui;
+pub mod app;
 pub mod soniox;
 pub mod audio;
 pub mod types;
