@@ -14,8 +14,14 @@ fn trim_text_to_fit(text: &str, max_chars: usize) -> String {
     }
 }
 
+#[inline]
+fn modify_text(text: &str) -> String {
+    text.replace("--", "—")
+}
+
 fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
     let trimmed = trim_text_to_fit(text, 64);
+    let modified = modify_text(&trimmed);
     let outline_color = Color32::BLACK;
     let text_color = Color32::YELLOW;
     let thickness = 2.0;
@@ -39,7 +45,7 @@ fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
         painter.text(
             pos + offset,
             egui::Align2::LEFT_BOTTOM,
-            &trimmed,
+            &modified,
             font.clone(),
             outline_color,
         );
@@ -47,7 +53,7 @@ fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
     painter.text(
         pos,
         egui::Align2::LEFT_BOTTOM,
-        &trimmed,
+        &modified,
         egui::FontId::proportional(font_size),
         text_color,
     );
