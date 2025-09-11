@@ -1,13 +1,14 @@
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use crate::settings::SettingsApp;
+use crate::types::AudioMessage;
 use crate::utils_windows::initialize_windows;
 use eframe::epaint::Color32;
-use eframe::{App, Frame, egui};
-use egui::{ViewportBuilder, ViewportId, Visuals};
-use std::time::Duration;
 use eframe::glow::Context;
+use eframe::{App, Frame, egui};
+use egui::{ComboBox, RichText, TopBottomPanel, ViewportBuilder, ViewportId, Visuals, vec2};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use crate::types::AudioMessage;
 
 fn trim_text_to_fit(text: &str, max_chars: usize) -> String {
     if text.chars().count() > max_chars {
@@ -41,8 +42,8 @@ fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
         egui::vec2(0.0, thickness),
         egui::vec2(-thickness, -thickness),
         egui::vec2(-thickness, thickness),
-        egui::vec2(thickness, -thickness),
-        egui::vec2(thickness, thickness),
+        vec2(thickness, -thickness),
+        vec2(thickness, thickness),
     ];
 
     for offset in offsets {
@@ -63,61 +64,114 @@ fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
     );
 }
 
+fn show_settings_subtitle(
+    ctx: &egui::Context,
+    show_viewport_subtitles: Arc<AtomicBool>,
+    show_viewport_settings: Arc<AtomicBool>,
+) {
+    ctx.show_viewport_deferred(
+        ViewportId::from_hash_of("settings_sublive"),
+        ViewportBuilder::default()
+            .with_title("Settings")
+            .with_inner_size([300., 300.])
+            .with_resizable(true),
+        move |ctx, _| {
+            egui::CentralPanel::default().show(ctx, |ui| {
+                ui.vertical(|ui| {
+                    ui.horizontal(|ui| {
+                        ui.label(
+                            RichText::new("Language hints")
+                                .monospace()
+                                .size(12.)
+                                .strong(),
+                        );
+                        ComboBox::from_id_salt("language")
+                            .selected_text("Bebra")
+                            .show_ui(ui, |ui| {
+                                ui.selectable_label(true, "English");
+                                ui.selectable_label(false, "Russian");
+                            });
+                    });
+                    ui.separator();
+                    ui.horizontal(|ui| {
+                        ui.label(RichText::new("Context").monospace().size(12.).strong());
+                    });
+                    ui.separator();
+                    // Controls
+                    // if ui.button("Start").clicked() {
+                    //     show_viewport_subtitles.store(true, Ordering::Relaxed);
+                    // }
+                });
+            });
+
+            if ctx.input(|i| i.viewport().close_requested()) {
+                show_viewport_settings.store(false, Ordering::Relaxed);
+            }
+        },
+    );
+}
+
 pub struct SubtitlesApp {
     tx_audio: UnboundedSender<AudioMessage>,
-    rx_subs: UnboundedReceiver<String>,
-    text: String,
+    rx_subs: Arc<Mutex<UnboundedReceiver<String>>>,
+    text: Arc<Mutex<String>>,
     initialized_windows: bool,
-    show_viewport: Arc<AtomicBool>,
+    show_viewport_subtitles: Arc<AtomicBool>,
+    show_viewport_settings: Arc<AtomicBool>,
+    settings: Arc<Mutex<SettingsApp>>,
 }
 
 impl SubtitlesApp {
-    pub fn new(rx_subs: UnboundedReceiver<String>, tx_audio: UnboundedSender<AudioMessage>) -> Self {
+    pub fn new(
+        rx_subs: UnboundedReceiver<String>,
+        tx_audio: UnboundedSender<AudioMessage>,
+    ) -> Self {
         Self {
-            rx_subs,
             tx_audio,
+            rx_subs: Arc::new(Mutex::new(rx_subs)),
+            settings: Arc::new(Mutex::new(SettingsApp {
+                language_hints: vec![],
+                context: String::new(),
+            })),
             initialized_windows: false,
-            show_viewport: Arc::new(AtomicBool::new(true)),
-            text: "... waiting for the sound ...".into(),
+            show_viewport_subtitles: Arc::new(AtomicBool::new(true)),
+            show_viewport_settings: Arc::new(AtomicBool::new(true)),
+            text: Arc::new(Mutex::new("... waiting for the sound ...".into())),
         }
+    }
+
+    fn update_text(&mut self) {
+        let text = Arc::clone(&self.text);
+        let rx_subs = Arc::clone(&self.rx_subs);
+        tokio::task::spawn_blocking(move || {
+            let mut rx_subs = rx_subs.lock().unwrap();
+            while let Ok(new_text) = rx_subs.try_recv() {
+                *text.lock().unwrap() = new_text;
+            }
+        });
     }
 }
 
 impl App for SubtitlesApp {
     fn update(&mut self, ctx: &egui::Context, frame: &mut Frame) {
-        if !self.initialized_windows {
-            initialize_windows(frame);
+        if self.show_viewport_settings.load(Ordering::Relaxed) {
+            let show_viewport_settings = Arc::clone(&self.show_viewport_settings);
+            let show_viewport_subtitles = Arc::clone(&self.show_viewport_subtitles);
+            show_settings_subtitle(ctx, show_viewport_subtitles, show_viewport_settings);
         }
-        while let Ok(new_text) = self.rx_subs.try_recv() {
-            self.text = new_text;
-        }
-
-        egui::CentralPanel::default()
-            .frame(egui::Frame::default().fill(Color32::TRANSPARENT))
-            .show(ctx, |ui| {
-                ui.vertical_centered(|ui| {
-                    draw_text_with_shadow(ui, &self.text, 24.0);
-                });
-            });
-
-        if self.show_viewport.load(Ordering::Relaxed) {
-            let show_viewport = Arc::clone(&self.show_viewport);
-            ctx.show_viewport_deferred(
-                ViewportId::from_hash_of("settings_sublive"),
-                ViewportBuilder::default()
-                    .with_title("Settings")
-                    .with_inner_size([300., 300.])
-                    .with_resizable(true),
-                move |ctx, _| {
-                    egui::CentralPanel::default().show(ctx, |ui| {
-                        ui.label("testing separate window")
-                    });
-
-                    if ctx.input(|i| i.viewport().close_requested()) {
-                        show_viewport.store(false, Ordering::Relaxed);
+        if self.show_viewport_subtitles.load(Ordering::Relaxed) {
+            egui::CentralPanel::default()
+                .frame(egui::Frame::default().fill(Color32::TRANSPARENT))
+                .show(ctx, |ui| {
+                    if !self.initialized_windows {
+                        initialize_windows(frame);
+                        self.initialized_windows = true;
                     }
-                }
-            );
+                    self.update_text();
+                    ui.vertical_centered(|ui| {
+                        draw_text_with_shadow(ui, self.text.lock().unwrap().as_str(), 24.0);
+                    });
+                });
         }
         ctx.request_repaint_after(Duration::from_millis(10));
     }

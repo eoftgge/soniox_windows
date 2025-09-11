@@ -1,17 +1,21 @@
-#![windows_subsystem = "windows"]
+// #![windows_subsystem = "windows"]
 
-use tokio::sync::mpsc::unbounded_channel;
 use eframe::egui::ViewportBuilder;
 use eframe::icon_data::from_png_bytes;
-use soniox_windows::errors::SonioxWindowsErrors;
+use log::LevelFilter;
 use soniox_windows::app::SubtitlesApp;
-use soniox_windows::soniox::start_soniox_stream;
 use soniox_windows::audio::start_capture_audio;
+use soniox_windows::errors::SonioxWindowsErrors;
+use soniox_windows::soniox::start_soniox_stream;
 use soniox_windows::types::AudioMessage;
+use tokio::sync::mpsc::unbounded_channel;
 
 #[tokio::main]
 async fn main() -> Result<(), SonioxWindowsErrors> {
-    simple_logger::SimpleLogger::new().init().unwrap();
+    simple_logger::SimpleLogger::new()
+        .with_level(LevelFilter::Debug)
+        .init()
+        .unwrap();
 
     let api_key = std::env::var("SONIOX_APIKEY")?;
     let (tx_audio, rx_audio) = unbounded_channel::<AudioMessage>();

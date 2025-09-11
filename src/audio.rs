@@ -1,11 +1,13 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::types::AudioMessage;
-use tokio::sync::mpsc::UnboundedSender;
 use std::thread::sleep;
 use std::time::Duration;
+use tokio::sync::mpsc::UnboundedSender;
 use wasapi::{Direction, StreamMode, get_default_device, initialize_mta};
 
-pub fn start_capture_audio(tx_audio: UnboundedSender<AudioMessage>) -> Result<(), SonioxWindowsErrors> {
+pub fn start_capture_audio(
+    tx_audio: UnboundedSender<AudioMessage>,
+) -> Result<(), SonioxWindowsErrors> {
     initialize_mta()
         .ok()
         .or_else(|_| Err(SonioxWindowsErrors::Internal("")))?;

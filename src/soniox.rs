@@ -79,13 +79,12 @@ pub async fn start_soniox_stream(
                     if let Err(err) = result {
                         log::error!("error during sent binary -> {:?}", err);
                     }
-                },
+                }
                 AudioMessage::Stop => {
                     let _ = write.send(Message::Binary(Bytes::new())).await;
                     return;
                 }
             }
-
         }
 
         let result = write.send(Message::Binary(Bytes::new())).await;
