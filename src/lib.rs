@@ -4,4 +4,4 @@ pub mod soniox;
 pub mod audio;
 pub mod types;
 pub mod wav;
-pub mod windows;
+pub mod utils_windows;
