@@ -6,7 +6,7 @@ use eframe::egui::ViewportBuilder;
 use soniox_windows::errors::SonioxWindowsErrors;
 use soniox_windows::gui::SubtitlesApp;
 use soniox_windows::soniox::start_soniox_stream;
-use soniox_windows::stream::start_capture_audio;
+use soniox_windows::audio::start_capture_audio;
 use soniox_windows::types::AudioSample;
 
 #[tokio::main]
