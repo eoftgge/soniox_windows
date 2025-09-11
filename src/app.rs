@@ -4,7 +4,7 @@ use crate::utils_windows::initialize_windows;
 use eframe::epaint::Color32;
 use eframe::glow::Context;
 use eframe::{App, Frame, egui};
-use egui::{ComboBox, RichText, TopBottomPanel, ViewportBuilder, ViewportId, Visuals, vec2};
+use egui::{Align2, ComboBox, FontId, RichText, ViewportBuilder, ViewportId, Visuals, vec2};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -33,15 +33,15 @@ fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
 
     let painter = ui.painter();
     let rect = ui.ctx().screen_rect();
-    let pos = rect.left_bottom() + egui::vec2(10., -40.);
-    let font = egui::FontId::proportional(font_size);
+    let pos = rect.left_bottom() + vec2(10., -40.);
+    let font = FontId::proportional(font_size);
     let offsets = [
-        egui::vec2(-thickness, 0.0),
-        egui::vec2(thickness, 0.0),
-        egui::vec2(0.0, -thickness),
-        egui::vec2(0.0, thickness),
-        egui::vec2(-thickness, -thickness),
-        egui::vec2(-thickness, thickness),
+        vec2(-thickness, 0.0),
+        vec2(thickness, 0.0),
+        vec2(0.0, -thickness),
+        vec2(0.0, thickness),
+        vec2(-thickness, -thickness),
+        vec2(-thickness, thickness),
         vec2(thickness, -thickness),
         vec2(thickness, thickness),
     ];
@@ -49,7 +49,7 @@ fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
     for offset in offsets {
         painter.text(
             pos + offset,
-            egui::Align2::LEFT_BOTTOM,
+            Align2::LEFT_BOTTOM,
             &modified,
             font.clone(),
             outline_color,
@@ -57,9 +57,9 @@ fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
     }
     painter.text(
         pos,
-        egui::Align2::LEFT_BOTTOM,
+        Align2::LEFT_BOTTOM,
         &modified,
-        egui::FontId::proportional(font_size),
+        FontId::proportional(font_size),
         text_color,
     );
 }
