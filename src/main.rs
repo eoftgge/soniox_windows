@@ -1,8 +1,8 @@
 #![windows_subsystem = "windows"]
-use std::thread;
 
 use tokio::sync::mpsc::unbounded_channel;
 use eframe::egui::ViewportBuilder;
+use eframe::icon_data::from_png_bytes;
 use soniox_windows::errors::SonioxWindowsErrors;
 use soniox_windows::gui::SubtitlesApp;
 use soniox_windows::soniox::start_soniox_stream;
@@ -27,10 +27,10 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
             log::error!("{}", err);
         }
     });
-
     let native_options = eframe::NativeOptions {
         viewport: ViewportBuilder::default()
             .with_app_id("sublive")
+            .with_icon(from_png_bytes(include_bytes!("../icon.png")).expect("Failed to load icon"))
             .with_decorations(false)
             .with_always_on_top()
             .with_transparent(true)
