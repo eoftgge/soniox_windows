@@ -75,8 +75,7 @@ impl SubtitlesApp {
         tx_audio: UnboundedSender<AudioMessage>,
     ) -> Self {
         Self {
-            tx_audio,
-            rx_subs: Arc::new(Mutex::new(rx_subs)),
+            tx_audio, rx_subs,
             text: "... waiting for the sound ...".into(),
         }
     }
@@ -95,9 +94,8 @@ impl App for SubtitlesApp {
             .show(ctx, |ui| {
                 initialize_windows(frame);
                 self.update_text();
-                let text = self.text.lock().unwrap().clone();
                 ui.vertical(|ui| {
-                    draw_text_with_shadow(ui, &text, 24.0);
+                    draw_text_with_shadow(ui, &self.text, 24.0);
                 });
             });
         ctx.request_repaint_after(Duration::from_millis(10));
