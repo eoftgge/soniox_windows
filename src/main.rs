@@ -38,10 +38,10 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
             .with_decorations(false)
             .with_always_on_top()
             .with_transparent(true)
-            .with_min_inner_size([800., 100.])
-            .with_inner_size([800., 100.])
-            .with_max_inner_size([800., 100.])
-            .with_position([100., (1920 - 1200) as f32]),
+            .with_min_inner_size([1000., 250.])
+            .with_inner_size([1000., 250.])
+            .with_max_inner_size([1000., 250.])
+            .with_position([100., (1920 - 1300) as f32]),
         ..Default::default()
     };
 
