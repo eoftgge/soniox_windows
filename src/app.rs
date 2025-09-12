@@ -65,8 +65,8 @@ fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
 
 pub struct SubtitlesApp {
     tx_audio: UnboundedSender<AudioMessage>,
-    rx_subs: Arc<Mutex<UnboundedReceiver<String>>>,
-    text: Arc<Mutex<String>>,
+    rx_subs: UnboundedReceiver<String>,
+    text: String,
 }
 
 impl SubtitlesApp {
@@ -77,19 +77,14 @@ impl SubtitlesApp {
         Self {
             tx_audio,
             rx_subs: Arc::new(Mutex::new(rx_subs)),
-            text: Arc::new(Mutex::new("... waiting for the sound ...".into())),
+            text: "... waiting for the sound ...".into(),
         }
     }
 
     fn update_text(&mut self) {
-        let text = Arc::clone(&self.text);
-        let rx_subs = Arc::clone(&self.rx_subs);
-        tokio::task::spawn_blocking(move || {
-            let mut rx_subs = rx_subs.lock().unwrap();
-            while let Ok(new_text) = rx_subs.try_recv() {
-                *text.lock().unwrap() = new_text;
-            }
-        });
+        while let Ok(new_text) = self.rx_subs.try_recv() {
+            self.text = new_text;
+        }
     }
 }
 
