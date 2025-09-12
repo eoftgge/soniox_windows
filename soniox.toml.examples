@@ -1,0 +1,4 @@
+language_hints = ["ru", "en", "ja"]
+context = "The university"
+api_key = "..."
+level = "debug"
