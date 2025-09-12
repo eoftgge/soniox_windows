@@ -1,5 +1,6 @@
 use crate::errors::SonioxWindowsErrors;
-use crate::types::{AudioMessage, SonioxTranscriptionRequest, SonioxTranscriptionResponse};
+use crate::types::audio::AudioMessage;
+use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranscriptionResponse};
 use futures_util::SinkExt;
 use futures_util::StreamExt;
 use std::f32;

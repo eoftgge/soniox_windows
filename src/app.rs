@@ -1,11 +1,9 @@
-use crate::settings::SettingsApp;
-use crate::types::AudioMessage;
+use crate::types::audio::AudioMessage;
 use crate::utils_windows::initialize_windows;
 use eframe::epaint::Color32;
 use eframe::glow::Context;
 use eframe::{App, Frame, egui};
 use egui::{Align2, FontId, Visuals, vec2};
-use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 

@@ -1,5 +1,5 @@
 use crate::errors::SonioxWindowsErrors;
-use crate::types::AudioMessage;
+use crate::types::audio::AudioMessage;
 use std::thread::sleep;
 use std::time::Duration;
 use tokio::sync::mpsc::UnboundedSender;
