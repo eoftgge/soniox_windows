@@ -5,7 +5,6 @@ use eframe::epaint::Color32;
 use eframe::glow::Context;
 use eframe::{egui, App, Frame};
 use egui::{vec2, Align2, FontId, Visuals};
-use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
@@ -68,7 +67,6 @@ pub struct SubtitlesApp {
     tx_audio: UnboundedSender<AudioMessage>,
     rx_subs: Arc<Mutex<UnboundedReceiver<String>>>,
     text: Arc<Mutex<String>>,
-    settings: Arc<Mutex<SettingsApp>>,
 }
 
 impl SubtitlesApp {
@@ -79,10 +77,6 @@ impl SubtitlesApp {
         Self {
             tx_audio,
             rx_subs: Arc::new(Mutex::new(rx_subs)),
-            settings: Arc::new(Mutex::new(SettingsApp {
-                language_hints: vec![],
-                context: String::new(),
-            })),
             text: Arc::new(Mutex::new("... waiting for the sound ...".into())),
         }
     }
