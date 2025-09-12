@@ -3,9 +3,9 @@ use crate::types::AudioMessage;
 use crate::utils_windows::initialize_windows;
 use eframe::epaint::Color32;
 use eframe::glow::Context;
-use eframe::{App, Frame, egui};
-use egui::{Align2, ComboBox, FontId, RichText, ViewportBuilder, ViewportId, Visuals, vec2};
-use std::sync::atomic::{AtomicBool, Ordering};
+use eframe::{egui, App, Frame};
+use egui::{vec2, Align2, FontId, Visuals};
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
@@ -64,59 +64,10 @@ fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
     );
 }
 
-fn show_settings_subtitle(
-    ctx: &egui::Context,
-    show_viewport_subtitles: Arc<AtomicBool>,
-    show_viewport_settings: Arc<AtomicBool>,
-) {
-    ctx.show_viewport_deferred(
-        ViewportId::from_hash_of("settings_sublive"),
-        ViewportBuilder::default()
-            .with_title("Settings")
-            .with_inner_size([300., 300.])
-            .with_resizable(true),
-        move |ctx, _| {
-            egui::CentralPanel::default().show(ctx, |ui| {
-                ui.vertical(|ui| {
-                    ui.horizontal(|ui| {
-                        ui.label(
-                            RichText::new("Language hints")
-                                .monospace()
-                                .size(12.)
-                                .strong(),
-                        );
-                        ComboBox::from_id_salt("language")
-                            .selected_text("Bebra")
-                            .show_ui(ui, |ui| {
-                                ui.selectable_label(true, "English");
-                                ui.selectable_label(false, "Russian");
-                            });
-                    });
-                    ui.separator();
-                    ui.horizontal(|ui| {
-                        ui.label(RichText::new("Context").monospace().size(12.).strong());
-                    });
-                    ui.separator();
-                    // Controls
-                    // if ui.button("Start").clicked() {
-                    //     show_viewport_subtitles.store(true, Ordering::Relaxed);
-                    // }
-                });
-            });
-
-            if ctx.input(|i| i.viewport().close_requested()) {
-                show_viewport_settings.store(false, Ordering::Relaxed);
-            }
-        },
-    );
-}
-
 pub struct SubtitlesApp {
     tx_audio: UnboundedSender<AudioMessage>,
     rx_subs: Arc<Mutex<UnboundedReceiver<String>>>,
     text: Arc<Mutex<String>>,
-    show_viewport_subtitles: Arc<AtomicBool>,
-    show_viewport_settings: Arc<AtomicBool>,
     settings: Arc<Mutex<SettingsApp>>,
 }
 
@@ -132,8 +83,6 @@ impl SubtitlesApp {
                 language_hints: vec![],
                 context: String::new(),
             })),
-            show_viewport_subtitles: Arc::new(AtomicBool::new(true)),
-            show_viewport_settings: Arc::new(AtomicBool::new(false)),
             text: Arc::new(Mutex::new("... waiting for the sound ...".into())),
         }
     }
@@ -152,23 +101,16 @@ impl SubtitlesApp {
 
 impl App for SubtitlesApp {
     fn update(&mut self, ctx: &egui::Context, frame: &mut Frame) {
-        // if self.show_viewport_settings.load(Ordering::Relaxed) {
-        //     let show_viewport_settings = Arc::clone(&self.show_viewport_settings);
-        //     let show_viewport_subtitles = Arc::clone(&self.show_viewport_subtitles);
-        //     show_settings_subtitle(ctx, show_viewport_subtitles, show_viewport_settings);
-        // }
-        if self.show_viewport_subtitles.load(Ordering::Relaxed) {
-            egui::CentralPanel::default()
-                .frame(egui::Frame::default().fill(Color32::TRANSPARENT))
-                .show(ctx, |ui| {
-                    initialize_windows(frame);
-                    self.update_text();
-                    let text = self.text.lock().unwrap().clone();
-                    ui.vertical(|ui| {
-                        draw_text_with_shadow(ui, &text, 24.0);
-                    });
+        egui::CentralPanel::default()
+            .frame(egui::Frame::default().fill(Color32::TRANSPARENT))
+            .show(ctx, |ui| {
+                initialize_windows(frame);
+                self.update_text();
+                let text = self.text.lock().unwrap().clone();
+                ui.vertical(|ui| {
+                    draw_text_with_shadow(ui, &text, 24.0);
                 });
-        }
+            });
         ctx.request_repaint_after(Duration::from_millis(10));
     }
 
