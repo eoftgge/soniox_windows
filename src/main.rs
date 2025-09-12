@@ -9,6 +9,7 @@ use soniox_windows::errors::SonioxWindowsErrors;
 use soniox_windows::soniox::stream::start_soniox_stream;
 use soniox_windows::types::audio::AudioMessage;
 use tokio::sync::mpsc::unbounded_channel;
+use soniox_windows::types::settings::SettingsApp;
 
 #[tokio::main]
 async fn main() -> Result<(), SonioxWindowsErrors> {
@@ -17,7 +18,7 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
         .init()
         .unwrap();
 
-    let api_key = std::env::var("SONIOX_APIKEY")?;
+    let settings = SettingsApp::new("soniox.toml")?;
     let (tx_audio, rx_audio) = unbounded_channel::<AudioMessage>();
     let (tx_subs, rx_subs) = unbounded_channel::<String>();
     let app = SubtitlesApp::new(rx_subs, tx_audio.clone());
@@ -27,7 +28,7 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
         }
     });
     tokio::spawn(async move {
-        if let Err(err) = start_soniox_stream(api_key, tx_subs, rx_audio).await {
+        if let Err(err) = start_soniox_stream(settings, tx_subs, rx_audio).await {
             log::error!("{}", err);
         }
     });

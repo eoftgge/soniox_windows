@@ -7,9 +7,10 @@ use wasapi::{get_default_device, initialize_mta, Direction};
 use crate::soniox::render::render_transcription;
 use crate::errors::SonioxWindowsErrors;
 use crate::types::audio::AudioMessage;
+use crate::types::settings::SettingsApp;
 use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranscriptionResponse};
 
-fn create_request(api_key: String) -> SonioxTranscriptionRequest {
+fn create_request(settings: SettingsApp) -> SonioxTranscriptionRequest {
     initialize_mta().ok().unwrap();
     let device = get_default_device(&Direction::Render).ok().unwrap();
     let audio_client = device.get_iaudioclient().ok().unwrap();
@@ -17,22 +18,23 @@ fn create_request(api_key: String) -> SonioxTranscriptionRequest {
     let sample_rate = format.get_samplespersec();
     let channels = format.get_nchannels();
     SonioxTranscriptionRequest {
-        api_key,
+        api_key: settings.api_key,
         model: "stt-rt-preview-v2".into(),
         audio_format: "pcm_s16le".into(),
         sample_rate: Some(sample_rate),
         num_channels: Some(channels as u32),
-        language_hints: vec!["en".into(), "ru".into()],
+        context: Some(settings.context),
+        language_hints: settings.language_hints,
         ..Default::default()
     }
 }
 
 pub async fn start_soniox_stream(
-    api_key: String,
+    settings: SettingsApp,
     tx_subs: UnboundedSender<String>,
     mut rx_audio: UnboundedReceiver<AudioMessage>,
 ) -> Result<(), SonioxWindowsErrors> {
-    let request = create_request(api_key);
+    let request = create_request(settings);
     let bytes = serde_json::to_vec(&request)?;
     let url = "wss://stt-rt.soniox.com/transcribe-websocket".into_client_request()?;
     let (ws_stream, _) = connect_async(url).await?;
