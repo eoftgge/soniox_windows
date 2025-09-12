@@ -4,9 +4,9 @@ use eframe::egui::ViewportBuilder;
 use eframe::icon_data::from_png_bytes;
 use log::LevelFilter;
 use soniox_windows::app::SubtitlesApp;
-use soniox_windows::audio::start_capture_audio;
+use soniox_windows::windows::audio::start_capture_audio;
 use soniox_windows::errors::SonioxWindowsErrors;
-use soniox_windows::soniox::start_soniox_stream;
+use soniox_windows::soniox::stream::start_soniox_stream;
 use soniox_windows::types::audio::AudioMessage;
 use tokio::sync::mpsc::unbounded_channel;
 

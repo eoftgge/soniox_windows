@@ -1,5 +1,5 @@
 use crate::types::audio::AudioMessage;
-use crate::utils_windows::initialize_windows;
+use crate::windows::utils::initialize_windows;
 use eframe::epaint::Color32;
 use eframe::glow::Context;
 use eframe::{App, Frame, egui};

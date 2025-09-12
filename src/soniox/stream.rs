@@ -1,33 +1,13 @@
-use crate::errors::SonioxWindowsErrors;
-use crate::types::audio::AudioMessage;
-use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranscriptionResponse};
-use futures_util::SinkExt;
-use futures_util::StreamExt;
-use std::f32;
+use futures_util::{SinkExt, StreamExt};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio_tungstenite::connect_async;
 use tungstenite::client::IntoClientRequest;
 use tungstenite::{Bytes, Message, Utf8Bytes};
-use wasapi::{Direction, get_default_device, initialize_mta};
-
-fn render_transcription(resp: &SonioxTranscriptionResponse) -> String {
-    let mut final_text = String::new();
-    let mut interim_text = String::new();
-
-    for token in &resp.tokens {
-        if token.is_final {
-            final_text.push_str(&token.text);
-        } else {
-            interim_text.push_str(&token.text);
-        }
-    }
-
-    if !interim_text.is_empty() {
-        format!("{}{}", final_text, interim_text)
-    } else {
-        final_text
-    }
-}
+use wasapi::{get_default_device, initialize_mta, Direction};
+use crate::soniox::render::render_transcription;
+use crate::errors::SonioxWindowsErrors;
+use crate::types::audio::AudioMessage;
+use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranscriptionResponse};
 
 fn create_request(api_key: String) -> SonioxTranscriptionRequest {
     initialize_mta().ok().unwrap();
