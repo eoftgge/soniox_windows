@@ -3,8 +3,8 @@ use crate::types::AudioMessage;
 use crate::utils_windows::initialize_windows;
 use eframe::epaint::Color32;
 use eframe::glow::Context;
-use eframe::{egui, App, Frame};
-use egui::{vec2, Align2, FontId, Visuals};
+use eframe::{App, Frame, egui};
+use egui::{Align2, FontId, Visuals, vec2};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
@@ -75,7 +75,8 @@ impl SubtitlesApp {
         tx_audio: UnboundedSender<AudioMessage>,
     ) -> Self {
         Self {
-            tx_audio, rx_subs,
+            tx_audio,
+            rx_subs,
             text: "... waiting for the sound ...".into(),
         }
     }
