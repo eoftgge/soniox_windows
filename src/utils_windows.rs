@@ -24,7 +24,6 @@ pub(crate) fn initialize_windows(frame: &Frame) {
             if let RawWindowHandle::Win32(win32) = raw {
                 let hwnd = HWND(win32.hwnd.get() as *mut _);
                 make_window_click_through(hwnd);
-                let hwnd = HWND(win32.hwnd.get() as *mut _);
                 let _ = SetWindowPos(
                     hwnd,
                     Some(HWND_TOPMOST),

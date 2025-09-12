@@ -115,7 +115,6 @@ pub struct SubtitlesApp {
     tx_audio: UnboundedSender<AudioMessage>,
     rx_subs: Arc<Mutex<UnboundedReceiver<String>>>,
     text: Arc<Mutex<String>>,
-    initialized_windows: bool,
     show_viewport_subtitles: Arc<AtomicBool>,
     show_viewport_settings: Arc<AtomicBool>,
     settings: Arc<Mutex<SettingsApp>>,
@@ -133,7 +132,6 @@ impl SubtitlesApp {
                 language_hints: vec![],
                 context: String::new(),
             })),
-            initialized_windows: false,
             show_viewport_subtitles: Arc::new(AtomicBool::new(true)),
             show_viewport_settings: Arc::new(AtomicBool::new(false)),
             text: Arc::new(Mutex::new("... waiting for the sound ...".into())),
@@ -154,22 +152,20 @@ impl SubtitlesApp {
 
 impl App for SubtitlesApp {
     fn update(&mut self, ctx: &egui::Context, frame: &mut Frame) {
-        if self.show_viewport_settings.load(Ordering::Relaxed) {
-            let show_viewport_settings = Arc::clone(&self.show_viewport_settings);
-            let show_viewport_subtitles = Arc::clone(&self.show_viewport_subtitles);
-            show_settings_subtitle(ctx, show_viewport_subtitles, show_viewport_settings);
-        }
+        // if self.show_viewport_settings.load(Ordering::Relaxed) {
+        //     let show_viewport_settings = Arc::clone(&self.show_viewport_settings);
+        //     let show_viewport_subtitles = Arc::clone(&self.show_viewport_subtitles);
+        //     show_settings_subtitle(ctx, show_viewport_subtitles, show_viewport_settings);
+        // }
         if self.show_viewport_subtitles.load(Ordering::Relaxed) {
             egui::CentralPanel::default()
                 .frame(egui::Frame::default().fill(Color32::TRANSPARENT))
                 .show(ctx, |ui| {
-                    if !self.initialized_windows {
-                        initialize_windows(frame);
-                        self.initialized_windows = true;
-                    }
+                    initialize_windows(frame);
                     self.update_text();
-                    ui.vertical_centered(|ui| {
-                        draw_text_with_shadow(ui, self.text.lock().unwrap().as_str(), 24.0);
+                    let text = self.text.lock().unwrap().clone();
+                    ui.vertical(|ui| {
+                        draw_text_with_shadow(ui, &text, 24.0);
                     });
                 });
         }
