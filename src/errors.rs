@@ -1,5 +1,5 @@
-use std::env;
 use log4rs::config::runtime::ConfigErrors;
+use std::env;
 use wasapi::WasapiError;
 
 #[derive(thiserror::Error, Debug)]

@@ -1,27 +1,31 @@
 // #![windows_subsystem = "windows"]
 
-use std::str::FromStr;
 use eframe::egui::ViewportBuilder;
 use eframe::icon_data::from_png_bytes;
+use log::LevelFilter;
+use log4rs::Config;
 use log4rs::append::console::{ConsoleAppender, Target};
 use log4rs::append::file::FileAppender;
-use log4rs::Config;
 use log4rs::config::{Appender, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use log4rs::filter::threshold::ThresholdFilter;
-use log::LevelFilter;
 use soniox_windows::app::SubtitlesApp;
-use soniox_windows::windows::audio::start_capture_audio;
 use soniox_windows::errors::SonioxWindowsErrors;
 use soniox_windows::soniox::stream::start_soniox_stream;
 use soniox_windows::types::audio::AudioMessage;
-use tokio::sync::mpsc::unbounded_channel;
 use soniox_windows::types::settings::SettingsApp;
+use soniox_windows::windows::audio::start_capture_audio;
+use std::str::FromStr;
+use tokio::sync::mpsc::unbounded_channel;
 
 #[tokio::main]
 async fn main() -> Result<(), SonioxWindowsErrors> {
     let settings = SettingsApp::new("soniox.toml")?;
-    let level = log::LevelFilter::from_str(&settings.level).map_err(|_| SonioxWindowsErrors::Internal("field `level` isn't valid. did u mean `info`, `debug` and `warn`?"))?;
+    let level = log::LevelFilter::from_str(&settings.level).map_err(|_| {
+        SonioxWindowsErrors::Internal(
+            "field `level` isn't valid. did u mean `info`, `debug` and `warn`?",
+        )
+    })?;
     let stderr = ConsoleAppender::builder().target(Target::Stderr).build();
     let logfile = FileAppender::builder()
         .encoder(Box::new(PatternEncoder::new("{d} - {m}\n")))

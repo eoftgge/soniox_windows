@@ -1,14 +1,14 @@
+use crate::errors::SonioxWindowsErrors;
+use crate::soniox::render::render_transcription;
+use crate::types::audio::AudioMessage;
+use crate::types::settings::SettingsApp;
+use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranscriptionResponse};
 use futures_util::{SinkExt, StreamExt};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio_tungstenite::connect_async;
 use tungstenite::client::IntoClientRequest;
 use tungstenite::{Bytes, Message, Utf8Bytes};
-use wasapi::{get_default_device, initialize_mta, Direction};
-use crate::soniox::render::render_transcription;
-use crate::errors::SonioxWindowsErrors;
-use crate::types::audio::AudioMessage;
-use crate::types::settings::SettingsApp;
-use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranscriptionResponse};
+use wasapi::{Direction, get_default_device, initialize_mta};
 
 fn create_request(settings: SettingsApp) -> SonioxTranscriptionRequest {
     initialize_mta().ok().unwrap();
