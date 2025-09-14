@@ -1,4 +1,4 @@
-// #![windows_subsystem = "windows"]
+#![windows_subsystem = "windows"]
 
 use eframe::egui::ViewportBuilder;
 use eframe::icon_data::from_png_bytes;
