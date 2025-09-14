@@ -26,17 +26,11 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
             "field `level` isn't valid. did u mean `info`, `debug` and `warn`?",
         )
     })?;
-    let stderr = ConsoleAppender::builder().target(Target::Stderr).build();
     let logfile = FileAppender::builder()
         .encoder(Box::new(PatternEncoder::new("{d} - {m}\n")))
         .build("soniox.log")?;
     let config = Config::builder()
         .appender(Appender::builder().build("logfile", Box::new(logfile)))
-        .appender(
-            Appender::builder()
-                .filter(Box::new(ThresholdFilter::new(level)))
-                .build("stderr", Box::new(stderr)),
-        )
         .build(
             Root::builder()
                 .appender("logfile")
