@@ -32,7 +32,6 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
         .build(
             Root::builder()
                 .appender("logfile")
-                .appender("stderr")
                 .build(level),
         )?;
     let _ = log4rs::init_config(config);
