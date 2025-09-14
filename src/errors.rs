@@ -1,4 +1,5 @@
 use std::env;
+use log4rs::config::runtime::ConfigErrors;
 use wasapi::WasapiError;
 
 #[derive(thiserror::Error, Debug)]
@@ -15,6 +16,10 @@ pub enum SonioxWindowsErrors {
     Env(#[from] env::VarError),
     #[error("{0}")]
     Config(#[from] config::ConfigError),
+    #[error("{0}")]
+    Io(#[from] std::io::Error),
+    #[error("{0}")]
+    LoggingRuntime(#[from] ConfigErrors),
     #[error("{0}")]
     Internal(&'static str),
 }
