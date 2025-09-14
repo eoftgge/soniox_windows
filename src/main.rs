@@ -4,11 +4,9 @@ use eframe::egui::ViewportBuilder;
 use eframe::icon_data::from_png_bytes;
 use log::LevelFilter;
 use log4rs::Config;
-use log4rs::append::console::{ConsoleAppender, Target};
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Root};
 use log4rs::encode::pattern::PatternEncoder;
-use log4rs::filter::threshold::ThresholdFilter;
 use soniox_windows::app::SubtitlesApp;
 use soniox_windows::errors::SonioxWindowsErrors;
 use soniox_windows::soniox::stream::start_soniox_stream;
@@ -21,7 +19,7 @@ use tokio::sync::mpsc::unbounded_channel;
 #[tokio::main]
 async fn main() -> Result<(), SonioxWindowsErrors> {
     let settings = SettingsApp::new("soniox.toml")?;
-    let level = log::LevelFilter::from_str(&settings.level).map_err(|_| {
+    let level = LevelFilter::from_str(&settings.level).map_err(|_| {
         SonioxWindowsErrors::Internal(
             "field `level` isn't valid. did u mean `info`, `debug` and `warn`?",
         )
@@ -35,7 +33,7 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
             Root::builder()
                 .appender("logfile")
                 .appender("stderr")
-                .build(LevelFilter::Trace),
+                .build(level),
         )?;
     let _ = log4rs::init_config(config);
     let (tx_audio, rx_audio) = unbounded_channel::<AudioMessage>();
