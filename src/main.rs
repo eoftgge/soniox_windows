@@ -1,5 +1,6 @@
 // #![windows_subsystem = "windows"]
 
+use std::str::FromStr;
 use eframe::egui::ViewportBuilder;
 use eframe::icon_data::from_png_bytes;
 use log::LevelFilter;
@@ -13,12 +14,12 @@ use soniox_windows::types::settings::SettingsApp;
 
 #[tokio::main]
 async fn main() -> Result<(), SonioxWindowsErrors> {
+    let settings = SettingsApp::new("soniox.toml")?;
+
     simple_logger::SimpleLogger::new()
-        .with_level(LevelFilter::Debug)
+        .with_level(LevelFilter::from_str(&settings.level).map_err(|_| SonioxWindowsErrors::Internal("field level isn't valid"))?)
         .init()
         .unwrap();
-
-    let settings = SettingsApp::new("soniox.toml")?;
     let (tx_audio, rx_audio) = unbounded_channel::<AudioMessage>();
     let (tx_subs, rx_subs) = unbounded_channel::<String>();
     let app = SubtitlesApp::new(rx_subs, tx_audio.clone());
