@@ -46,6 +46,7 @@ pub fn start_capture_audio(
 
         if result.is_err() {
             log::info!("Audio thread terminated");
+            let _ = tx_audio.send(AudioMessage::Stop);
             break Ok(());
         }
     }

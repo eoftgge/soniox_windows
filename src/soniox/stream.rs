@@ -61,6 +61,12 @@ pub async fn start_soniox_stream(
 
                     if let Err(err) = result {
                         log::error!("error during sent binary -> {:?}", err);
+                        let bytes = serde_json::to_vec(&request)
+                            .expect("REQUEST IS VALID ALWAYS");
+                        let _ = write
+                            .send(Message::Text(Utf8Bytes::try_from(bytes).unwrap()))
+                            .await;
+                        // todo: add error handle normally
                     }
                 }
                 AudioMessage::Stop => {
