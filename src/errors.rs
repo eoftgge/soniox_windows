@@ -21,5 +21,7 @@ pub enum SonioxWindowsErrors {
     #[error("{0}")]
     LoggingRuntime(#[from] ConfigErrors),
     #[error("{0}")]
+    Utf8(#[from] std::str::Utf8Error),
+    #[error("{0}")]
     Internal(&'static str),
 }

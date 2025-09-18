@@ -10,6 +10,8 @@ use tungstenite::client::IntoClientRequest;
 use tungstenite::{Bytes, Message, Utf8Bytes};
 use wasapi::{Direction, get_default_device, initialize_mta};
 
+const URL: &'static str = "wss://stt-rt.soniox.com/transcribe-websocket";
+
 fn create_request(settings: SettingsApp) -> SonioxTranscriptionRequest {
     initialize_mta().ok().unwrap();
     let device = get_default_device(&Direction::Render).ok().unwrap();
@@ -29,22 +31,39 @@ fn create_request(settings: SettingsApp) -> SonioxTranscriptionRequest {
     }
 }
 
-pub async fn start_soniox_stream(
-    settings: SettingsApp,
+async fn listen_soniox_stream(
+    bytes: Vec<u8>,
     tx_subs: UnboundedSender<String>,
     mut rx_audio: UnboundedReceiver<AudioMessage>,
 ) -> Result<(), SonioxWindowsErrors> {
-    let request = create_request(settings);
-    let bytes = serde_json::to_vec(&request)?;
-    let url = "wss://stt-rt.soniox.com/transcribe-websocket".into_client_request()?;
-    let (ws_stream, _) = connect_async(url).await?;
+    'stream: loop {
+        let url = URL.into_client_request()?;
+        let (ws_stream, _) = connect_async(url).await?;
+        let (mut write, mut read) = ws_stream.split();
+        write
+            .send(Message::Text(Utf8Bytes::try_from(bytes.clone())?))
+            .await?;
 
-    let (mut write, mut read) = ws_stream.split();
-    write
-        .send(Message::Text(Utf8Bytes::try_from(bytes).unwrap()))
-        .await?;
+        let tx_subs = tx_subs.clone();
+        let reader = async move {
+            while let Some(msg) = read.next().await {
+                match msg? {
+                    Message::Text(txt) => {
+                        let v: SonioxTranscriptionResponse = serde_json::from_str(&txt)?;
+                        let s = render_transcription(&v);
+                        let _ = tx_subs.send(s);
+                    }
+                    _ => {}
+                }
+            }
+            <Result<(), SonioxWindowsErrors>>::Ok(())
+        };
 
-    tokio::spawn(async move {
+        tokio::spawn(async move {
+            if let Err(err) = reader.await {
+                log::error!("error during read message {}", err);
+            }
+        });
         while let Some(message) = rx_audio.recv().await {
             match message {
                 AudioMessage::Audio(buffer) => {
@@ -61,17 +80,12 @@ pub async fn start_soniox_stream(
 
                     if let Err(err) = result {
                         log::error!("error during sent binary -> {:?}", err);
-                        let bytes = serde_json::to_vec(&request)
-                            .expect("REQUEST IS VALID ALWAYS");
-                        let _ = write
-                            .send(Message::Text(Utf8Bytes::try_from(bytes).unwrap()))
-                            .await;
-                        // todo: add error handle normally
+                        continue 'stream;
                     }
-                }
+                },
                 AudioMessage::Stop => {
                     let _ = write.send(Message::Binary(Bytes::new())).await;
-                    return;
+                    break 'stream;
                 }
             }
         }
@@ -80,19 +94,20 @@ pub async fn start_soniox_stream(
         if let Err(err) = result {
             log::error!("error during sent empty binary -> {:?}", err);
         }
-    });
+    }
+
+    Ok(())
+}
+
+pub async fn start_soniox_stream(
+    settings: SettingsApp,
+    tx_subs: UnboundedSender<String>,
+    rx_audio: UnboundedReceiver<AudioMessage>,
+) -> Result<(), SonioxWindowsErrors> {
+    let request = create_request(settings);
+    let bytes = serde_json::to_vec(&request)?;
 
     log::info!("Started Soniox stream!");
     log::info!("Starting to listen websocket stream Soniox...");
-    while let Some(msg) = read.next().await {
-        match msg? {
-            Message::Text(txt) => {
-                let v: SonioxTranscriptionResponse = serde_json::from_str(&txt)?;
-                let s = render_transcription(&v);
-                let _ = tx_subs.send(s);
-            }
-            _ => {}
-        }
-    }
-    Ok(())
+    listen_soniox_stream(bytes, tx_subs, rx_audio).await
 }
