@@ -51,7 +51,7 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
     let native_options = eframe::NativeOptions {
         viewport: ViewportBuilder::default()
             .with_app_id("sublive")
-            .with_icon(from_png_bytes(include_bytes!("../icon.png")).expect("Failed to load icon"))
+            .with_icon(from_png_bytes(include_bytes!("../assets/icon.png")).expect("Failed to load icon"))
             .with_decorations(false)
             .with_always_on_top()
             .with_transparent(true)
