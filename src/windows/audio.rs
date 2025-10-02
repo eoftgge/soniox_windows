@@ -10,7 +10,7 @@ pub fn start_capture_audio(
 ) -> Result<(), SonioxWindowsErrors> {
     initialize_mta()
         .ok()
-        .or_else(|_| Err(SonioxWindowsErrors::Internal("")))?;
+        .map_err(|_| SonioxWindowsErrors::Internal(""))?;
     let device = get_default_device(&Direction::Render)?;
     let mut audio_client = device.get_iaudioclient()?;
     let format = audio_client.get_mixformat()?;

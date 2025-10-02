@@ -10,7 +10,7 @@ use tungstenite::client::IntoClientRequest;
 use tungstenite::{Bytes, Message, Utf8Bytes};
 use wasapi::{Direction, get_default_device, initialize_mta};
 
-const URL: &'static str = "wss://stt-rt.soniox.com/transcribe-websocket";
+const URL: &str = "wss://stt-rt.soniox.com/transcribe-websocket";
 
 fn create_request(settings: SettingsApp) -> SonioxTranscriptionRequest {
     initialize_mta().ok().unwrap();
@@ -47,13 +47,10 @@ async fn listen_soniox_stream(
         let tx_subs = tx_subs.clone();
         let reader = async move {
             while let Some(msg) = read.next().await {
-                match msg? {
-                    Message::Text(txt) => {
-                        let v: SonioxTranscriptionResponse = serde_json::from_str(&txt)?;
-                        let s = render_transcription(&v);
-                        let _ = tx_subs.send(s);
-                    }
-                    _ => {}
+                if let Message::Text(txt) = msg? {
+                    let v: SonioxTranscriptionResponse = serde_json::from_str(&txt)?;
+                    let s = render_transcription(&v);
+                    let _ = tx_subs.send(s);
                 }
             }
             <Result<(), SonioxWindowsErrors>>::Ok(())
@@ -82,7 +79,7 @@ async fn listen_soniox_stream(
                         log::error!("error during sent binary -> {:?}", err);
                         continue 'stream;
                     }
-                },
+                }
                 AudioMessage::Stop => {
                     let _ = write.send(Message::Binary(Bytes::new())).await;
                     break 'stream;

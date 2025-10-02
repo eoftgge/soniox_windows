@@ -29,11 +29,7 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
         .build("soniox.log")?;
     let config = Config::builder()
         .appender(Appender::builder().build("logfile", Box::new(logfile)))
-        .build(
-            Root::builder()
-                .appender("logfile")
-                .build(level),
-        )?;
+        .build(Root::builder().appender("logfile").build(level))?;
     let _ = log4rs::init_config(config);
     let (tx_audio, rx_audio) = unbounded_channel::<AudioMessage>();
     let (tx_subs, rx_subs) = unbounded_channel::<String>();
@@ -51,7 +47,9 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
     let native_options = eframe::NativeOptions {
         viewport: ViewportBuilder::default()
             .with_app_id("sublive")
-            .with_icon(from_png_bytes(include_bytes!("../assets/icon.png")).expect("Failed to load icon"))
+            .with_icon(
+                from_png_bytes(include_bytes!("../assets/icon.png")).expect("Failed to load icon"),
+            )
             .with_decorations(false)
             .with_always_on_top()
             .with_transparent(true)

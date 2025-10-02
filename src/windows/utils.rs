@@ -18,8 +18,8 @@ fn make_window_click_through(hwnd: HWND) {
 }
 
 pub(crate) fn initialize_windows(frame: &Frame) {
-    match frame.window_handle() {
-        Ok(handle) => unsafe {
+    if let Ok(handle) = frame.window_handle() {
+        unsafe {
             let raw = handle.as_raw();
             if let RawWindowHandle::Win32(win32) = raw {
                 let hwnd = HWND(win32.hwnd.get() as *mut _);
@@ -34,7 +34,6 @@ pub(crate) fn initialize_windows(frame: &Frame) {
                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
                 );
             }
-        },
-        _ => {}
+        }
     }
 }
