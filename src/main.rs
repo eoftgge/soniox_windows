@@ -14,7 +14,21 @@ use soniox_windows::types::audio::AudioMessage;
 use soniox_windows::types::settings::SettingsApp;
 use soniox_windows::windows::audio::start_capture_audio;
 use std::str::FromStr;
+use screen_size::get_primary_screen_size;
 use tokio::sync::mpsc::unbounded_channel;
+
+
+const WINDOW_WIDTH: f32 = 1000.;
+const WINDOW_HEIGHT: f32 = 250.;
+
+fn get_position_application() -> (f32, f32) {
+    let (_, height) = get_primary_screen_size().expect("Failed to get primary screen size");
+    let window_height = WINDOW_HEIGHT;
+    let pos_x = 100.;
+    let pos_y = height as f32 - window_height - 100.;
+
+    (pos_x, pos_y)
+}
 
 #[tokio::main]
 async fn main() -> Result<(), SonioxWindowsErrors> {
@@ -53,10 +67,10 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
             .with_decorations(false)
             .with_always_on_top()
             .with_transparent(true)
-            .with_min_inner_size([1000., 250.])
-            .with_inner_size([1000., 250.])
-            .with_max_inner_size([1000., 250.])
-            .with_position([100., (1920 - 1300) as f32]),
+            .with_min_inner_size([WINDOW_WIDTH, WINDOW_HEIGHT])
+            .with_inner_size([WINDOW_WIDTH, WINDOW_HEIGHT])
+            .with_max_inner_size([WINDOW_WIDTH, WINDOW_HEIGHT])
+            .with_position(get_position_application()),
         ..Default::default()
     };
 
