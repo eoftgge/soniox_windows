@@ -7,6 +7,7 @@ use log4rs::Config;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Root};
 use log4rs::encode::pattern::PatternEncoder;
+use screen_size::get_primary_screen_size;
 use soniox_windows::app::SubtitlesApp;
 use soniox_windows::errors::SonioxWindowsErrors;
 use soniox_windows::soniox::stream::start_soniox_stream;
@@ -14,7 +15,6 @@ use soniox_windows::types::audio::AudioMessage;
 use soniox_windows::types::settings::SettingsApp;
 use soniox_windows::windows::audio::start_capture_audio;
 use std::str::FromStr;
-use screen_size::get_primary_screen_size;
 use tokio::sync::mpsc::unbounded_channel;
 
 const WINDOW_HEIGHT: f32 = 250.;
