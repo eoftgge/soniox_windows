@@ -6,14 +6,14 @@ edition = "2024"
 [dependencies]
 wasapi = "0.19.0"
 thiserror = "2.0.16"
-tungstenite = { version = "0.27.0", features = ["native-tls"] }
+tungstenite = { version = "0.28.0", features = ["native-tls"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.143"
-tokio-tungstenite = { version = "0.27.0", features = ["native-tls"] }
-tokio = { version = "1.47.1", features = ["full"] }
+tokio-tungstenite = { version = "0.28.0", features = ["native-tls"] }
+tokio = { version = "1.47.1", features = ["rt", "rt-multi-thread", "macros", "sync"] }
 futures-util = "0.3.31"
 egui = "0.32.2"
-eframe = { version = "0.32.2", features = ["wgpu"] }
+eframe = { version = "0.32.2", features = ["glow"] }
 windows = { version = "0.62.0", features = ["Win32_UI_WindowsAndMessaging"] }
 raw-window-handle = "0.6.2"
 log = "0.4.28"
