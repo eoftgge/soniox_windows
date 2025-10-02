@@ -26,3 +26,5 @@ It supports only the Windows operating system, there can be no question of suppo
 // and you should to create new configuration file (soniox.toml), example in repository.
 // and run normally execution file. maybe, the antivirus will complain. it's normal
 ```
+
+If you have any problems, don't hesitate to ask in the Issues section
