@@ -3,9 +3,10 @@
 It supports only the Windows operating system, there can be no question of supporting other systems.**
 
 **Advantages**
-* It does not work as a window, but as a purely disguised and privileged window with text, and you can even click through it with the mouse. Very convenient.
+* It does not work as a window, but as a purely disguised and privileged window with text, and you can even click through it with the mouse. Quite convenient.
 * Uninterrupted operation. If the connection is disconnected, it makes a repeat request to the server.
 * Minimal memory consumption.
+* And the most important thing is that it receives sound directly from Windows, without any third-party virtual channels. I'll say it's very convenient.
 
 **Disadvantages**
 * A quite inconvenient setup for inexperienced users. However, you can figure it out quickly, I think.
@@ -18,6 +19,7 @@ It supports only the Windows operating system, there can be no question of suppo
 5. Fix exit application (in some instances)
 
 ### Launch
+For build and start, you need rust compiler
 ```terminaloutput
 >>> git clone https://github.com/eoftgge/soniox_windows.git
 >>> cd soniox_windows
