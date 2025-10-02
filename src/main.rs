@@ -17,14 +17,12 @@ use std::str::FromStr;
 use screen_size::get_primary_screen_size;
 use tokio::sync::mpsc::unbounded_channel;
 
-
-const WINDOW_WIDTH: f32 = 1000.;
 const WINDOW_HEIGHT: f32 = 250.;
+const OFFSET_WIDTH: f32 = 100.;
 
-fn get_position_application() -> (f32, f32) {
-    let (_, height) = get_primary_screen_size().expect("Failed to get primary screen size");
+fn get_position_application(height: u64) -> (f32, f32) {
     let window_height = WINDOW_HEIGHT;
-    let pos_x = 100.;
+    let pos_x = OFFSET_WIDTH;
     let pos_y = height as f32 - window_height - 100.;
 
     (pos_x, pos_y)
@@ -45,6 +43,7 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
         .appender(Appender::builder().build("logfile", Box::new(logfile)))
         .build(Root::builder().appender("logfile").build(level))?;
     let _ = log4rs::init_config(config);
+    let (width, height) = get_primary_screen_size().expect("Failed to get primary screen size");
     let (tx_audio, rx_audio) = unbounded_channel::<AudioMessage>();
     let (tx_subs, rx_subs) = unbounded_channel::<String>();
     let app = SubtitlesApp::new(rx_subs, tx_audio.clone());
@@ -67,10 +66,10 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
             .with_decorations(false)
             .with_always_on_top()
             .with_transparent(true)
-            .with_min_inner_size([WINDOW_WIDTH, WINDOW_HEIGHT])
-            .with_inner_size([WINDOW_WIDTH, WINDOW_HEIGHT])
-            .with_max_inner_size([WINDOW_WIDTH, WINDOW_HEIGHT])
-            .with_position(get_position_application()),
+            .with_min_inner_size([width as f32 - OFFSET_WIDTH * 2., WINDOW_HEIGHT])
+            .with_inner_size([width as f32 - OFFSET_WIDTH * 2., WINDOW_HEIGHT])
+            .with_max_inner_size([width as f32 - OFFSET_WIDTH * 2., WINDOW_HEIGHT])
+            .with_position(get_position_application(height)),
         ..Default::default()
     };
 
