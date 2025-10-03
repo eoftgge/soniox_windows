@@ -1,4 +1,4 @@
-# Soniox: Subtitle Live
+# Soniox: Subtitles Live
 **An advanced AI-based Soniox application that draws subtitles on the screen.
 It supports only the Windows operating system, there can be no question of supporting other systems.**
 
@@ -19,7 +19,7 @@ It supports only the Windows operating system, there can be no question of suppo
 5. Fix exit application (in some instances)
 
 ### Launch
-For build and start, you need [Rust compiler](https://rust-lang.org/tools/install/)
+For build and start, you need [Rust Compiler](https://rust-lang.org/tools/install/)
 ```terminaloutput
 >>> git clone https://github.com/eoftgge/soniox_windows.git
 >>> cd soniox_windows
