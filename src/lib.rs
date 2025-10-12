@@ -2,7 +2,6 @@ use log4rs::append::file::FileAppender;
 use log4rs::Config;
 use log4rs::config::{Appender, Root};
 use log4rs::encode::pattern::PatternEncoder;
-use screen_size::get_primary_screen_size;
 use tokio::sync::mpsc::unbounded_channel;
 use crate::app::SubtitlesApp;
 use crate::errors::SonioxWindowsErrors;
