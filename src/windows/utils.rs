@@ -1,7 +1,8 @@
 use eframe::Frame;
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+use windows::core::PCWSTR;
 use windows::Win32::Foundation::HWND;
-use windows::Win32::UI::WindowsAndMessaging::{GWL_EXSTYLE, GetWindowLongW, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SetWindowLongW, SetWindowPos, WS_EX_LAYERED, WS_EX_TRANSPARENT, SM_CYSCREEN, GetSystemMetrics, SM_CXSCREEN};
+use windows::Win32::UI::WindowsAndMessaging::{GWL_EXSTYLE, GetWindowLongW, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SetWindowLongW, SetWindowPos, WS_EX_LAYERED, WS_EX_TRANSPARENT, SM_CYSCREEN, GetSystemMetrics, SM_CXSCREEN, MessageBoxW, MB_OK, MB_ICONERROR};
 
 fn make_window_click_through(hwnd: HWND) {
     unsafe {
@@ -32,6 +33,22 @@ pub(crate) fn initialize_windows(frame: &Frame) {
                 );
             }
         }
+    }
+}
+
+pub fn show_error(msg: &str) {
+    use std::ffi::OsStr;
+    use std::os::windows::ffi::OsStrExt;
+
+    let wide: Vec<u16> = OsStr::new(msg).encode_wide().chain(Some(0)).collect();
+
+    unsafe {
+        MessageBoxW(
+            None,
+            PCWSTR(wide.as_ptr()),
+            PCWSTR(wide.as_ptr()),
+            MB_OK | MB_ICONERROR,
+        );
     }
 }
 
