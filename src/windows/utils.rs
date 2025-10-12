@@ -1,10 +1,7 @@
 use eframe::Frame;
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
 use windows::Win32::Foundation::HWND;
-use windows::Win32::UI::WindowsAndMessaging::{
-    GWL_EXSTYLE, GetWindowLongW, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE,
-    SetWindowLongW, SetWindowPos, WS_EX_LAYERED, WS_EX_TRANSPARENT,
-};
+use windows::Win32::UI::WindowsAndMessaging::{GWL_EXSTYLE, GetWindowLongW, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SetWindowLongW, SetWindowPos, WS_EX_LAYERED, WS_EX_TRANSPARENT, SM_CYSCREEN, GetSystemMetrics, SM_CXSCREEN};
 
 fn make_window_click_through(hwnd: HWND) {
     unsafe {
@@ -36,4 +33,9 @@ pub(crate) fn initialize_windows(frame: &Frame) {
             }
         }
     }
+}
+
+pub fn get_screen_size() -> (usize, usize) {
+    let (width, height) = unsafe { (GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)) };
+    (width as usize, height as usize)
 }
