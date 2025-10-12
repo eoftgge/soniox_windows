@@ -3,8 +3,8 @@
 use eframe::egui::ViewportBuilder;
 use eframe::icon_data::from_png_bytes;
 use soniox_windows::errors::SonioxWindowsErrors;
-use soniox_windows::types::settings::SettingsApp;
 use soniox_windows::initialize_app;
+use soniox_windows::types::settings::SettingsApp;
 use soniox_windows::windows::utils::{get_screen_size, show_error};
 
 const WINDOW_HEIGHT: f32 = 250.;

@@ -1,14 +1,14 @@
-use log4rs::append::file::FileAppender;
-use log4rs::Config;
-use log4rs::config::{Appender, Root};
-use log4rs::encode::pattern::PatternEncoder;
-use tokio::sync::mpsc::unbounded_channel;
 use crate::app::SubtitlesApp;
 use crate::errors::SonioxWindowsErrors;
 use crate::soniox::stream::start_soniox_stream;
 use crate::types::audio::AudioMessage;
 use crate::types::settings::SettingsApp;
 use crate::windows::audio::start_capture_audio;
+use log4rs::Config;
+use log4rs::append::file::FileAppender;
+use log4rs::config::{Appender, Root};
+use log4rs::encode::pattern::PatternEncoder;
+use tokio::sync::mpsc::unbounded_channel;
 
 pub mod app;
 pub mod errors;

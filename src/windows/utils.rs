@@ -1,8 +1,12 @@
 use eframe::Frame;
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
-use windows::core::PCWSTR;
 use windows::Win32::Foundation::HWND;
-use windows::Win32::UI::WindowsAndMessaging::{GWL_EXSTYLE, GetWindowLongW, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SetWindowLongW, SetWindowPos, WS_EX_LAYERED, WS_EX_TRANSPARENT, SM_CYSCREEN, GetSystemMetrics, SM_CXSCREEN, MessageBoxW, MB_OK, MB_ICONERROR};
+use windows::Win32::UI::WindowsAndMessaging::{
+    GWL_EXSTYLE, GetSystemMetrics, GetWindowLongW, HWND_TOPMOST, MB_ICONERROR, MB_OK, MessageBoxW,
+    SM_CXSCREEN, SM_CYSCREEN, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SetWindowLongW, SetWindowPos,
+    WS_EX_LAYERED, WS_EX_TRANSPARENT,
+};
+use windows::core::PCWSTR;
 
 fn make_window_click_through(hwnd: HWND) {
     unsafe {

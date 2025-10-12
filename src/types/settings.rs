@@ -1,8 +1,8 @@
-use std::str::FromStr;
+use crate::errors::SonioxWindowsErrors;
 use config::{Config, ConfigError, File};
 use log::LevelFilter;
 use serde::Deserialize;
-use crate::errors::SonioxWindowsErrors;
+use std::str::FromStr;
 
 #[derive(Deserialize)]
 pub struct SettingsApp {
@@ -20,7 +20,7 @@ impl SettingsApp {
             .build()?;
         s.try_deserialize()
     }
-    
+
     pub fn level(&self) -> Result<LevelFilter, SonioxWindowsErrors> {
         LevelFilter::from_str(&self.level).map_err(|_| {
             SonioxWindowsErrors::Internal(
