@@ -5,7 +5,7 @@ use eframe::icon_data::from_png_bytes;
 use soniox_windows::errors::SonioxWindowsErrors;
 use soniox_windows::types::settings::SettingsApp;
 use soniox_windows::initialize_app;
-use soniox_windows::windows::utils::get_screen_size;
+use soniox_windows::windows::utils::{get_screen_size, show_error};
 
 const WINDOW_HEIGHT: f32 = 250.;
 const OFFSET_WIDTH: f32 = 100.;
@@ -18,8 +18,7 @@ fn get_position_application(height: usize) -> (f32, f32) {
     (pos_x, pos_y)
 }
 
-#[tokio::main]
-async fn main() -> Result<(), SonioxWindowsErrors> {
+async fn run() -> Result<(), SonioxWindowsErrors> {
     let settings = SettingsApp::new("soniox.toml")?;
     let app = initialize_app(settings)?;
     let (width, height) = get_screen_size();
@@ -45,5 +44,15 @@ async fn main() -> Result<(), SonioxWindowsErrors> {
         native_options,
         Box::new(move |_| Ok(Box::new(app))),
     )?;
+
+    Ok(())
+}
+
+#[tokio::main]
+async fn main() -> Result<(), SonioxWindowsErrors> {
+    if let Err(err) = run().await {
+        show_error(&format!("{}", err));
+        std::process::exit(1);
+    }
     Ok(())
 }
