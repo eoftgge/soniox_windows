@@ -1,6 +1,6 @@
 [package]
 name = "soniox_windows"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 repository = "https://github.com/eoftgge/soniox_windows"
 
