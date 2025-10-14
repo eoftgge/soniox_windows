@@ -40,7 +40,7 @@ async fn run() -> Result<(), SonioxWindowsErrors> {
 
     log::info!("Starting application");
     eframe::run_native(
-        "Subtitle Live",
+        "Subtitles Live",
         native_options,
         Box::new(move |_| Ok(Box::new(app))),
     )?;
