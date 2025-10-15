@@ -90,6 +90,7 @@ async fn listen_soniox_stream(
         let result = write.send(Message::Binary(Bytes::new())).await;
         if let Err(err) = result {
             log::error!("error during sent empty binary -> {:?}", err);
+            break;
         }
     }
 

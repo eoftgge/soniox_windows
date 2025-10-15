@@ -16,7 +16,7 @@ It supports only the Windows operating system, there can be no question of suppo
 2. [x] Add binary-execution files
 3. [ ] Add the separate window for settings application (In the distant future)
 4. [ ] Add mark speaker ID for conversation
-5. [ ] Fix exit application (in some instances)
+5. [x] Fix exit application (in some instances)
 6. [x] Add display messages errors
 
 ### Launch

@@ -10,7 +10,6 @@ pub struct SettingsApp {
     pub context: String,
     pub api_key: String,
     pub level: String,
-    // pub high_priority: bool,
 }
 
 impl SettingsApp {
