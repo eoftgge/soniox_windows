@@ -3,8 +3,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Default)]
 pub struct SonioxTranslationObject {
     pub r#type: String,
-    pub language_a: String,
-    pub language_b: String,
+    pub language_a: Option<String>,
+    pub language_b: Option<String>,
+    pub target_language: Option<String>,
 }
 
 #[derive(Debug, Serialize, Default)]
@@ -36,6 +37,7 @@ pub struct SonioxTranscriptionToken {
     pub speaker: Option<String>,
     pub language: Option<String>,
     pub source_language: Option<String>,
+    pub translation_status: Option<String>, // maybe add enum?
 }
 
 #[derive(Debug, Deserialize, Default)]

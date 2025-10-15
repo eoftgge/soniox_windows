@@ -2,7 +2,7 @@ use crate::errors::SonioxWindowsErrors;
 use crate::soniox::render::render_transcription;
 use crate::types::audio::AudioMessage;
 use crate::types::settings::SettingsApp;
-use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranscriptionResponse};
+use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranscriptionResponse, SonioxTranslationObject};
 use futures_util::{SinkExt, StreamExt};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio_tungstenite::connect_async;
@@ -19,7 +19,7 @@ fn create_request(settings: SettingsApp) -> SonioxTranscriptionRequest {
     let format = audio_client.get_mixformat().ok().unwrap();
     let sample_rate = format.get_samplespersec();
     let channels = format.get_nchannels();
-    SonioxTranscriptionRequest {
+    let mut request = SonioxTranscriptionRequest {
         api_key: settings.api_key,
         model: "stt-rt-preview-v2".into(),
         audio_format: "pcm_s16le".into(),
@@ -28,7 +28,16 @@ fn create_request(settings: SettingsApp) -> SonioxTranscriptionRequest {
         context: Some(settings.context),
         language_hints: settings.language_hints,
         ..Default::default()
+    };
+    if settings.is_translate {
+        request.translation = Some(SonioxTranslationObject {
+            r#type: "one_way".into(),
+            target_language: Some(settings.target_language),
+            ..Default::default()
+        });
     }
+
+    request
 }
 
 async fn listen_soniox_stream(
@@ -49,8 +58,8 @@ async fn listen_soniox_stream(
             while let Some(msg) = read.next().await {
                 if let Message::Text(txt) = msg? {
                     let v: SonioxTranscriptionResponse = serde_json::from_str(&txt)?;
-                    let s = render_transcription(&v);
-                    let _ = tx_subs.send(s);
+                    let t = render_transcription(&v);
+                    let _ = tx_subs.send(t);
                 }
             }
             <Result<(), SonioxWindowsErrors>>::Ok(())

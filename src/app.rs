@@ -81,6 +81,9 @@ impl SubtitlesApp {
 
     fn update_text(&mut self) {
         while let Ok(new_text) = self.rx_subs.try_recv() {
+            if new_text.is_empty() {
+                continue;
+            }
             self.text = new_text;
         }
     }
