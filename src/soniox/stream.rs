@@ -2,7 +2,9 @@ use crate::errors::SonioxWindowsErrors;
 use crate::soniox::render::render_transcription;
 use crate::types::audio::AudioMessage;
 use crate::types::settings::SettingsApp;
-use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranscriptionResponse, SonioxTranslationObject};
+use crate::types::soniox::{
+    SonioxTranscriptionRequest, SonioxTranscriptionResponse, SonioxTranslationObject,
+};
 use futures_util::{SinkExt, StreamExt};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio_tungstenite::connect_async;

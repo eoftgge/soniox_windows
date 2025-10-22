@@ -1,6 +1,5 @@
 #![windows_subsystem = "windows"]
 
-use std::sync::Arc;
 use eframe::egui::ViewportBuilder;
 use eframe::icon_data::from_png_bytes;
 use egui::{FontData, FontDefinitions};
@@ -8,6 +7,7 @@ use soniox_windows::errors::SonioxWindowsErrors;
 use soniox_windows::initialize_app;
 use soniox_windows::types::settings::SettingsApp;
 use soniox_windows::windows::utils::{get_screen_size, show_error};
+use std::sync::Arc;
 
 const FONT_BYTES: &[u8] = include_bytes!("../assets/MPLUSRounded1c-Medium.ttf");
 const ICON_BYTES: &[u8] = include_bytes!("../assets/icon.png");
@@ -48,7 +48,7 @@ async fn run() -> Result<(), SonioxWindowsErrors> {
             let mut fonts = FontDefinitions::default();
             fonts.font_data.insert(
                 "mplus".to_owned(),
-                Arc::new(FontData::from_static(FONT_BYTES))
+                Arc::new(FontData::from_static(FONT_BYTES)),
             );
             fonts
                 .families

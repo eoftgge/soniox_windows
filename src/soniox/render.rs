@@ -18,7 +18,11 @@ pub(crate) fn render_transcription(resp: &SonioxTranscriptionResponse) -> String
                     interim_translation.push_str(&token.text);
                 }
             }
-            Some("original") => if !has_translation { has_translation = true; }
+            Some("original") => {
+                if !has_translation {
+                    has_translation = true;
+                }
+            }
             _ => {
                 if !has_translation {
                     if token.is_final {

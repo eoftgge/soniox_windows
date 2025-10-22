@@ -52,13 +52,7 @@ fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
             outline_color,
         );
     }
-    painter.text(
-        pos,
-        Align2::LEFT_BOTTOM,
-        &modified,
-        font,
-        text_color,
-    );
+    painter.text(pos, Align2::LEFT_BOTTOM, &modified, font, text_color);
 }
 
 pub struct SubtitlesApp {
