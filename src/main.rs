@@ -10,6 +10,7 @@ use soniox_windows::types::settings::SettingsApp;
 use soniox_windows::windows::utils::{get_screen_size, show_error};
 
 const FONT_BYTES: &[u8] = include_bytes!("../assets/MPLUSRounded1c-Medium.ttf");
+const ICON_BYTES: &[u8] = include_bytes!("../assets/icon.png");
 const WINDOW_HEIGHT: f32 = 250.;
 const OFFSET_WIDTH: f32 = 100.;
 
@@ -28,9 +29,7 @@ async fn run() -> Result<(), SonioxWindowsErrors> {
     let native_options = eframe::NativeOptions {
         viewport: ViewportBuilder::default()
             .with_app_id("sublive")
-            .with_icon(
-                from_png_bytes(include_bytes!("../assets/icon.png")).expect("Failed to load icon"),
-            )
+            .with_icon(from_png_bytes(ICON_BYTES).expect("Failed to load icon"))
             .with_decorations(false)
             .with_always_on_top()
             .with_transparent(true)
