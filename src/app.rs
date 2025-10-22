@@ -29,7 +29,7 @@ fn draw_text_with_shadow(ui: &mut egui::Ui, text: &str, font_size: f32) {
     let thickness = 2.0;
 
     let painter = ui.painter();
-    let rect = ui.ctx().screen_rect();
+    let rect = ui.ctx().content_rect();
     let pos = rect.left_bottom() + vec2(10., -40.);
     let font = FontId::proportional(font_size);
     let offsets = [
