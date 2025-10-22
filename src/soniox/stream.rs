@@ -11,6 +11,7 @@ use tungstenite::{Bytes, Message, Utf8Bytes};
 use wasapi::{Direction, get_default_device, initialize_mta};
 
 const URL: &str = "wss://stt-rt.soniox.com/transcribe-websocket";
+const MODEL: &str = "stt-rt-v3";
 
 fn create_request(settings: SettingsApp) -> SonioxTranscriptionRequest {
     initialize_mta().ok().unwrap();
@@ -21,7 +22,7 @@ fn create_request(settings: SettingsApp) -> SonioxTranscriptionRequest {
     let channels = format.get_nchannels();
     let mut request = SonioxTranscriptionRequest {
         api_key: settings.api_key,
-        model: "stt-rt-preview-v2".into(),
+        model: MODEL.into(),
         audio_format: "pcm_s16le".into(),
         sample_rate: Some(sample_rate),
         num_channels: Some(channels as u32),
