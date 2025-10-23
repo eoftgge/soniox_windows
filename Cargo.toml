@@ -21,6 +21,7 @@ raw-window-handle = "0.6.2"
 log = "0.4.28"
 config = "0.15.15"
 log4rs = "1.4.0"
+bytemuck = "1.24.0"
 
 # The profile that 'dist' will build with
 

@@ -48,11 +48,11 @@ async fn listen_soniox_stream(
                     if buffer.is_empty() {
                         break;
                     }
-                    let pcm16: Vec<u8> = buffer
-                        .iter()
-                        .map(|&s| (s.clamp(-1.0, 1.0) * i16::MAX as f32) as i16)
-                        .flat_map(|s| s.to_le_bytes())
-                        .collect();
+                    let mut pcm16 = Vec::with_capacity(buffer.len() * 2);
+                    for s in buffer {
+                        let sample = (s.clamp(-1.0, 1.0) * i16::MAX as f32) as i16;
+                        pcm16.extend_from_slice(&sample.to_le_bytes());
+                    }
 
                     let result = write.send(Message::Binary(Bytes::from(pcm16))).await;
 

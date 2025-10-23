@@ -2,6 +2,7 @@ use crate::errors::SonioxWindowsErrors;
 use crate::types::audio::AudioMessage;
 use std::thread::sleep;
 use std::time::Duration;
+use bytemuck::cast_slice;
 use tokio::sync::mpsc::UnboundedSender;
 use wasapi::{Direction, StreamMode, get_default_device, initialize_mta};
 
@@ -30,7 +31,7 @@ pub fn start_capture_audio(
         let frames = match capture.get_next_packet_size()? {
             Some(f) if f > 0 => f,
             _ => {
-                sleep(Duration::from_millis(5));
+                sleep(Duration::from_millis(50));
                 continue;
             }
         };
@@ -38,10 +39,12 @@ pub fn start_capture_audio(
         let mut buffer = vec![0u8; frames as usize * bytes_per_frame];
         let _ = capture.read_from_device(&mut buffer)?;
 
-        let final_buffer: Vec<f32> = buffer
-            .chunks_exact(4)
-            .map(|b| f32::from_le_bytes([b[0], b[1], b[2], b[3]]))
-            .collect();
+        let final_buffer: Vec<f32> = if !buffer.len().is_multiple_of(4) {
+            log::warn!("Buffer size not multiple of 4: {}", buffer.len());
+            Vec::new()
+        } else {
+            cast_slice::<u8, f32>(&buffer).to_vec()
+        };
         let result = tx_audio.send(AudioMessage::Audio(final_buffer));
 
         if result.is_err() {
