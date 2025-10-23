@@ -1,5 +1,5 @@
-use crate::gui::SubtitlesApp;
 use crate::errors::SonioxWindowsErrors;
+use crate::gui::SubtitlesApp;
 use crate::soniox::stream::start_soniox_stream;
 use crate::types::audio::{AudioMessage, AudioSubtitle};
 use crate::types::settings::SettingsApp;
@@ -11,10 +11,10 @@ use log4rs::encode::pattern::PatternEncoder;
 use tokio::sync::mpsc::unbounded_channel;
 
 pub mod errors;
+pub mod gui;
 pub mod soniox;
 pub mod types;
 pub mod windows;
-pub mod gui;
 
 const FILE_LOG: &str = "soniox.log";
 

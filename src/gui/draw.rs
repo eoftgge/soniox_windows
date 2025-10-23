@@ -1,6 +1,6 @@
-use egui::{vec2, Color32, FontId, Align2, Ui};
 use crate::gui::text::{modify_text, trim_text_to_fit_precise};
 use crate::types::audio::AudioSubtitle;
+use egui::{Align2, Color32, FontId, Ui, vec2};
 
 pub(crate) fn draw_text_with_shadow(ui: &mut Ui, subtitle: &AudioSubtitle, font_size: f32) {
     let text = match subtitle {

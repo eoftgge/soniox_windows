@@ -1,13 +1,13 @@
-use eframe::{App, Frame, epaint::Color32};
-use eframe::glow::Context;
-use egui::Visuals;
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use crate::gui::draw::draw_text_with_shadow;
 use crate::types::audio::{AudioMessage, AudioSubtitle};
 use crate::windows::utils::{initialize_windows, make_window_click_through};
+use eframe::glow::Context;
+use eframe::{App, Frame, epaint::Color32};
+use egui::Visuals;
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
-pub mod text;
 pub mod draw;
+pub mod text;
 
 pub struct SubtitlesApp {
     tx_audio: UnboundedSender<AudioMessage>,
