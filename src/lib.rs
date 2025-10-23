@@ -1,5 +1,5 @@
 use crate::errors::SonioxWindowsErrors;
-use crate::gui::SubtitlesApp;
+use crate::gui::app::SubtitlesApp;
 use crate::soniox::stream::start_soniox_stream;
 use crate::types::audio::{AudioMessage, AudioSubtitle};
 use crate::types::settings::SettingsApp;

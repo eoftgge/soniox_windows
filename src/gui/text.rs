@@ -1,8 +1,9 @@
-use egui::{Color32, FontId};
+use eframe::epaint::{Color32, FontId};
+use egui::Ui;
 
 pub(crate) fn trim_text_to_fit_precise(
     text: String,
-    ui: &egui::Ui,
+    ui: &Ui,
     font_id: &FontId,
     max_width_ratio: f32,
 ) -> String {
