@@ -29,8 +29,10 @@ async fn listen_soniox_stream(
             while let Some(msg) = read.next().await {
                 if let Message::Text(txt) = msg? {
                     let response: SonioxTranscriptionResponse = serde_json::from_str(&txt)?;
-                    let subtitle = render_transcription(&response);
-                    let _ = tx_subs.send(subtitle);
+                    let subtitles = render_transcription(&response);
+                    for subtitle in subtitles {
+                        let _ = tx_subs.send(subtitle);
+                    }
                 }
                 tokio::time::sleep(std::time::Duration::from_millis(100)).await;
             }
