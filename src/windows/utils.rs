@@ -8,24 +8,29 @@ use windows::Win32::UI::WindowsAndMessaging::{
 };
 use windows::core::PCWSTR;
 
-fn make_window_click_through(hwnd: HWND) {
-    unsafe {
-        let ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
-        SetWindowLongW(
-            hwnd,
-            GWL_EXSTYLE,
-            ex_style | WS_EX_LAYERED.0 as i32 | WS_EX_TRANSPARENT.0 as i32,
-        );
+pub(crate) fn make_window_click_through(frame: &Frame) {
+    if let Ok(handle) = frame.window_handle() {
+        let raw = handle.as_raw();
+        if let RawWindowHandle::Win32(win32) = raw {
+            let hwnd = HWND(win32.hwnd.get() as *mut _);
+            unsafe {
+                let ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
+                SetWindowLongW(
+                    hwnd,
+                    GWL_EXSTYLE,
+                    ex_style | WS_EX_LAYERED.0 as i32 | WS_EX_TRANSPARENT.0 as i32,
+                );
+            }
+        }
     }
 }
 
 pub(crate) fn initialize_windows(frame: &Frame) {
     if let Ok(handle) = frame.window_handle() {
-        unsafe {
-            let raw = handle.as_raw();
-            if let RawWindowHandle::Win32(win32) = raw {
-                let hwnd = HWND(win32.hwnd.get() as *mut _);
-                make_window_click_through(hwnd);
+        let raw = handle.as_raw();
+        if let RawWindowHandle::Win32(win32) = raw {
+            let hwnd = HWND(win32.hwnd.get() as *mut _);
+            unsafe {
                 let _ = SetWindowPos(
                     hwnd,
                     Some(HWND_TOPMOST),

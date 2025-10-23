@@ -1,10 +1,9 @@
 use crate::types::audio::{AudioMessage, AudioSubtitle};
-use crate::windows::utils::initialize_windows;
+use crate::windows::utils::{initialize_windows, make_window_click_through};
 use eframe::epaint::Color32;
 use eframe::glow::Context;
 use eframe::{App, Frame, egui};
 use egui::{Align2, FontId, Visuals, vec2};
-use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 fn trim_text_to_fit_precise(
@@ -41,14 +40,13 @@ fn modify_text(text: &str) -> String {
 
 fn draw_text_with_shadow(ui: &mut egui::Ui, subtitle: &AudioSubtitle, font_size: f32) {
     let text = match subtitle {
-        AudioSubtitle::Text(text) => text.clone(),
-        AudioSubtitle::Speaker(speaker, text) => format!("{}: {}", speaker, text),
+        AudioSubtitle::Text(text) => modify_text(text),
+        AudioSubtitle::Speaker(speaker, text) => format!("{}: {}", speaker, modify_text(text)),
         AudioSubtitle::Empty => return,
     };
 
     let font = FontId::proportional(font_size);
     let trimmed = trim_text_to_fit_precise(text, ui, &font, 0.8);
-    let modified = modify_text(&trimmed);
     let outline_color = Color32::BLACK;
     let text_color = Color32::YELLOW;
     let thickness = 2.0;
@@ -71,18 +69,19 @@ fn draw_text_with_shadow(ui: &mut egui::Ui, subtitle: &AudioSubtitle, font_size:
         painter.text(
             pos + offset,
             Align2::LEFT_BOTTOM,
-            &modified,
+            &trimmed,
             font.clone(),
             outline_color,
         );
     }
-    painter.text(pos, Align2::LEFT_BOTTOM, &modified, font, text_color);
+    painter.text(pos, Align2::LEFT_BOTTOM, &trimmed, font, text_color);
 }
 
 pub struct SubtitlesApp {
     tx_audio: UnboundedSender<AudioMessage>,
     rx_subs: UnboundedReceiver<AudioSubtitle>,
     subtitle: AudioSubtitle,
+    initialized_windows: bool,
 }
 
 impl SubtitlesApp {
@@ -93,17 +92,8 @@ impl SubtitlesApp {
         Self {
             tx_audio,
             rx_subs,
+            initialized_windows: false,
             subtitle: AudioSubtitle::default(),
-        }
-    }
-
-    fn update_text(&mut self, ui: &mut egui::Ui) {
-        while let Ok(subtitle) = self.rx_subs.try_recv() {
-            if subtitle == self.subtitle {
-                ui.ctx().request_repaint();
-                break;
-            }
-            self.subtitle = subtitle;
         }
     }
 }
@@ -113,13 +103,19 @@ impl App for SubtitlesApp {
         egui::CentralPanel::default()
             .frame(egui::Frame::default().fill(Color32::TRANSPARENT))
             .show(ctx, |ui| {
-                initialize_windows(frame);
-                self.update_text(ui);
+                make_window_click_through(frame);
+                if !self.initialized_windows {
+                    initialize_windows(frame);
+                    self.initialized_windows = true;
+                }
+                while let Ok(subtitle) = self.rx_subs.try_recv() {
+                    self.subtitle = subtitle;
+                }
                 ui.vertical(|ui| {
                     draw_text_with_shadow(ui, &self.subtitle, 24.0);
                 });
+                ctx.request_repaint();
             });
-        ctx.request_repaint_after(Duration::from_millis(10));
     }
 
     fn on_exit(&mut self, _gl: Option<&Context>) {
