@@ -1,6 +1,6 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::soniox::render::render_transcription;
-use crate::types::audio::AudioMessage;
+use crate::types::audio::{AudioMessage, AudioSubtitle};
 use crate::types::settings::SettingsApp;
 use crate::types::soniox::{
     SonioxTranscriptionRequest, SonioxTranscriptionResponse, SonioxTranslationObject,
@@ -30,9 +30,10 @@ fn create_request(settings: SettingsApp) -> SonioxTranscriptionRequest {
         num_channels: Some(channels as u32),
         context: Some(settings.context),
         language_hints: settings.language_hints,
+        enable_speaker_diarization: Some(settings.enable_speakers),
         ..Default::default()
     };
-    if settings.is_translate {
+    if settings.enable_translate {
         request.translation = Some(SonioxTranslationObject {
             r#type: "one_way".into(),
             target_language: Some(settings.target_language),
@@ -45,7 +46,7 @@ fn create_request(settings: SettingsApp) -> SonioxTranscriptionRequest {
 
 async fn listen_soniox_stream(
     bytes: Vec<u8>,
-    tx_subs: UnboundedSender<String>,
+    tx_subs: UnboundedSender<AudioSubtitle>,
     mut rx_audio: UnboundedReceiver<AudioMessage>,
 ) -> Result<(), SonioxWindowsErrors> {
     'stream: loop {
@@ -60,9 +61,9 @@ async fn listen_soniox_stream(
         let reader = async move {
             while let Some(msg) = read.next().await {
                 if let Message::Text(txt) = msg? {
-                    let v: SonioxTranscriptionResponse = serde_json::from_str(&txt)?;
-                    let t = render_transcription(&v);
-                    let _ = tx_subs.send(t);
+                    let response: SonioxTranscriptionResponse = serde_json::from_str(&txt)?;
+                    let subtitle = render_transcription(&response);
+                    let _ = tx_subs.send(subtitle);
                 }
             }
             <Result<(), SonioxWindowsErrors>>::Ok(())
@@ -111,7 +112,7 @@ async fn listen_soniox_stream(
 
 pub async fn start_soniox_stream(
     settings: SettingsApp,
-    tx_subs: UnboundedSender<String>,
+    tx_subs: UnboundedSender<AudioSubtitle>,
     rx_audio: UnboundedReceiver<AudioMessage>,
 ) -> Result<(), SonioxWindowsErrors> {
     let request = create_request(settings);

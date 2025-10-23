@@ -10,8 +10,9 @@ pub struct SettingsApp {
     pub context: String,
     pub api_key: String,
     pub level: String,
-    pub is_translate: bool,
     pub target_language: String,
+    pub enable_translate: bool,
+    pub enable_speakers: bool,
 }
 
 impl SettingsApp {

@@ -1,7 +1,7 @@
 use crate::app::SubtitlesApp;
 use crate::errors::SonioxWindowsErrors;
 use crate::soniox::stream::start_soniox_stream;
-use crate::types::audio::AudioMessage;
+use crate::types::audio::{AudioMessage, AudioSubtitle};
 use crate::types::settings::SettingsApp;
 use crate::windows::audio::start_capture_audio;
 use log4rs::Config;
@@ -28,7 +28,7 @@ pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindo
         .build(Root::builder().appender("logfile").build(level))?;
     let _ = log4rs::init_config(config);
     let (tx_audio, rx_audio) = unbounded_channel::<AudioMessage>();
-    let (tx_subs, rx_subs) = unbounded_channel::<String>();
+    let (tx_subs, rx_subs) = unbounded_channel::<AudioSubtitle>();
     let app = SubtitlesApp::new(rx_subs, tx_audio.clone());
     tokio::task::spawn_blocking(move || {
         if let Err(err) = start_capture_audio(tx_audio) {
