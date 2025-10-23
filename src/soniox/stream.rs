@@ -1,19 +1,15 @@
-use std::thread::sleep;
 use crate::errors::SonioxWindowsErrors;
-use crate::soniox::render::render_transcription;
 use crate::types::audio::{AudioMessage, AudioSubtitle};
 use crate::types::settings::SettingsApp;
-use crate::types::soniox::{
-    SonioxTranscriptionResponse, SonioxTranslationObject,
-};
+use crate::types::soniox::SonioxTranscriptionResponse;
+use crate::soniox::render::render_transcription;
+use crate::soniox::request::create_request;
 use crate::soniox::URL;
 use futures_util::{SinkExt, StreamExt};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio_tungstenite::connect_async;
 use tungstenite::client::IntoClientRequest;
 use tungstenite::{Bytes, Message, Utf8Bytes};
-use wasapi::{get_default_device, initialize_mta};
-use crate::soniox::request::create_request;
 
 async fn listen_soniox_stream(
     bytes: Vec<u8>,

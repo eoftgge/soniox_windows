@@ -97,8 +97,12 @@ impl SubtitlesApp {
         }
     }
 
-    fn update_text(&mut self) {
+    fn update_text(&mut self, ui: &mut egui::Ui) {
         while let Ok(subtitle) = self.rx_subs.try_recv() {
+            if subtitle == self.subtitle {
+                ui.ctx().request_repaint();
+                break;
+            }
             self.subtitle = subtitle;
         }
     }
@@ -110,7 +114,7 @@ impl App for SubtitlesApp {
             .frame(egui::Frame::default().fill(Color32::TRANSPARENT))
             .show(ctx, |ui| {
                 initialize_windows(frame);
-                self.update_text();
+                self.update_text(ui);
                 ui.vertical(|ui| {
                     draw_text_with_shadow(ui, &self.subtitle, 24.0);
                 });
