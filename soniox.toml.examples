@@ -1,6 +1,7 @@
-language_hints = ["ru", "en", "ja"]
-context = "The university"
+language_hints = ["ru", "en"]
+context = "context for Soniox"
 api_key = "..."
 level = "debug"
-is_translate = true
 target_language = "ru"
+enable_translate = false
+enable_speakers = false
