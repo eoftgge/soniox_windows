@@ -1,8 +1,7 @@
-use wasapi::{get_default_device, initialize_mta, Direction};
 use crate::soniox::MODEL;
 use crate::types::settings::SettingsApp;
 use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranslationObject};
-
+use wasapi::{Direction, get_default_device, initialize_mta};
 
 pub(crate) fn create_request(settings: SettingsApp) -> SonioxTranscriptionRequest {
     initialize_mta().ok().unwrap();

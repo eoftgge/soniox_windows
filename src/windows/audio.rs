@@ -1,8 +1,8 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::types::audio::AudioMessage;
+use bytemuck::cast_slice;
 use std::thread::sleep;
 use std::time::Duration;
-use bytemuck::cast_slice;
 use tokio::sync::mpsc::UnboundedSender;
 use wasapi::{Direction, StreamMode, get_default_device, initialize_mta};
 

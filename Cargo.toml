@@ -23,7 +23,6 @@ config = "0.15.15"
 log4rs = "1.4.0"
 bytemuck = "1.24.0"
 
-
 [profile.release]
 lto = "thin"
 strip = true

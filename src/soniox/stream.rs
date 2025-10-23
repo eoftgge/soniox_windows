@@ -1,10 +1,10 @@
 use crate::errors::SonioxWindowsErrors;
+use crate::soniox::URL;
+use crate::soniox::render::render_transcription;
+use crate::soniox::request::create_request;
 use crate::types::audio::{AudioMessage, AudioSubtitle};
 use crate::types::settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
-use crate::soniox::render::render_transcription;
-use crate::soniox::request::create_request;
-use crate::soniox::URL;
 use futures_util::{SinkExt, StreamExt};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use tokio_tungstenite::connect_async;
