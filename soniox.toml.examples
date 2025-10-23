@@ -4,4 +4,4 @@ api_key = "..."
 level = "debug"
 target_language = "ru"
 enable_translate = false
-enable_speakers = false
+enable_speakers = false  # it's don't work at current moment
