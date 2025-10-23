@@ -12,7 +12,6 @@ pub struct SettingsApp {
     pub level: String,
     pub target_language: String,
     pub enable_translate: bool,
-    pub enable_speakers: bool,
 }
 
 impl SettingsApp {

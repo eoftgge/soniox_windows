@@ -18,7 +18,6 @@ pub(crate) fn create_request(settings: SettingsApp) -> SonioxTranscriptionReques
         num_channels: Some(channels as u32),
         context: Some(settings.context),
         language_hints: settings.language_hints,
-        enable_speaker_diarization: Some(settings.enable_speakers),
         ..Default::default()
     };
     if settings.enable_translate {
