@@ -14,7 +14,6 @@ pub enum AudioMessage {
 }
 
 impl AudioSubtitle {
-
     pub fn is_empty(&self) -> bool {
         AudioSubtitle::Empty == *self
     }

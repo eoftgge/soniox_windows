@@ -18,7 +18,9 @@ fn trim_text_to_fit_precise(
     let mut trimmed = text.to_owned();
 
     loop {
-        let galley = ui.painter().layout_no_wrap(trimmed.clone(), font_id.clone(), Color32::WHITE);
+        let galley = ui
+            .painter()
+            .layout_no_wrap(trimmed.clone(), font_id.clone(), Color32::WHITE);
         let text_width = galley.size().x;
 
         if text_width <= available_width || chars.len() <= 4 {
@@ -41,7 +43,7 @@ fn draw_text_with_shadow(ui: &mut egui::Ui, subtitle: &AudioSubtitle, font_size:
     let text = match subtitle {
         AudioSubtitle::Text(text) => text.clone(),
         AudioSubtitle::Speaker(speaker, text) => format!("{}: {}", speaker, text),
-        AudioSubtitle::Empty => return
+        AudioSubtitle::Empty => return,
     };
 
     let font = FontId::proportional(font_size);
