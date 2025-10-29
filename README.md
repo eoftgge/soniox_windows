@@ -18,6 +18,7 @@ It supports only the Windows operating system, there can be no question of suppo
 4. [ ] Add mark speaker ID for conversation
 5. [x] Fix exit application (in some instances)
 6. [x] Add display messages errors
+7. [ ] Add advanced error handling responses Soniox
 
 ### Launch
 For build and start, you need [Rust Compiler](https://rust-lang.org/tools/install/)

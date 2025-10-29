@@ -1,7 +1,8 @@
-language_hints = ["ru", "en"]
-context = "context for Soniox"
-api_key = "..."
-level = "debug"
-target_language = "ru"
-enable_translate = false
-enable_speakers = false
+language_hints = ["ru", "en"]               # language hints
+context = "context for Soniox"              # context for AI
+api_key = "..."                             # API key Soniox
+level = "debug"                             # level logging
+target_language = "ru"                      # for translate
+enable_translate = false                    # enable/disable translate
+enable_speakers = false                     # enable/disalbe speakers (TODO) field didn't work
+position = (0, 0)                           # 0, 0 - default dynamic position
