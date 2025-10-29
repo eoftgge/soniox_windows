@@ -8,24 +8,16 @@ use soniox_windows::initialize_app;
 use soniox_windows::types::settings::SettingsApp;
 use soniox_windows::windows::utils::{get_screen_size, show_error};
 use std::sync::Arc;
+use soniox_windows::types::offset::{OFFSET_WIDTH, WINDOW_HEIGHT};
 
 const FONT_BYTES: &[u8] = include_bytes!("../assets/MPLUSRounded1c-Medium.ttf");
 const ICON_BYTES: &[u8] = include_bytes!("../assets/icon.png");
-const WINDOW_HEIGHT: f32 = 250.;
-const OFFSET_WIDTH: f32 = 100.;
-
-fn get_position_application(height: usize) -> (f32, f32) {
-    let window_height = WINDOW_HEIGHT;
-    let pos_x = OFFSET_WIDTH;
-    let pos_y = height as f32 - window_height - 100.;
-
-    (pos_x, pos_y)
-}
 
 async fn run() -> Result<(), SonioxWindowsErrors> {
     let settings = SettingsApp::new("soniox.toml")?;
-    let app = initialize_app(settings)?;
     let (width, height) = get_screen_size();
+    let position = settings.get_position(height);
+    let app = initialize_app(settings)?;
     let native_options = eframe::NativeOptions {
         viewport: ViewportBuilder::default()
             .with_app_id("sublive")
@@ -36,7 +28,7 @@ async fn run() -> Result<(), SonioxWindowsErrors> {
             .with_min_inner_size([width as f32 - OFFSET_WIDTH * 2., WINDOW_HEIGHT])
             .with_inner_size([width as f32 - OFFSET_WIDTH * 2., WINDOW_HEIGHT])
             .with_max_inner_size([width as f32 - OFFSET_WIDTH * 2., WINDOW_HEIGHT])
-            .with_position(get_position_application(height)),
+            .with_position(position),
         ..Default::default()
     };
 
