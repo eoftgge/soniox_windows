@@ -1,8 +1,8 @@
-language_hints = ["ru", "en"]
-context = "context for Soniox"
-api_key = "..."
-level = "debug"
-target_language = "ru"
-enable_translate = false
-enable_speakers = false
-position = (0, 0)
+language_hints = ["ru", "en"]               # languages
+context = "context for Soniox"              # context for AI
+api_key = "..."                             # API key Soniox
+level = "debug"                             # level logging
+target_language = "ru"                      # translation language
+enable_translate = false                    # enable translate
+enable_speakers = false                     # enable speakers id (doesn't work at current time)
+position = [0, 0]                           # [0, 0] = default dynamic size
