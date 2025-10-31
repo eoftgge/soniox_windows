@@ -1,16 +1,16 @@
 use crate::errors::SonioxWindowsErrors;
+use crate::types::offset::{OFFSET_WIDTH, WINDOW_HEIGHT};
 use config::{Config, ConfigError, File};
 use log::LevelFilter;
 use serde::Deserialize;
 use std::str::FromStr;
-use crate::types::offset::{OFFSET_WIDTH, WINDOW_HEIGHT};
 
 #[derive(Deserialize)]
 pub struct SettingsApp {
-    pub(crate) language_hints: Vec<String>,            // TODO: add check languages
+    pub(crate) language_hints: Vec<String>, // TODO: add check languages
     pub(crate) context: String,
     pub(crate) api_key: String,
-    pub(crate) target_language: String,                // same
+    pub(crate) target_language: String, // same
     pub(crate) enable_translate: bool,
     enable_speakers: bool,
     level: String,

@@ -1,7 +1,6 @@
 use crate::types::audio::AudioSubtitle;
 use crate::types::soniox::SonioxTranscriptionResponse;
 
-
 pub(crate) fn render_transcription(resp: &SonioxTranscriptionResponse) -> Vec<AudioSubtitle> {
     let mut results = Vec::new();
     let mut current_text = String::new();

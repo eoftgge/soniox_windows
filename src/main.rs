@@ -4,11 +4,11 @@ use eframe::egui::ViewportBuilder;
 use eframe::icon_data::from_png_bytes;
 use egui::{FontData, FontDefinitions};
 use soniox_windows::errors::SonioxWindowsErrors;
+use soniox_windows::gui::utils::get_inner_size;
 use soniox_windows::initialize_app;
 use soniox_windows::types::settings::SettingsApp;
 use soniox_windows::windows::utils::{get_screen_size, show_error};
 use std::sync::Arc;
-use soniox_windows::gui::utils::get_inner_size;
 
 const FONT_BYTES: &[u8] = include_bytes!("../assets/MPLUSRounded1c-Medium.ttf");
 const ICON_BYTES: &[u8] = include_bytes!("../assets/icon.png");
