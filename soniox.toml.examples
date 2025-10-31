@@ -5,3 +5,4 @@ level = "debug"
 target_language = "ru"
 enable_translate = false
 enable_speakers = false
+position = (0, 0)
