@@ -1,3 +1,5 @@
+use std::thread::sleep;
+use std::time::Duration;
 use crate::gui::draw::draw_text_with_shadow;
 use crate::types::audio::{AudioMessage, AudioSubtitle};
 use crate::windows::utils::{initialize_windows, make_window_click_through};
@@ -6,6 +8,9 @@ use eframe::glow::Context;
 use eframe::{App, Frame};
 use egui::Visuals;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+
+const MAX_FPS: u64 = 60;
+const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
 
 pub struct SubtitlesApp {
     tx_audio: UnboundedSender<AudioMessage>,
@@ -45,6 +50,7 @@ impl App for SubtitlesApp {
                     draw_text_with_shadow(ui, &self.subtitle, 24.0);
                 });
                 ctx.request_repaint();
+                sleep(FRAME_TIME);
             });
     }
 
