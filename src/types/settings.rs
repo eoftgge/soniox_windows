@@ -12,6 +12,7 @@ pub struct SettingsApp {
     pub(crate) api_key: String,
     pub(crate) target_language: String, // same
     pub(crate) enable_translate: bool,
+    enable_high_priority: bool,
     enable_speakers: bool,
     level: String,
     position: (f32, f32),
@@ -47,6 +48,10 @@ impl SettingsApp {
 
     pub fn enable_translate(&self) -> bool {
         self.enable_translate
+    }
+
+    pub fn enable_high_priority(&self) -> bool {
+        self.enable_high_priority
     }
 
     pub fn level(&self) -> Result<LevelFilter, SonioxWindowsErrors> {

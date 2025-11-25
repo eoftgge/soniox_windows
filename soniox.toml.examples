@@ -4,5 +4,6 @@ api_key = "..."                             # API key Soniox
 level = "debug"                             # level logging
 target_language = "ru"                      # translation language
 enable_translate = false                    # enable translate
+enable_high_priority = true                 # always on top or not
 enable_speakers = false                     # enable speakers id (doesn't work at current time)
 position = [0, 0]                           # [0, 0] = default dynamic size
