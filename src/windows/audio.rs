@@ -4,7 +4,7 @@ use bytemuck::cast_slice;
 use std::thread::sleep;
 use std::time::Duration;
 use tokio::sync::mpsc::UnboundedSender;
-use wasapi::{Direction, StreamMode, get_default_device, initialize_mta};
+use wasapi::{Direction, StreamMode, DeviceEnumerator, initialize_mta};
 
 pub fn start_capture_audio(
     tx_audio: UnboundedSender<AudioMessage>,
@@ -12,7 +12,8 @@ pub fn start_capture_audio(
     initialize_mta()
         .ok()
         .map_err(|_| SonioxWindowsErrors::Internal(""))?;
-    let device = get_default_device(&Direction::Render)?;
+    let enumerator = DeviceEnumerator::new()?;
+    let device = enumerator.get_default_device(&Direction::Render)?;
     let mut audio_client = device.get_iaudioclient()?;
     let format = audio_client.get_mixformat()?;
     let bytes_per_frame = format.get_blockalign() as usize;

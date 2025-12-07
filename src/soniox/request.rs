@@ -1,11 +1,12 @@
 use crate::soniox::MODEL;
 use crate::types::settings::SettingsApp;
 use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranslationObject};
-use wasapi::{Direction, get_default_device, initialize_mta};
+use wasapi::{Direction, DeviceEnumerator, initialize_mta};
 
 pub(crate) fn create_request(settings: SettingsApp) -> SonioxTranscriptionRequest {
     initialize_mta().ok().unwrap();
-    let device = get_default_device(&Direction::Render).ok().unwrap();
+    let enumerator = DeviceEnumerator::new().unwrap();
+    let device = enumerator.get_default_device(&Direction::Render).ok().unwrap();
     let audio_client = device.get_iaudioclient().ok().unwrap();
     let format = audio_client.get_mixformat().ok().unwrap();
     let sample_rate = format.get_samplespersec();
