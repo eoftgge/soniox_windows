@@ -16,6 +16,7 @@ pub struct SettingsApp {
     enable_speakers: bool,
     level: String,
     position: (f32, f32),
+    font_size: f32,
 }
 
 impl SettingsApp {
@@ -52,6 +53,10 @@ impl SettingsApp {
 
     pub fn enable_high_priority(&self) -> bool {
         self.enable_high_priority
+    }
+
+    pub fn font_size(&self) -> f32 {
+        self.font_size
     }
 
     pub fn level(&self) -> Result<LevelFilter, SonioxWindowsErrors> {

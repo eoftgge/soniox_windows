@@ -29,7 +29,7 @@ pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindo
     let _ = log4rs::init_config(config);
     let (tx_audio, rx_audio) = unbounded_channel::<AudioMessage>();
     let (tx_subs, rx_subs) = unbounded_channel::<AudioSubtitle>();
-    let app = SubtitlesApp::new(rx_subs, tx_audio.clone(), settings.enable_high_priority());
+    let app = SubtitlesApp::new(rx_subs, tx_audio.clone(), settings.enable_high_priority(), settings.font_size());
     tokio::task::spawn_blocking(move || {
         if let Err(err) = start_capture_audio(tx_audio) {
             log::error!("{}", err);

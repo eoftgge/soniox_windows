@@ -18,6 +18,7 @@ pub struct SubtitlesApp {
     subtitle: AudioSubtitle,
     initialized_windows: bool,
     enable_high_priority: bool,
+    font_size: f32,
 }
 
 impl SubtitlesApp {
@@ -25,11 +26,13 @@ impl SubtitlesApp {
         rx_subs: UnboundedReceiver<AudioSubtitle>,
         tx_audio: UnboundedSender<AudioMessage>,
         enable_high_priority: bool,
+        font_size: f32,
     ) -> Self {
         Self {
             tx_audio,
             rx_subs,
             enable_high_priority,
+            font_size,
             initialized_windows: false,
             subtitle: AudioSubtitle::default(),
         }
@@ -53,7 +56,7 @@ impl App for SubtitlesApp {
                     self.subtitle = subtitle;
                 }
                 ui.vertical(|ui| {
-                    draw_text_with_shadow(ui, &self.subtitle, 24.0);
+                    draw_text_with_shadow(ui, &self.subtitle, self.font_size);
                 });
                 ctx.request_repaint();
                 sleep(FRAME_TIME);
