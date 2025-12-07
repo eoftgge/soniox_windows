@@ -2,7 +2,7 @@
 
 use eframe::egui::ViewportBuilder;
 use eframe::icon_data::from_png_bytes;
-use egui::{FontData, FontDefinitions};
+use eframe::egui::{FontData, FontDefinitions, FontFamily};
 use soniox_windows::errors::SonioxWindowsErrors;
 use soniox_windows::gui::utils::get_inner_size;
 use soniox_windows::initialize_app;
@@ -45,12 +45,12 @@ async fn run() -> Result<(), SonioxWindowsErrors> {
             );
             fonts
                 .families
-                .entry(egui::FontFamily::Proportional)
+                .entry(FontFamily::Proportional)
                 .or_default()
                 .insert(0, "mplus".to_owned());
             fonts
                 .families
-                .entry(egui::FontFamily::Monospace)
+                .entry(FontFamily::Monospace)
                 .or_default()
                 .push("mplus".to_owned());
             cc.egui_ctx.set_fonts(fonts);

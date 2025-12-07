@@ -1,5 +1,5 @@
 use eframe::epaint::{Color32, FontId};
-use egui::Ui;
+use eframe::egui::Ui;
 
 pub(crate) fn trim_text_to_fit_precise(
     text: String,

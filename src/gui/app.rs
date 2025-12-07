@@ -1,10 +1,9 @@
 use crate::gui::draw::draw_text_with_shadow;
 use crate::types::audio::{AudioMessage, AudioSubtitle};
 use crate::windows::utils::{initialize_tool_window, initialize_window, make_window_click_through};
-use eframe::epaint::Color32;
-use eframe::glow::Context;
 use eframe::{App, Frame};
-use egui::Visuals;
+use eframe::epaint::Color32;
+use eframe::egui::{Visuals, CentralPanel, Context};
 use std::thread::sleep;
 use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
@@ -40,9 +39,9 @@ impl SubtitlesApp {
 }
 
 impl App for SubtitlesApp {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut Frame) {
-        egui::CentralPanel::default()
-            .frame(egui::Frame::default().fill(Color32::TRANSPARENT))
+    fn update(&mut self, ctx: &Context, frame: &mut Frame) {
+        CentralPanel::default()
+            .frame(eframe::egui::Frame::default().fill(Color32::TRANSPARENT))
             .show(ctx, |ui| {
                 make_window_click_through(frame);
                 if !self.initialized_windows {
@@ -63,7 +62,7 @@ impl App for SubtitlesApp {
             });
     }
 
-    fn on_exit(&mut self, _gl: Option<&Context>) {
+    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
         let _ = self.tx_audio.send(AudioMessage::Stop);
     }
 
