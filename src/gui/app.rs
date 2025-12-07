@@ -1,9 +1,9 @@
 use crate::gui::draw::draw_text_with_shadow;
 use crate::types::audio::{AudioMessage, AudioSubtitle};
 use crate::windows::utils::{initialize_tool_window, initialize_window, make_window_click_through};
-use eframe::{App, Frame};
+use eframe::egui::{CentralPanel, Context, Visuals};
 use eframe::epaint::Color32;
-use eframe::egui::{Visuals, CentralPanel, Context};
+use eframe::{App, Frame};
 use std::thread::sleep;
 use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};

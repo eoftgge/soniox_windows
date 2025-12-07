@@ -1,8 +1,8 @@
 #![windows_subsystem = "windows"]
 
 use eframe::egui::ViewportBuilder;
-use eframe::icon_data::from_png_bytes;
 use eframe::egui::{FontData, FontDefinitions, FontFamily};
+use eframe::icon_data::from_png_bytes;
 use soniox_windows::errors::SonioxWindowsErrors;
 use soniox_windows::gui::utils::get_inner_size;
 use soniox_windows::initialize_app;
