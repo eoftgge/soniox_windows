@@ -24,7 +24,7 @@ pub(crate) fn render_transcription(resp: SonioxTranscriptionResponse) -> Vec<Aud
 
     if !current_text.is_empty() && current_speaker.is_empty() {
         results.push(AudioSubtitle::Text(current_text));
-    } else {
+    } else if !current_text.is_empty() {
         results.push(AudioSubtitle::Speaker(current_speaker, current_text));
     }
 
