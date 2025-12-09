@@ -5,6 +5,7 @@ level = "debug"                             # level logging
 target_language = "ru"                      # translation language
 enable_translate = false                    # enable translate
 enable_high_priority = true                 # always on top or not
-enable_speakers = false                     # enable speakers id (doesn't work at current time)
+enable_speakers = false                     # enable speakers id
 position = [0, 0]                           # [0, 0] = default dynamic size
 font_size = 24                              # font size
+text_color = [255, 255, 0]                  # text color in RGB, default is YELLOW

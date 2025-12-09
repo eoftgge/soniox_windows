@@ -17,6 +17,7 @@ pub struct SettingsApp {
     level: String,
     position: (f32, f32),
     font_size: f32,
+    text_color: (u8, u8, u8),
 }
 
 impl SettingsApp {
@@ -65,6 +66,10 @@ impl SettingsApp {
                 "field `level` isn't valid. did u mean `info`, `debug` and `warn`?",
             )
         })
+    }
+
+    pub fn text_color(&self) -> eframe::egui::Color32 {
+        eframe::egui::Color32::from_rgb(self.text_color.0, self.text_color.1, self.text_color.2)
     }
 
     pub fn get_position(&self, height: usize) -> (f32, f32) {

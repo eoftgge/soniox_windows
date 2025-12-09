@@ -4,7 +4,7 @@ use eframe::egui::Ui;
 use eframe::emath::Align2;
 use eframe::epaint::{Color32, FontId, vec2};
 
-pub(crate) fn draw_text_with_shadow(ui: &mut Ui, subtitle: &AudioSubtitle, font_size: f32) {
+pub(crate) fn draw_text_with_shadow(ui: &mut Ui, subtitle: &AudioSubtitle, font_size: f32, text_color: Color32) {
     let text = match subtitle {
         AudioSubtitle::Text(text) => modify_text(text),
         AudioSubtitle::Speaker(speaker, text) => format!("{} >> {}", speaker, modify_text(text)),
@@ -14,7 +14,6 @@ pub(crate) fn draw_text_with_shadow(ui: &mut Ui, subtitle: &AudioSubtitle, font_
     let font = FontId::proportional(font_size);
     let trimmed = trim_text_to_fit_precise(text, ui, &font, 0.8);
     let outline_color = Color32::BLACK;
-    let text_color = Color32::YELLOW;
     let thickness = 2.0;
 
     let painter = ui.painter();
