@@ -17,7 +17,7 @@ pub(crate) fn render_transcription(resp: SonioxTranscriptionResponse) -> Vec<Aud
                 results.push(AudioSubtitle::Speaker(current_speaker, current_text));
                 current_speaker = speaker;
                 current_text = token.text;
-            },
+            }
             _ => current_text.push_str(&token.text),
         }
     }

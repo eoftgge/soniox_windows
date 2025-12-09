@@ -1,10 +1,12 @@
-use crate::soniox::MODEL;
 use crate::errors::SonioxWindowsErrors;
+use crate::soniox::MODEL;
 use crate::types::settings::SettingsApp;
 use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranslationObject};
 use wasapi::{DeviceEnumerator, Direction, initialize_mta};
 
-pub(crate) fn create_request(settings: &'_ SettingsApp) -> Result<SonioxTranscriptionRequest<'_>, SonioxWindowsErrors> {
+pub(crate) fn create_request(
+    settings: &'_ SettingsApp,
+) -> Result<SonioxTranscriptionRequest<'_>, SonioxWindowsErrors> {
     initialize_mta().ok()?;
     let enumerator = DeviceEnumerator::new()?;
     let device = enumerator.get_default_device(&Direction::Render)?;
