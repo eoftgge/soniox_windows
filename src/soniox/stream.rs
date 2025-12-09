@@ -29,7 +29,7 @@ async fn listen_soniox_stream(
             while let Some(msg) = read.next().await {
                 if let Message::Text(txt) = msg? {
                     let response: SonioxTranscriptionResponse = serde_json::from_str(&txt)?;
-                    let subtitles = render_transcription(&response);
+                    let subtitles = render_transcription(response);
                     for subtitle in subtitles {
                         let _ = tx_subs.send(subtitle);
                     }
@@ -81,7 +81,7 @@ async fn listen_soniox_stream(
 }
 
 pub async fn start_soniox_stream(
-    settings: SettingsApp,
+    settings: &SettingsApp,
     tx_subs: UnboundedSender<AudioSubtitle>,
     rx_audio: UnboundedReceiver<AudioMessage>,
 ) -> Result<(), SonioxWindowsErrors> {
