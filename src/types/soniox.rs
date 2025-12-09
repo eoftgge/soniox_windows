@@ -1,29 +1,29 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Default)]
-pub struct SonioxTranslationObject {
-    pub r#type: String,
-    pub language_a: Option<String>,
-    pub language_b: Option<String>,
-    pub target_language: Option<String>,
+pub struct SonioxTranslationObject<'a> {
+    pub r#type: &'static str,
+    pub language_a: Option<&'a str>,
+    pub language_b: Option<&'a str>,
+    pub target_language: Option<&'a str>,
 }
 
 #[derive(Debug, Serialize, Default)]
 #[serde(default)]
-pub struct SonioxTranscriptionRequest {
-    pub api_key: String,
-    pub model: String,
-    pub audio_format: String,
+pub struct SonioxTranscriptionRequest<'a> {
+    pub api_key: &'a str,
+    pub model: &'static str,
+    pub audio_format: &'static str,
     pub num_channels: Option<u32>,   // required for raw audio
     pub sample_rate: Option<u32>,    // required for raw audio
-    pub language_hints: Vec<String>, // required
-    pub context: Option<String>,
+    pub language_hints: &'a [String], // required
+    pub context: Option<&'a str>,
     pub enable_speaker_diarization: Option<bool>,
     pub enable_language_identification: Option<bool>,
     pub enable_non_final_tokens: Option<bool>,
     pub enable_endpoint_detection: Option<bool>,
-    pub client_reference_id: Option<String>,
-    pub translation: Option<SonioxTranslationObject>,
+    pub client_reference_id: Option<&'a str>,
+    pub translation: Option<SonioxTranslationObject<'a>>,
 }
 
 #[derive(Debug, Deserialize, Default)]

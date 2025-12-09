@@ -41,7 +41,7 @@ pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindo
         }
     });
     tokio::spawn(async move {
-        if let Err(err) = start_soniox_stream(settings, tx_subs, rx_audio).await {
+        if let Err(err) = start_soniox_stream(&settings, tx_subs, rx_audio).await {
             log::error!("{}", err);
         }
     });
