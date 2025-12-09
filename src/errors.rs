@@ -5,6 +5,8 @@ use wasapi::WasapiError;
 pub enum SonioxWindowsErrors {
     #[error("Error in audio: {0}")]
     Wasapi(#[from] WasapiError),
+    #[error("Error in Windows API: {0}")]
+    Windows(#[from] windows::core::Error),
     #[error("Error in WEB: {0}")]
     Websocket(#[from] tungstenite::Error),
     #[error("Error in JSON: {0}")]

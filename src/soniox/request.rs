@@ -1,17 +1,15 @@
 use crate::soniox::MODEL;
+use crate::errors::SonioxWindowsErrors;
 use crate::types::settings::SettingsApp;
 use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranslationObject};
 use wasapi::{DeviceEnumerator, Direction, initialize_mta};
 
-pub(crate) fn create_request(settings: &'_ SettingsApp) -> SonioxTranscriptionRequest<'_> {
-    initialize_mta().ok().unwrap();
-    let enumerator = DeviceEnumerator::new().unwrap();
-    let device = enumerator
-        .get_default_device(&Direction::Render)
-        .ok()
-        .unwrap();
-    let audio_client = device.get_iaudioclient().ok().unwrap();
-    let format = audio_client.get_mixformat().ok().unwrap();
+pub(crate) fn create_request(settings: &'_ SettingsApp) -> Result<SonioxTranscriptionRequest<'_>, SonioxWindowsErrors> {
+    initialize_mta().ok()?;
+    let enumerator = DeviceEnumerator::new()?;
+    let device = enumerator.get_default_device(&Direction::Render)?;
+    let audio_client = device.get_iaudioclient()?;
+    let format = audio_client.get_mixformat()?;
     let sample_rate = format.get_samplespersec();
     let channels = format.get_nchannels();
     let mut request = SonioxTranscriptionRequest {
@@ -33,5 +31,5 @@ pub(crate) fn create_request(settings: &'_ SettingsApp) -> SonioxTranscriptionRe
         });
     }
 
-    request
+    Ok(request)
 }

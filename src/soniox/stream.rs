@@ -85,7 +85,7 @@ pub async fn start_soniox_stream(
     tx_subs: UnboundedSender<AudioSubtitle>,
     rx_audio: UnboundedReceiver<AudioMessage>,
 ) -> Result<(), SonioxWindowsErrors> {
-    let request = create_request(settings);
+    let request = create_request(settings)?;
     let bytes = serde_json::to_vec(&request)?;
 
     log::info!("Started Soniox stream!");
