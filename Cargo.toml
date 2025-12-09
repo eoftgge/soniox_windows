@@ -1,6 +1,6 @@
 [package]
 name = "soniox_windows"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2024"
 repository = "https://github.com/eoftgge/soniox_windows"
 rust-version = "1.89.0"
@@ -23,12 +23,8 @@ log4rs = "1.4.0"
 bytemuck = "1.24.0"
 
 [profile.release]
-lto = "thin"
+lto = "fat"
 strip = true
-opt-level = "z"
-codegen-units = 1
+opt-level = 3
+codegen-units = 32
 panic = "abort"
-
-[profile.dist]
-inherits = "release"
-lto = "thin"
