@@ -1,4 +1,5 @@
 use crate::errors::SonioxWindowsErrors;
+use crate::types::languages::LanguageHint;
 use crate::types::offset::{OFFSET_WIDTH, WINDOW_HEIGHT};
 use config::{Config, ConfigError, File};
 use log::LevelFilter;
@@ -7,10 +8,10 @@ use std::str::FromStr;
 
 #[derive(Deserialize)]
 pub struct SettingsApp {
-    pub(crate) language_hints: Vec<String>, // TODO: add check languages
+    pub(crate) language_hints: Vec<LanguageHint>,
     pub(crate) context: String,
     pub(crate) api_key: String,
-    pub(crate) target_language: String, // same
+    pub(crate) target_language: LanguageHint,
     pub(crate) enable_translate: bool,
     enable_high_priority: bool,
     enable_speakers: bool,
@@ -28,7 +29,7 @@ impl SettingsApp {
         s.try_deserialize()
     }
 
-    pub fn language_hints(&self) -> &[String] {
+    pub fn language_hints(&self) -> &[LanguageHint] {
         &self.language_hints
     }
 
@@ -40,8 +41,8 @@ impl SettingsApp {
         &self.api_key
     }
 
-    pub fn target_language(&self) -> &str {
-        &self.target_language
+    pub fn target_language(&self) -> LanguageHint {
+        self.target_language
     }
 
     pub fn enable_speakers(&self) -> bool {
