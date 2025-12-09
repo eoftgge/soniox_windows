@@ -62,10 +62,10 @@ async fn run() -> Result<(), SonioxWindowsErrors> {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), SonioxWindowsErrors> {
+async fn main() {
     if let Err(err) = run().await {
         show_error(&format!("{}", err));
+        log::error!("error in soniox_windows!: {:?}", err);
         std::process::exit(1);
     }
-    Ok(())
 }
