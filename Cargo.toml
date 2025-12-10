@@ -1,6 +1,6 @@
 [package]
 name = "soniox_windows"
-version = "0.4.4"
+version = "0.4.41"
 edition = "2024"
 repository = "https://github.com/eoftgge/soniox_windows"
 rust-version = "1.89.0"
