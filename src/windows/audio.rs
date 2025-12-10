@@ -3,11 +3,12 @@ use crate::types::audio::AudioMessage;
 use bytemuck::cast_slice;
 use std::thread::sleep;
 use std::time::Duration;
-use tokio::sync::mpsc::UnboundedSender;
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use wasapi::{DeviceEnumerator, Direction, StreamMode, initialize_mta};
 
 pub fn start_capture_audio(
     tx_audio: UnboundedSender<AudioMessage>,
+    mut rx_stop: UnboundedReceiver<bool>,
 ) -> Result<(), SonioxWindowsErrors> {
     initialize_mta()
         .ok()
@@ -29,6 +30,12 @@ pub fn start_capture_audio(
 
     log::info!("Started audio stream!");
     loop {
+        if let Ok(true) = rx_stop.try_recv() {
+            log::info!("Audio thread terminated!");
+            audio_client.stop_stream()?;
+            break Ok(());
+        }
+
         let frames = match capture.get_next_packet_size()? {
             Some(f) if f > 0 => f,
             _ => {
@@ -48,8 +55,8 @@ pub fn start_capture_audio(
         };
         let result = tx_audio.send(AudioMessage::Audio(final_buffer));
 
-        if result.is_err() {
-            log::info!("Audio thread terminated");
+        if let Err(err) = result {
+            log::info!("Audio thread terminated, error: {:?}", err);
             let _ = tx_audio.send(AudioMessage::Stop);
             audio_client.stop_stream()?;
             break Ok(());

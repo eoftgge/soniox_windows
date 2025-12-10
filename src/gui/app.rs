@@ -6,14 +6,16 @@ use eframe::epaint::Color32;
 use eframe::{App, Frame};
 use std::thread::sleep;
 use std::time::Duration;
+use futures_util::SinkExt;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 const MAX_FPS: u64 = 60;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
 
 pub struct SubtitlesApp {
-    tx_audio: UnboundedSender<AudioMessage>,
     rx_subs: UnboundedReceiver<AudioSubtitle>,
+    tx_audio: UnboundedSender<AudioMessage>,
+    tx_exit: UnboundedSender<bool>,
     subtitle: AudioSubtitle,
     initialized_windows: bool,
     enable_high_priority: bool,
@@ -24,14 +26,16 @@ pub struct SubtitlesApp {
 impl SubtitlesApp {
     pub fn new(
         rx_subs: UnboundedReceiver<AudioSubtitle>,
+        tx_exit: UnboundedSender<bool>,
         tx_audio: UnboundedSender<AudioMessage>,
         enable_high_priority: bool,
         font_size: f32,
         text_color: Color32,
     ) -> Self {
         Self {
-            tx_audio,
             rx_subs,
+            tx_exit,
+            tx_audio,
             enable_high_priority,
             font_size,
             text_color,
@@ -60,13 +64,14 @@ impl App for SubtitlesApp {
                 ui.vertical(|ui| {
                     draw_text_with_shadow(ui, &self.subtitle, self.font_size, self.text_color);
                 });
-                ctx.request_repaint();
-                sleep(FRAME_TIME);
+                ctx.request_repaint_after(FRAME_TIME);
             });
     }
 
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
         let _ = self.tx_audio.send(AudioMessage::Stop);
+        let _= self.tx_exit.send(true);
+        self.rx_subs.close();
     }
 
     fn clear_color(&self, _visuals: &Visuals) -> [f32; 4] {
