@@ -68,7 +68,7 @@ impl App for SubtitlesApp {
 
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
         let _ = self.tx_audio.send(AudioMessage::Stop);
-        let _= self.tx_exit.send(true);
+        let _ = self.tx_exit.send(true);
         self.rx_subs.close();
     }
 
