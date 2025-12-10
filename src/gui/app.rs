@@ -4,9 +4,7 @@ use crate::windows::utils::{initialize_tool_window, initialize_window, make_wind
 use eframe::egui::{CentralPanel, Context, Visuals};
 use eframe::epaint::Color32;
 use eframe::{App, Frame};
-use std::thread::sleep;
 use std::time::Duration;
-use futures_util::SinkExt;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 const MAX_FPS: u64 = 60;
