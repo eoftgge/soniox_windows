@@ -40,7 +40,9 @@ async fn listen_soniox_stream(
         };
 
         tokio::spawn(async move {
-            let _ = reader.await.inspect_err(|err| log::error!("error during read message: {}", err));
+            let _ = reader
+                .await
+                .inspect_err(|err| log::error!("error during read message: {}", err));
         });
 
         while let Some(message) = rx_audio.recv().await {
@@ -61,7 +63,7 @@ async fn listen_soniox_stream(
                         log::error!("error during sent binary -> {:?}", err);
                         continue 'stream;
                     }
-                },
+                }
                 AudioMessage::Stop => {
                     let _ = write.send(Message::Binary(Bytes::new())).await;
                     break 'stream;
