@@ -32,8 +32,7 @@ pub fn start_capture_audio(
     loop {
         if let Ok(true) = rx_stop.try_recv() {
             log::info!("Audio thread terminated!");
-            audio_client.stop_stream()?;
-            break Ok(());
+            break;
         }
 
         let frames = match capture.get_next_packet_size()? {
@@ -57,9 +56,11 @@ pub fn start_capture_audio(
 
         if let Err(err) = result {
             log::info!("Audio thread terminated, error: {:?}", err);
-            let _ = tx_audio.send(AudioMessage::Stop);
-            audio_client.stop_stream()?;
-            break Ok(());
+            break;
         }
     }
+
+    audio_client.stop_stream()?;
+    let _ = tx_audio.send(AudioMessage::Stop);
+    Ok(())
 }
