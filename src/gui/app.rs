@@ -6,12 +6,14 @@ use eframe::epaint::Color32;
 use eframe::{App, Frame};
 use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use crate::soniox::render::render_transcription;
+use crate::types::soniox::SonioxTranscriptionResponse;
 
 const MAX_FPS: u64 = 60;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
 
 pub struct SubtitlesApp {
-    rx_subs: UnboundedReceiver<AudioSubtitle>,
+    rx_transcription: UnboundedReceiver<SonioxTranscriptionResponse>,
     tx_audio: UnboundedSender<AudioMessage>,
     tx_exit: UnboundedSender<bool>,
     subtitle: AudioSubtitle,
@@ -23,7 +25,7 @@ pub struct SubtitlesApp {
 
 impl SubtitlesApp {
     pub fn new(
-        rx_subs: UnboundedReceiver<AudioSubtitle>,
+        rx_transcription: UnboundedReceiver<SonioxTranscriptionResponse>,
         tx_exit: UnboundedSender<bool>,
         tx_audio: UnboundedSender<AudioMessage>,
         enable_high_priority: bool,
@@ -31,7 +33,7 @@ impl SubtitlesApp {
         text_color: Color32,
     ) -> Self {
         Self {
-            rx_subs,
+            rx_transcription,
             tx_exit,
             tx_audio,
             enable_high_priority,
@@ -56,8 +58,11 @@ impl App for SubtitlesApp {
                 if self.enable_high_priority {
                     initialize_tool_window(frame);
                 }
-                while let Ok(subtitle) = self.rx_subs.try_recv() {
-                    self.subtitle = subtitle;
+                while let Ok(transcription) = self.rx_transcription.try_recv() {
+                    let subtitles = render_transcription(transcription);
+                    if let Some(subtitle) = subtitles.into_iter().last() {
+                        self.subtitle = subtitle;
+                    }
                 }
                 ui.vertical(|ui| {
                     draw_text_with_shadow(ui, &self.subtitle, self.font_size, self.text_color);
@@ -69,7 +74,7 @@ impl App for SubtitlesApp {
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
         let _ = self.tx_audio.send(AudioMessage::Stop);
         let _ = self.tx_exit.send(true);
-        self.rx_subs.close();
+        self.rx_transcription.close();
     }
 
     fn clear_color(&self, _visuals: &Visuals) -> [f32; 4] {

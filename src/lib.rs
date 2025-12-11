@@ -9,6 +9,7 @@ use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use tokio::sync::mpsc::unbounded_channel;
+use crate::types::soniox::SonioxTranscriptionResponse;
 
 pub mod errors;
 pub mod gui;
@@ -28,10 +29,10 @@ pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindo
         .build(Root::builder().appender("logfile").build(level))?;
     let _ = log4rs::init_config(config);
     let (tx_audio, rx_audio) = unbounded_channel::<AudioMessage>();
-    let (tx_subs, rx_subs) = unbounded_channel::<AudioSubtitle>();
+    let (tx_transcription, rx_transcription) = unbounded_channel::<SonioxTranscriptionResponse>();
     let (tx_exit, rx_exit) = unbounded_channel::<bool>();
     let app = SubtitlesApp::new(
-        rx_subs,
+        rx_transcription,
         tx_exit,
         tx_audio.clone(),
         settings.enable_high_priority(),
@@ -44,7 +45,7 @@ pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindo
         }
     });
     tokio::spawn(async move {
-        if let Err(err) = start_soniox_stream(&settings, tx_subs, rx_audio).await {
+        if let Err(err) = start_soniox_stream(&settings, tx_transcription, rx_audio).await {
             log::error!("{}", err);
         }
     });
