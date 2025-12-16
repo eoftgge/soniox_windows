@@ -1,7 +1,7 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::gui::app::SubtitlesApp;
 use crate::soniox::stream::start_soniox_stream;
-use crate::types::audio::{AudioMessage, AudioSubtitle};
+use crate::types::audio::AudioMessage;
 use crate::types::settings::SettingsApp;
 use crate::windows::audio::start_capture_audio;
 use log4rs::Config;
