@@ -41,12 +41,12 @@ pub(crate) fn draw_text_with_shadow<'a>(
             painter.text(
                 pos + offset,
                 Align2::LEFT_BOTTOM,
-                &trimmed,
+                &text,
                 font.clone(),
                 outline_color,
             );
         }
-        painter.text(pos, Align2::LEFT_BOTTOM, &trimmed, font.clone(), text_color);
+        painter.text(pos, Align2::LEFT_BOTTOM, &text, font.clone(), text_color);
 
         y -= font_size * 1.2;
     }
