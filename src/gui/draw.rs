@@ -18,8 +18,13 @@ pub(crate) fn draw_text_with_shadow<'a>(
     let mut y = rect.bottom() - 10.0;
 
     for line in lines {
-        let text = line.to_string();
-        let trimmed = trim_text_to_fit_precise(text, ui, &font, 0.8);
+        let mut text = String::new();
+        if let Some(speaker) = line.speaker.to_owned() {
+            text.push_str(&(speaker + " >> "));
+        }
+        let trimmed = trim_text_to_fit_precise(&line.text, ui, &font, 0.8);
+        text.push_str(&trimmed);
+
         let pos = pos2(rect.left() + 10., y);
         let offsets = [
             vec2(-thickness, 0.0),
