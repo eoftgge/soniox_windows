@@ -28,12 +28,3 @@ impl Default for AudioSubtitle {
         }
     }
 }
-
-impl Display for AudioSubtitle {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let Some(s) = &self.speaker {
-            write!(f, "{} >> ", s)?;
-        }
-        write!(f, "{}", self.text.trim())
-    }
-}
