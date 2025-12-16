@@ -1,8 +1,7 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::soniox::URL;
-use crate::soniox::render::render_transcription;
 use crate::soniox::request::create_request;
-use crate::types::audio::{AudioMessage, AudioSubtitle};
+use crate::types::audio::AudioMessage;
 use crate::types::settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use futures_util::{SinkExt, StreamExt};
@@ -31,7 +30,6 @@ async fn listen_soniox_stream(
                     let response: SonioxTranscriptionResponse = serde_json::from_str(&txt)?;
                     let _ = tx_subs.send(response);
                 }
-                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
             }
             <Result<(), SonioxWindowsErrors>>::Ok(())
         };
