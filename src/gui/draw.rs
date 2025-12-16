@@ -1,10 +1,8 @@
-use crate::gui::text::{modify_text, trim_text_to_fit_precise};
+use crate::gui::text::trim_text_to_fit_precise;
 use crate::types::audio::AudioSubtitle;
 use eframe::egui::{Ui, pos2};
 use eframe::emath::Align2;
 use eframe::epaint::{Color32, FontId, vec2};
-
-const WAITING_SOUND: &str = "... waiting for a sound ...";
 
 pub(crate) fn draw_text_with_shadow<'a>(
     ui: &mut Ui,
@@ -20,14 +18,7 @@ pub(crate) fn draw_text_with_shadow<'a>(
     let mut y = rect.bottom() - 10.0;
 
     for line in lines {
-        let text = match line {
-            AudioSubtitle::Text(text) => modify_text(text),
-            AudioSubtitle::Speaker(speaker, text) => {
-                format!("{} >> {}", speaker, modify_text(text))
-            }
-            AudioSubtitle::Empty => WAITING_SOUND.into(),
-        };
-
+        let text = line.to_string();
         let trimmed = trim_text_to_fit_precise(text, ui, &font, 0.8);
         let pos = pos2(rect.left() + 10., y);
         let offsets = [

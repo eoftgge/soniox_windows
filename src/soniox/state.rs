@@ -13,7 +13,7 @@ impl TranscriptionState {
 
         Self {
             finishes_lines: Vec::new(),
-            current_line: AudioSubtitle::Empty,
+            current_line: AudioSubtitle::default(),
             max_lines,
         }
     }
@@ -66,11 +66,7 @@ impl TranscriptionState {
     }
 
     fn push(&mut self, speaker: Option<String>, text: String, is_final: bool) {
-        let entry = if let Some(s) = speaker {
-            AudioSubtitle::Speaker(s, text)
-        } else {
-            AudioSubtitle::Text(text)
-        };
+        let entry = AudioSubtitle::new(speaker, text);
 
         if is_final {
             self.finishes_lines.push(entry);

@@ -27,8 +27,3 @@ pub(crate) fn trim_text_to_fit_precise(
 
     trimmed
 }
-
-#[inline]
-pub(crate) fn modify_text(text: &str) -> String {
-    text.replace("--", "—")
-}
