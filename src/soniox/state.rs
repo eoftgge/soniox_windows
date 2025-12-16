@@ -1,6 +1,6 @@
-use std::collections::VecDeque;
 use crate::types::audio::AudioSubtitle;
 use crate::types::soniox::SonioxTranscriptionResponse;
+use std::collections::VecDeque;
 
 pub struct TranscriptionState {
     finishes_lines: VecDeque<AudioSubtitle>,
@@ -20,8 +20,7 @@ impl TranscriptionState {
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &AudioSubtitle> {
-        std::iter::once(&self.interim_line)
-            .chain(&self.finishes_lines)
+        std::iter::once(&self.interim_line).chain(&self.finishes_lines)
     }
 
     pub fn handle_transcription(&mut self, response: SonioxTranscriptionResponse) {
@@ -43,7 +42,6 @@ impl TranscriptionState {
                 }
 
                 final_text.push_str(&token.text);
-
             } else {
                 if interim_speaker != token.speaker {
                     interim_speaker = token.speaker;
@@ -65,7 +63,9 @@ impl TranscriptionState {
 
         match self.finishes_lines.front_mut() {
             Some(last) if last.speaker == speaker => last.text.push_str(&text),
-            _ => self.finishes_lines.push_front(AudioSubtitle::new(speaker, text)),
+            _ => self
+                .finishes_lines
+                .push_front(AudioSubtitle::new(speaker, text)),
         }
 
         if self.finishes_lines.len() > self.max_lines {

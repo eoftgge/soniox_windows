@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 pub type AudioSample = Vec<f32>;
 
 #[derive(Debug, PartialEq, Eq)]
