@@ -1,13 +1,13 @@
 use crate::gui::draw::draw_text_with_shadow;
-use crate::types::audio::{AudioMessage};
+use crate::soniox::state::TranscriptionState;
+use crate::types::audio::AudioMessage;
+use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::windows::utils::{initialize_tool_window, initialize_window, make_window_click_through};
 use eframe::egui::{CentralPanel, Context, Visuals};
 use eframe::epaint::Color32;
 use eframe::{App, Frame};
 use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use crate::soniox::state::TranscriptionState;
-use crate::types::soniox::SonioxTranscriptionResponse;
 
 const MAX_FPS: u64 = 60;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
@@ -62,7 +62,12 @@ impl App for SubtitlesApp {
                     self.subtitles_state.handle_transcription(transcription);
                 }
                 ui.vertical(|ui| {
-                    draw_text_with_shadow(ui, self.subtitles_state.iter(), self.font_size, self.text_color);
+                    draw_text_with_shadow(
+                        ui,
+                        self.subtitles_state.iter(),
+                        self.font_size,
+                        self.text_color,
+                    );
                 });
                 ctx.request_repaint_after(FRAME_TIME);
             });

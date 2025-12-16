@@ -1,5 +1,5 @@
-pub(crate) mod state;
 pub(crate) mod request;
+pub(crate) mod state;
 pub mod stream;
 
 pub const URL: &str = "wss://stt-rt.soniox.com/transcribe-websocket";

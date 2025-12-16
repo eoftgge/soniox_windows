@@ -17,11 +17,12 @@ impl TranscriptionState {
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item=&AudioSubtitle>  {
-        self.finishes_lines.iter().chain(std::iter::once(&self.current_line)).rev()
+    pub fn iter(&self) -> impl Iterator<Item = &AudioSubtitle> {
+        self.finishes_lines
+            .iter()
+            .chain(std::iter::once(&self.current_line))
+            .rev()
     }
 
-    pub fn handle_transcription(&mut self, _response: SonioxTranscriptionResponse) {
-
-    }
+    pub fn handle_transcription(&mut self, _response: SonioxTranscriptionResponse) {}
 }

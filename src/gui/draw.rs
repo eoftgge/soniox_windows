@@ -1,6 +1,6 @@
 use crate::gui::text::{modify_text, trim_text_to_fit_precise};
 use crate::types::audio::AudioSubtitle;
-use eframe::egui::{pos2, Ui};
+use eframe::egui::{Ui, pos2};
 use eframe::emath::Align2;
 use eframe::epaint::{Color32, FontId, vec2};
 
@@ -8,7 +8,7 @@ const WAITING_SOUND: &str = "... waiting for a sound ...";
 
 pub(crate) fn draw_text_with_shadow<'a>(
     ui: &mut Ui,
-    lines: impl Iterator<Item=&'a AudioSubtitle>,
+    lines: impl Iterator<Item = &'a AudioSubtitle>,
     font_size: f32,
     text_color: Color32,
 ) {
@@ -22,7 +22,9 @@ pub(crate) fn draw_text_with_shadow<'a>(
     for line in lines {
         let text = match line {
             AudioSubtitle::Text(text) => modify_text(text),
-            AudioSubtitle::Speaker(speaker, text) => format!("{} >> {}", speaker, modify_text(text)),
+            AudioSubtitle::Speaker(speaker, text) => {
+                format!("{} >> {}", speaker, modify_text(text))
+            }
             AudioSubtitle::Empty => WAITING_SOUND.into(),
         };
 
@@ -40,7 +42,13 @@ pub(crate) fn draw_text_with_shadow<'a>(
         ];
 
         for offset in offsets {
-            painter.text(pos + offset, Align2::LEFT_BOTTOM, &trimmed, font.clone(), outline_color);
+            painter.text(
+                pos + offset,
+                Align2::LEFT_BOTTOM,
+                &trimmed,
+                font.clone(),
+                outline_color,
+            );
         }
         painter.text(pos, Align2::LEFT_BOTTOM, &trimmed, font.clone(), text_color);
 
