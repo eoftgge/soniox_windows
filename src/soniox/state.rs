@@ -60,13 +60,9 @@ impl TranscriptionState {
     }
 
     fn push_final(&mut self, speaker: Option<String>, text: String) {
-        match (self.finishes_lines.last_mut(), speaker) {
-            (Some(last), current)
-                if last.speaker == current
-            => {
-                last.text.push_str(&text);
-            }
-            (_, s) => self.finishes_lines.push(AudioSubtitle::new(s, text))
+        match self.finishes_lines.last_mut() {
+            Some(last) if last.speaker == speaker => last.text.push_str(&text),
+            _ => self.finishes_lines.push(AudioSubtitle::new(speaker, text)),
         }
 
         if self.finishes_lines.len() > self.max_lines - 1 {
