@@ -1,12 +1,12 @@
 use crate::gui::draw::draw_text_with_shadow;
-use crate::types::audio::{AudioMessage, AudioSubtitle};
+use crate::types::audio::{AudioMessage};
 use crate::windows::utils::{initialize_tool_window, initialize_window, make_window_click_through};
 use eframe::egui::{CentralPanel, Context, Visuals};
 use eframe::epaint::Color32;
 use eframe::{App, Frame};
 use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use crate::soniox::render::render_transcription;
+use crate::soniox::state::TranscriptionState;
 use crate::types::soniox::SonioxTranscriptionResponse;
 
 const MAX_FPS: u64 = 60;
@@ -16,11 +16,11 @@ pub struct SubtitlesApp {
     rx_transcription: UnboundedReceiver<SonioxTranscriptionResponse>,
     tx_audio: UnboundedSender<AudioMessage>,
     tx_exit: UnboundedSender<bool>,
-    subtitle: AudioSubtitle,
     initialized_windows: bool,
     enable_high_priority: bool,
     font_size: f32,
     text_color: Color32,
+    subtitles_state: TranscriptionState,
 }
 
 impl SubtitlesApp {
@@ -40,7 +40,7 @@ impl SubtitlesApp {
             font_size,
             text_color,
             initialized_windows: false,
-            subtitle: AudioSubtitle::default(),
+            subtitles_state: TranscriptionState::new(3),
         }
     }
 }
@@ -58,14 +58,11 @@ impl App for SubtitlesApp {
                 if self.enable_high_priority {
                     initialize_tool_window(frame);
                 }
-                while let Ok(transcription) = self.rx_transcription.try_recv() {
-                    let subtitles = render_transcription(transcription);
-                    if let Some(subtitle) = subtitles.into_iter().last() {
-                        self.subtitle = subtitle;
-                    }
+                if let Ok(transcription) = self.rx_transcription.try_recv() {
+                    self.subtitles_state.handle_transcription(transcription);
                 }
                 ui.vertical(|ui| {
-                    draw_text_with_shadow(ui, &self.subtitle, self.font_size, self.text_color);
+                    draw_text_with_shadow(ui, self.subtitles_state.iter(), self.font_size, self.text_color);
                 });
                 ctx.request_repaint_after(FRAME_TIME);
             });
