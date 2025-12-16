@@ -18,10 +18,6 @@ impl AudioSubtitle {
     pub fn new(speaker: Option<String>, text: String) -> Self {
         Self { speaker, text }
     }
-    
-    pub fn is_empty(&self) -> bool {
-        self.text.is_empty()
-    }
 }
 
 impl Default for AudioSubtitle {
@@ -38,6 +34,6 @@ impl Display for AudioSubtitle {
         if let Some(s) = &self.speaker {
             write!(f, "{} >> ", s)?;
         }
-        write!(f, "{}", self.text)
+        write!(f, "{}", self.text.trim())
     }
 }

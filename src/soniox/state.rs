@@ -1,8 +1,9 @@
+use std::collections::VecDeque;
 use crate::types::audio::AudioSubtitle;
 use crate::types::soniox::SonioxTranscriptionResponse;
 
 pub struct TranscriptionState {
-    finishes_lines: Vec<AudioSubtitle>,
+    finishes_lines: VecDeque<AudioSubtitle>,
     interim_line: AudioSubtitle,
     max_lines: usize,
 }
@@ -12,17 +13,15 @@ impl TranscriptionState {
         assert!(max_lines > 0);
 
         Self {
-            finishes_lines: Vec::new(),
+            finishes_lines: VecDeque::with_capacity(max_lines),
             interim_line: AudioSubtitle::default(),
             max_lines,
         }
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &AudioSubtitle> {
-        self.finishes_lines
-            .iter()
-            .chain(std::iter::once(&self.interim_line))
-            .rev()
+        std::iter::once(&self.interim_line)
+            .chain(&self.finishes_lines)
     }
 
     pub fn handle_transcription(&mut self, response: SonioxTranscriptionResponse) {
@@ -55,18 +54,22 @@ impl TranscriptionState {
             }
         }
 
-        self.push_final(final_speaker, final_text);
         self.update_interim(interim_speaker, interim_text);
+        self.push_final(final_speaker, final_text);
     }
 
     fn push_final(&mut self, speaker: Option<String>, text: String) {
-        match self.finishes_lines.last_mut() {
-            Some(last) if last.speaker == speaker => last.text.push_str(&text),
-            _ => self.finishes_lines.push(AudioSubtitle::new(speaker, text)),
+        if text.is_empty() {
+            return;
         }
 
-        if self.finishes_lines.len() > self.max_lines - 1 {
-            self.finishes_lines.remove(0);
+        match self.finishes_lines.front_mut() {
+            Some(last) if last.speaker == speaker => last.text.push_str(&text),
+            _ => self.finishes_lines.push_front(AudioSubtitle::new(speaker, text)),
+        }
+
+        if self.finishes_lines.len() > self.max_lines {
+            self.finishes_lines.pop_back();
         }
     }
 
