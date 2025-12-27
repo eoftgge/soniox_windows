@@ -4,10 +4,9 @@ use eframe::egui::{Ui, pos2};
 use eframe::emath::Align2;
 use eframe::epaint::{Color32, FontId, vec2};
 
-pub(crate) fn draw_text_with_shadow(
+pub(crate) fn draw_text_with_shadow<'a>(
     ui: &mut Ui,
-    // lines: impl Iterator<Item = &'a AudioSubtitle>,
-    lines: Vec<AudioSubtitle>,
+    lines: impl Iterator<Item = &'a AudioSubtitle>,
     font_size: f32,
     text_color: Color32,
 ) {

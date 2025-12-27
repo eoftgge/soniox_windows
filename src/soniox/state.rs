@@ -19,41 +19,8 @@ impl TranscriptionState {
         }
     }
 
-    // pub fn iter(&self) -> impl Iterator<Item = &AudioSubtitle> {
-    //     std::iter::once(&self.interim_line).chain(&self.finishes_lines)
-    // }
-
-    pub fn get_view_data(&self) -> Vec<AudioSubtitle> {
-        let mut result = Vec::with_capacity(self.finishes_lines.len() + 1);
-        let last_finished = self.finishes_lines.front();
-
-        let should_merge = match (last_finished, &self.interim_line.speaker) {
-            (Some(last), Some(curr_speaker)) => {
-                !self.interim_line.text.is_empty() && last.speaker.as_ref() == Some(curr_speaker)
-            },
-            _ => false,
-        };
-
-        if should_merge {
-            let last = last_finished.unwrap();
-            let mut merged_line = last.clone();
-
-            if !merged_line.text.ends_with(' ') && !self.interim_line.text.starts_with(' ') {
-                merged_line.text.push(' ');
-            }
-            merged_line.text.push_str(&self.interim_line.text);
-            result.push(merged_line);
-            result.extend(self.finishes_lines.iter().skip(1).cloned());
-
-        } else {
-            if !self.interim_line.text.is_empty() {
-                result.push(self.interim_line.clone());
-            }
-
-            result.extend(self.finishes_lines.iter().cloned());
-        }
-
-        result
+    pub fn iter(&self) -> impl Iterator<Item = &AudioSubtitle> {
+        std::iter::once(&self.interim_line).chain(&self.finishes_lines)
     }
 
     pub fn handle_transcription(&mut self, response: SonioxTranscriptionResponse) {
@@ -85,15 +52,14 @@ impl TranscriptionState {
             }
         }
 
-        self.update_interim(interim_speaker, interim_text);
         self.push_final(final_speaker, final_text);
+        self.update_interim(interim_speaker, interim_text);
     }
 
     fn push_final(&mut self, speaker: Option<String>, text: String) {
         if text.is_empty() {
             return;
         }
-
         match self.finishes_lines.front_mut() {
             Some(last) if last.speaker == speaker => last.text.push_str(&text),
             _ => self
@@ -107,6 +73,9 @@ impl TranscriptionState {
     }
 
     fn update_interim(&mut self, speaker: Option<String>, text: String) {
-        self.interim_line = AudioSubtitle::new(speaker, text);
+        match self.finishes_lines.front_mut() {
+            Some(last) if last.speaker == speaker => self.interim_line = AudioSubtitle::new(None, text),
+            _ => self.interim_line = AudioSubtitle::new(speaker, text),
+        }
     }
 }
