@@ -1,6 +1,6 @@
 pub type AudioSample = Vec<f32>;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct AudioSubtitle {
     pub(crate) speaker: Option<String>,
     pub(crate) text: String,
