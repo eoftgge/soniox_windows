@@ -13,14 +13,47 @@ impl TranscriptionState {
         assert!(max_lines > 0);
 
         Self {
-            finishes_lines: VecDeque::with_capacity(max_lines),
+            finishes_lines: VecDeque::with_capacity(max_lines - 1),
             interim_line: AudioSubtitle::default(),
             max_lines,
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &AudioSubtitle> {
-        std::iter::once(&self.interim_line).chain(&self.finishes_lines)
+    // pub fn iter(&self) -> impl Iterator<Item = &AudioSubtitle> {
+    //     std::iter::once(&self.interim_line).chain(&self.finishes_lines)
+    // }
+
+    pub fn get_view_data(&self) -> Vec<AudioSubtitle> {
+        let mut result = Vec::with_capacity(self.finishes_lines.len() + 1);
+        let last_finished = self.finishes_lines.front();
+
+        let should_merge = match (last_finished, &self.interim_line.speaker) {
+            (Some(last), Some(curr_speaker)) => {
+                !self.interim_line.text.is_empty() && last.speaker.as_ref() == Some(curr_speaker)
+            },
+            _ => false,
+        };
+
+        if should_merge {
+            let last = last_finished.unwrap();
+            let mut merged_line = last.clone();
+
+            if !merged_line.text.ends_with(' ') && !self.interim_line.text.starts_with(' ') {
+                merged_line.text.push(' ');
+            }
+            merged_line.text.push_str(&self.interim_line.text);
+            result.push(merged_line);
+            result.extend(self.finishes_lines.iter().skip(1).cloned());
+
+        } else {
+            if !self.interim_line.text.is_empty() {
+                result.push(self.interim_line.clone());
+            }
+
+            result.extend(self.finishes_lines.iter().cloned());
+        }
+
+        result
     }
 
     pub fn handle_transcription(&mut self, response: SonioxTranscriptionResponse) {
@@ -68,16 +101,12 @@ impl TranscriptionState {
                 .push_front(AudioSubtitle::new(speaker, text)),
         }
 
-        if self.finishes_lines.len() > self.max_lines {
+        if self.finishes_lines.len() > self.max_lines - 1 {
             self.finishes_lines.pop_back();
         }
     }
 
     fn update_interim(&mut self, speaker: Option<String>, text: String) {
-        if text.is_empty() {
-            return;
-        }
-
         self.interim_line = AudioSubtitle::new(speaker, text);
     }
 }

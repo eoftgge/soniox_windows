@@ -64,7 +64,7 @@ impl App for SubtitlesApp {
                 ui.vertical(|ui| {
                     draw_text_with_shadow(
                         ui,
-                        self.subtitles_state.iter(),
+                        self.subtitles_state.get_view_data(),
                         self.font_size,
                         self.text_color,
                     );
