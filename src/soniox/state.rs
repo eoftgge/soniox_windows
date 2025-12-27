@@ -74,7 +74,9 @@ impl TranscriptionState {
 
     fn update_interim(&mut self, speaker: Option<String>, text: String) {
         match self.finishes_lines.front_mut() {
-            Some(last) if last.speaker == speaker => self.interim_line = AudioSubtitle::new(None, text),
+            Some(last) if last.speaker == speaker => {
+                self.interim_line = AudioSubtitle::new(None, text)
+            }
             _ => self.interim_line = AudioSubtitle::new(speaker, text),
         }
     }
