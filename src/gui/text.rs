@@ -2,14 +2,15 @@ use eframe::egui::Ui;
 use eframe::epaint::{Color32, FontId};
 
 pub(crate) fn trim_text_to_fit_precise(
-    text: String,
+    text: impl Into<String>,
     ui: &Ui,
     font_id: &FontId,
     max_width_ratio: f32,
 ) -> String {
     let available_width = ui.ctx().content_rect().width() * max_width_ratio;
+    let text = text.into();
     let mut chars: Vec<char> = text.chars().collect();
-    let mut trimmed = text.to_owned();
+    let mut trimmed = text;
 
     loop {
         let galley = ui
@@ -26,9 +27,4 @@ pub(crate) fn trim_text_to_fit_precise(
     }
 
     trimmed
-}
-
-#[inline]
-pub(crate) fn modify_text(text: &str) -> String {
-    text.replace("--", "—")
 }

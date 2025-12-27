@@ -1,10 +1,9 @@
 pub type AudioSample = Vec<f32>;
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum AudioSubtitle {
-    Text(String),
-    Speaker(String, String),
-    Empty,
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct AudioSubtitle {
+    pub(crate) speaker: Option<String>,
+    pub(crate) text: String,
 }
 
 #[derive(Debug)]
@@ -14,13 +13,16 @@ pub enum AudioMessage {
 }
 
 impl AudioSubtitle {
-    pub fn is_empty(&self) -> bool {
-        AudioSubtitle::Empty == *self
+    pub fn new(speaker: Option<String>, text: String) -> Self {
+        Self { speaker, text }
     }
 }
 
 impl Default for AudioSubtitle {
     fn default() -> Self {
-        Self::Text("... waiting for the sound ...".into())
+        Self {
+            speaker: None,
+            text: "... waiting for the sound ...".to_string(),
+        }
     }
 }

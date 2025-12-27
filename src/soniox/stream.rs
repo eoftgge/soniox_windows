@@ -1,8 +1,7 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::soniox::URL;
-use crate::soniox::render::render_transcription;
 use crate::soniox::request::create_request;
-use crate::types::audio::{AudioMessage, AudioSubtitle};
+use crate::types::audio::AudioMessage;
 use crate::types::settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use futures_util::{SinkExt, StreamExt};
@@ -13,7 +12,7 @@ use tungstenite::{Bytes, Message, Utf8Bytes};
 
 async fn listen_soniox_stream(
     bytes: Vec<u8>,
-    tx_subs: UnboundedSender<AudioSubtitle>,
+    tx_transcription: UnboundedSender<SonioxTranscriptionResponse>,
     mut rx_audio: UnboundedReceiver<AudioMessage>,
 ) -> Result<(), SonioxWindowsErrors> {
     'stream: loop {
@@ -24,17 +23,13 @@ async fn listen_soniox_stream(
             .send(Message::Text(Utf8Bytes::try_from(bytes.clone())?))
             .await?;
 
-        let tx_subs = tx_subs.clone();
+        let tx_subs = tx_transcription.clone();
         let reader = async move {
             while let Some(msg) = read.next().await {
                 if let Message::Text(txt) = msg? {
                     let response: SonioxTranscriptionResponse = serde_json::from_str(&txt)?;
-                    let subtitles = render_transcription(response);
-                    for subtitle in subtitles {
-                        let _ = tx_subs.send(subtitle);
-                    }
+                    let _ = tx_subs.send(response);
                 }
-                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
             }
             <Result<(), SonioxWindowsErrors>>::Ok(())
         };
@@ -83,7 +78,7 @@ async fn listen_soniox_stream(
 
 pub async fn start_soniox_stream(
     settings: &SettingsApp,
-    tx_subs: UnboundedSender<AudioSubtitle>,
+    tx_transcription: UnboundedSender<SonioxTranscriptionResponse>,
     rx_audio: UnboundedReceiver<AudioMessage>,
 ) -> Result<(), SonioxWindowsErrors> {
     let request = create_request(settings)?;
@@ -91,5 +86,5 @@ pub async fn start_soniox_stream(
 
     log::info!("Started Soniox stream!");
     log::info!("Starting to listen websocket stream Soniox...");
-    listen_soniox_stream(bytes, tx_subs, rx_audio).await
+    listen_soniox_stream(bytes, tx_transcription, rx_audio).await
 }

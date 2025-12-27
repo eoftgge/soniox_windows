@@ -1,8 +1,9 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::gui::app::SubtitlesApp;
 use crate::soniox::stream::start_soniox_stream;
-use crate::types::audio::{AudioMessage, AudioSubtitle};
+use crate::types::audio::AudioMessage;
 use crate::types::settings::SettingsApp;
+use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::windows::audio::start_capture_audio;
 use log4rs::Config;
 use log4rs::append::file::FileAppender;
@@ -28,10 +29,10 @@ pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindo
         .build(Root::builder().appender("logfile").build(level))?;
     let _ = log4rs::init_config(config);
     let (tx_audio, rx_audio) = unbounded_channel::<AudioMessage>();
-    let (tx_subs, rx_subs) = unbounded_channel::<AudioSubtitle>();
+    let (tx_transcription, rx_transcription) = unbounded_channel::<SonioxTranscriptionResponse>();
     let (tx_exit, rx_exit) = unbounded_channel::<bool>();
     let app = SubtitlesApp::new(
-        rx_subs,
+        rx_transcription,
         tx_exit,
         tx_audio.clone(),
         settings.enable_high_priority(),
@@ -44,7 +45,7 @@ pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindo
         }
     });
     tokio::spawn(async move {
-        if let Err(err) = start_soniox_stream(&settings, tx_subs, rx_audio).await {
+        if let Err(err) = start_soniox_stream(&settings, tx_transcription, rx_audio).await {
             log::error!("{}", err);
         }
     });

@@ -1,5 +1,7 @@
 use crate::gui::draw::draw_text_with_shadow;
-use crate::types::audio::{AudioMessage, AudioSubtitle};
+use crate::soniox::state::TranscriptionState;
+use crate::types::audio::AudioMessage;
+use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::windows::utils::{initialize_tool_window, initialize_window, make_window_click_through};
 use eframe::egui::{CentralPanel, Context, Visuals};
 use eframe::epaint::Color32;
@@ -11,19 +13,19 @@ const MAX_FPS: u64 = 60;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
 
 pub struct SubtitlesApp {
-    rx_subs: UnboundedReceiver<AudioSubtitle>,
+    rx_transcription: UnboundedReceiver<SonioxTranscriptionResponse>,
     tx_audio: UnboundedSender<AudioMessage>,
     tx_exit: UnboundedSender<bool>,
-    subtitle: AudioSubtitle,
     initialized_windows: bool,
     enable_high_priority: bool,
     font_size: f32,
     text_color: Color32,
+    subtitles_state: TranscriptionState,
 }
 
 impl SubtitlesApp {
     pub fn new(
-        rx_subs: UnboundedReceiver<AudioSubtitle>,
+        rx_transcription: UnboundedReceiver<SonioxTranscriptionResponse>,
         tx_exit: UnboundedSender<bool>,
         tx_audio: UnboundedSender<AudioMessage>,
         enable_high_priority: bool,
@@ -31,14 +33,14 @@ impl SubtitlesApp {
         text_color: Color32,
     ) -> Self {
         Self {
-            rx_subs,
+            rx_transcription,
             tx_exit,
             tx_audio,
             enable_high_priority,
             font_size,
             text_color,
             initialized_windows: false,
-            subtitle: AudioSubtitle::default(),
+            subtitles_state: TranscriptionState::new(3),
         }
     }
 }
@@ -56,11 +58,16 @@ impl App for SubtitlesApp {
                 if self.enable_high_priority {
                     initialize_tool_window(frame);
                 }
-                while let Ok(subtitle) = self.rx_subs.try_recv() {
-                    self.subtitle = subtitle;
+                if let Ok(transcription) = self.rx_transcription.try_recv() {
+                    self.subtitles_state.handle_transcription(transcription);
                 }
                 ui.vertical(|ui| {
-                    draw_text_with_shadow(ui, &self.subtitle, self.font_size, self.text_color);
+                    draw_text_with_shadow(
+                        ui,
+                        self.subtitles_state.iter(),
+                        self.font_size,
+                        self.text_color,
+                    );
                 });
                 ctx.request_repaint_after(FRAME_TIME);
             });
@@ -69,7 +76,7 @@ impl App for SubtitlesApp {
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
         let _ = self.tx_audio.send(AudioMessage::Stop);
         let _ = self.tx_exit.send(true);
-        self.rx_subs.close();
+        self.rx_transcription.close();
     }
 
     fn clear_color(&self, _visuals: &Visuals) -> [f32; 4] {
