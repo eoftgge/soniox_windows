@@ -18,6 +18,7 @@ pub mod types;
 pub mod windows;
 
 const FILE_LOG: &str = "soniox.log";
+pub const ICON_BYTES: &[u8] = include_bytes!("../assets/icon.png");
 
 pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindowsErrors> {
     let level = settings.level()?;
