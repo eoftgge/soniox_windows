@@ -80,7 +80,6 @@ impl App for SubtitlesApp {
                     );
                 });
 
-                // Ограничиваем FPS, чтобы не грузить CPU
                 ctx.request_repaint_after(FRAME_TIME);
             });
     }

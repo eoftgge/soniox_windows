@@ -23,4 +23,6 @@ pub enum SonioxWindowsErrors {
     Utf8(#[from] std::str::Utf8Error),
     #[error("Internal error: {0}")]
     Internal(&'static str),
+    #[error("Error in WebSocket... Maybe he is dead")]
+    WssConnectionError
 }
