@@ -1,4 +1,4 @@
-use crate::types::audio::AudioSubtitle;
+use crate::types::subtitles::AudioSubtitle;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use std::collections::VecDeque;
 

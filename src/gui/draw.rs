@@ -1,5 +1,5 @@
 use crate::gui::text::trim_text_to_fit_precise;
-use crate::types::audio::AudioSubtitle;
+use crate::types::subtitles::AudioSubtitle;
 use eframe::egui::{Ui, pos2};
 use eframe::emath::Align2;
 use eframe::epaint::{Color32, FontId, vec2};
