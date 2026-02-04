@@ -30,7 +30,6 @@ pub fn draw_subtitles(
 
             ui.vertical(|ui| {
                 for replica in visible_replicas {
-                    // Вызываем отрисовку одной строки
                     draw_replica_row(ui, replica, font_size, text_color, interim_color);
 
                     ui.add_space(4.0);
@@ -58,7 +57,7 @@ fn draw_replica_row(
 
         for elem in replica.elements.iter() {
             let color = if elem.is_interim { interim_color } else { text_color };
-            
+
             ui.label(RichText::new(&elem.text)
                 .size(font_size)
                 .strong()
