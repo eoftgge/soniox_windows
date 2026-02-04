@@ -26,6 +26,10 @@ impl TranscriptionStore {
     }
 
     pub fn update(&mut self, response: SonioxTranscriptionResponse) {
+        if !response.tokens.is_empty() {
+            self.last_activity = Instant::now();
+        }
+
         for token in &response.tokens {
             if token.translation_status.as_deref() == Some("original") {
                 continue;
@@ -82,8 +86,8 @@ impl TranscriptionStore {
 
     pub fn clear_if_silent(&mut self, timeout: Duration) {
         if self.last_activity.elapsed() > timeout
-            && !self.blocks.is_empty()
-            || !self.interim_blocks.is_empty() {
+            && (!self.blocks.is_empty()
+            || !self.interim_blocks.is_empty()) {
             self.blocks.clear();
             self.interim_blocks.clear();
         }
