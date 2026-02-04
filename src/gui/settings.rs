@@ -149,8 +149,8 @@ pub fn show_settings_window(
                             });
                             ui.checkbox(&mut settings.enable_speakers, "Speakers ID");
                             ui.end_row();
-                            ui.small("To change configuration Soniox you need restart application.")
                         });
+                    ui.small("To change configuration Soniox you need restart application.");
                 });
 
                 ui.collapsing("Position", |ui| {
