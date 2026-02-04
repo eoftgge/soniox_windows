@@ -93,4 +93,11 @@ impl TranscriptionStore {
             self.interim_blocks.clear();
         }
     }
+
+    pub fn resize(&mut self, new_max_blocks: usize) {
+        self.max_blocks = new_max_blocks;
+        while self.blocks.len() > self.max_blocks {
+            self.blocks.pop_front();
+        }
+    }
 }
