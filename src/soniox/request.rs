@@ -7,7 +7,7 @@ use wasapi::{DeviceEnumerator, Direction, initialize_mta};
 pub(crate) fn create_request(
     settings: &'_ SettingsApp,
 ) -> Result<SonioxTranscriptionRequest<'_>, SonioxWindowsErrors> {
-    initialize_mta().ok()?;
+    initialize_mta().ok().expect("mta setup failed");
     let enumerator = DeviceEnumerator::new()?;
     let device = enumerator.get_default_device(&Direction::Render)?;
     let audio_client = device.get_iaudioclient()?;

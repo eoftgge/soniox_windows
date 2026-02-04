@@ -15,8 +15,6 @@ tokio-tungstenite = { version = "0.28.0", features = ["native-tls"] }
 tokio = { version = "1.48.0", features = ["rt", "rt-multi-thread", "macros", "sync", "time"] }
 futures-util = "0.3.31"
 eframe = { version = "0.33.2", features = ["glow"] }
-windows = { version = "0.62.2", features = ["Win32_UI_WindowsAndMessaging"] }
-raw-window-handle = "0.6.2"
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["fmt"] }
 tracing-appender = "0.2.4"
