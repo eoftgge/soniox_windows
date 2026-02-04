@@ -1,20 +1,15 @@
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct AudioSubtitle {
+#[derive(Debug, Default, PartialEq, Eq, Clone)]
+pub struct SubtitleBlock {
     pub(crate) speaker: Option<String>,
-    pub(crate) text: String,
+    pub(crate) final_text: String,
+    pub(crate) interim_text: String,
 }
 
-impl AudioSubtitle {
-    pub fn new(speaker: Option<String>, text: String) -> Self {
-        Self { speaker, text }
-    }
-}
-
-impl Default for AudioSubtitle {
-    fn default() -> Self {
+impl SubtitleBlock {
+    pub fn new(speaker: Option<String>) -> Self {
         Self {
-            speaker: None,
-            text: "... waiting for the sound ...".to_string(),
+            speaker,
+            ..Default::default()
         }
     }
 }

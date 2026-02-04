@@ -1,81 +1,78 @@
-use crate::types::subtitles::AudioSubtitle;
 use crate::types::soniox::SonioxTranscriptionResponse;
+use crate::types::subtitles::SubtitleBlock;
 use std::collections::VecDeque;
 
 pub struct TranscriptionStore {
-    finishes_lines: VecDeque<AudioSubtitle>,
-    interim_line: AudioSubtitle,
-    max_lines: usize,
+    pub blocks: VecDeque<SubtitleBlock>,
+    pub interim_blocks: Vec<SubtitleBlock>,
+    max_blocks: usize,
 }
 
 impl TranscriptionStore {
-    pub fn new(max_lines: usize) -> Self {
-        assert!(max_lines > 0);
-
+    pub fn new(max_blocks: usize) -> Self {
         Self {
-            finishes_lines: VecDeque::with_capacity(max_lines - 1),
-            interim_line: AudioSubtitle::default(),
-            max_lines,
+            blocks: VecDeque::with_capacity(max_blocks),
+            interim_blocks: Vec::new(),
+            max_blocks,
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &AudioSubtitle> {
-        std::iter::once(&self.interim_line).chain(&self.finishes_lines)
+    pub fn max_blocks(&self) -> usize {
+        self.max_blocks
     }
 
-    pub fn handle_transcription(&mut self, response: SonioxTranscriptionResponse) {
-        let mut interim_text = String::new();
-        let mut interim_speaker = Option::<String>::None;
-        let mut final_text = String::new();
-        let mut final_speaker = Option::<String>::None;
+    pub fn update(&mut self, response: SonioxTranscriptionResponse) {
+        for token in &response.tokens {
+            if token.translation_status.as_deref() == Some("original") { continue; }
 
-        for token in response.tokens {
-            log::debug!("Token from WS: {:?}", token);
+            if token.is_final {
+                let speaker = token.speaker.clone();
+                let needs_new = match self.blocks.back() {
+                    Some(last) => {
+                        last.speaker != speaker || last.final_text.len() > 200
+                    },
+                    None => true,
+                };
 
-            if token.translation_status.as_deref() == Some("original") {
-                continue;
-            } else if token.is_final {
-                if final_speaker != token.speaker {
-                    self.push_final(final_speaker, final_text);
-                    final_speaker = token.speaker;
-                    final_text = String::new();
+                if needs_new {
+                    self.blocks.push_back(SubtitleBlock::new(speaker.clone()));
+                    if self.blocks.len() > self.max_blocks {
+                        self.blocks.pop_front();
+                    }
                 }
 
-                final_text.push_str(&token.text);
-            } else {
-                if interim_speaker != token.speaker {
-                    interim_speaker = token.speaker;
-                    interim_text = String::new();
+                if let Some(block) = self.blocks.back_mut() {
+                    block.final_text.push_str(&token.text);
                 }
-
-                interim_text.push_str(&token.text);
             }
         }
 
-        self.push_final(final_speaker, final_text);
-        self.update_interim(interim_speaker, interim_text);
-    }
+        self.interim_blocks.clear();
+        let mut current_interim_block: Option<SubtitleBlock> = None;
 
-    fn push_final(&mut self, speaker: Option<String>, text: String) {
-        if text.is_empty() {
-            return;
-        }
-        match self.finishes_lines.front_mut() {
-            Some(last) if last.speaker == speaker => last.text.push_str(&text),
-            _ => self
-                .finishes_lines
-                .push_front(AudioSubtitle::new(speaker, text)),
+        for token in &response.tokens {
+            if !token.is_final && token.translation_status.as_deref() != Some("original") {
+                let speaker = token.speaker.clone();
+                let speaker_changed = match &current_interim_block {
+                    Some(block) => block.speaker != speaker,
+                    None => true,
+                };
+
+                if speaker_changed {
+                    if let Some(block) = current_interim_block.take() {
+                        self.interim_blocks.push(block);
+                    }
+                    let mut new_block = SubtitleBlock::new(speaker);
+                    new_block.interim_text.push_str(&token.text);
+                    current_interim_block = Some(new_block);
+                } else if let Some(block) = &mut current_interim_block {
+                    block.interim_text.push_str(&token.text);
+                }
+            }
         }
 
-        if self.finishes_lines.len() > self.max_lines - 1 {
-            self.finishes_lines.pop_back();
-        }
-    }
-
-    fn update_interim(&mut self, speaker: Option<String>, text: String) {
-        match self.finishes_lines.front_mut() {
-            Some(last) if last.speaker == speaker => self.interim_line = AudioSubtitle::new(None, text),
-            _ => self.interim_line = AudioSubtitle::new(speaker, text),
+        if let Some(block) = current_interim_block {
+            self.interim_blocks.push(block);
         }
     }
 }

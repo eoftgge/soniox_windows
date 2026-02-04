@@ -1,11 +1,11 @@
-use crate::gui::draw::draw_text_with_shadow;
-use crate::soniox::state::TranscriptionState;
+use crate::gui::draw::draw_subtitles;
+use crate::soniox::store::TranscriptionStore;
 use crate::types::audio::AudioMessage;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::windows::utils::{initialize_tool_window, initialize_window, make_window_click_through};
-use eframe::egui::{CentralPanel, Context, Visuals};
+use eframe::egui::{Align, Area, Context, Id, Layout, Order, Visuals};
 use eframe::epaint::Color32;
-use eframe::{App, Frame};
+use eframe::{egui, App, Frame};
 use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
@@ -20,7 +20,7 @@ pub struct SubtitlesApp {
     enable_high_priority: bool,
     font_size: f32,
     text_color: Color32,
-    subtitles_state: TranscriptionState,
+    transcription_store: TranscriptionStore,
 }
 
 impl SubtitlesApp {
@@ -40,15 +40,16 @@ impl SubtitlesApp {
             font_size,
             text_color,
             initialized_windows: false,
-            subtitles_state: TranscriptionState::new(3),
+            transcription_store: TranscriptionStore::new(3),
         }
     }
 }
 
 impl App for SubtitlesApp {
     fn update(&mut self, ctx: &Context, frame: &mut Frame) {
-        CentralPanel::default()
-            .frame(eframe::egui::Frame::default().fill(Color32::TRANSPARENT))
+        Area::new(Id::from("subtitles_area"))
+            .fixed_pos(egui::pos2(50., 900.))
+            .order(Order::Foreground)
             .show(ctx, |ui| {
                 make_window_click_through(frame);
                 if !self.initialized_windows {
@@ -58,17 +59,21 @@ impl App for SubtitlesApp {
                 if self.enable_high_priority {
                     initialize_tool_window(frame);
                 }
-                if let Ok(transcription) = self.rx_transcription.try_recv() {
-                    self.subtitles_state.handle_transcription(transcription);
+
+                while let Ok(transcription) = self.rx_transcription.try_recv() {
+                    self.transcription_store.update(transcription);
                 }
-                ui.vertical(|ui| {
-                    draw_text_with_shadow(
+
+                ui.with_layout(Layout::top_down(Align::LEFT), |ui| {
+                    draw_subtitles(
                         ui,
-                        self.subtitles_state.iter(),
+                        &self.transcription_store,
                         self.font_size,
-                        self.text_color,
+                        self.text_color
                     );
                 });
+
+                // Ограничиваем FPS, чтобы не грузить CPU
                 ctx.request_repaint_after(FRAME_TIME);
             });
     }
