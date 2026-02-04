@@ -67,6 +67,7 @@ impl App for SubtitlesApp {
                     self.transcription_store.update(transcription);
                 }
 
+                self.transcription_store.clear_if_silent(Duration::from_secs(15));
                 ui.with_layout(Layout::top_down(Align::LEFT), |ui| {
                     draw_subtitles(
                         ui,
