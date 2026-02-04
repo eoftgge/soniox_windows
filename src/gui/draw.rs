@@ -8,6 +8,7 @@ pub fn draw_subtitles(
     store: &TranscriptionStore,
     font_size: f32,
     text_color: Color32,
+    background_color: Color32,
 ) {
     let replicas = prepare_replicas(store);
     if replicas.is_empty() { return; }
@@ -22,7 +23,7 @@ pub fn draw_subtitles(
     let interim_color = get_interim_color(text_color);
 
     Frame::new()
-        .fill(Color32::from_black_alpha(200))
+        .fill(background_color)
         .corner_radius(12.0)
         .inner_margin(16.0)
         .show(ui, |ui| {

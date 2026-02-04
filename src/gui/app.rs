@@ -20,6 +20,7 @@ pub struct SubtitlesApp {
     enable_high_priority: bool,
     font_size: f32,
     text_color: Color32,
+    background_color: Color32,
     transcription_store: TranscriptionStore,
 }
 
@@ -31,6 +32,7 @@ impl SubtitlesApp {
         enable_high_priority: bool,
         font_size: f32,
         text_color: Color32,
+        background_color: Color32,
     ) -> Self {
         Self {
             rx_transcription,
@@ -39,6 +41,7 @@ impl SubtitlesApp {
             enable_high_priority,
             font_size,
             text_color,
+            background_color,
             initialized_windows: false,
             transcription_store: TranscriptionStore::new(3),
         }
@@ -70,6 +73,7 @@ impl App for SubtitlesApp {
                         &self.transcription_store,
                         self.font_size,
                         self.text_color,
+                        self.background_color,
                     );
                 });
 

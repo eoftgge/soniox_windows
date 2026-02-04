@@ -39,6 +39,7 @@ pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindo
         settings.enable_high_priority(),
         settings.font_size(),
         settings.text_color(),
+        settings.get_background_color()
     );
     tokio::task::spawn_blocking(move || {
         if let Err(err) = start_capture_audio(tx_audio, rx_exit) {
