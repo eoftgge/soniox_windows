@@ -31,7 +31,7 @@ impl TranscriptionStore {
         }
 
         for token in &response.tokens {
-            tracing::trace!("{:?}", token);
+            tracing::debug!("{:?}", token);
             if token.translation_status.as_deref() == Some("original") {
                 continue;
             }

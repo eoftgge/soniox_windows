@@ -56,13 +56,13 @@ where
             Ok(StreamAction::Continue)
         }
         Some(AudioMessage::Stop) => {
-            tracing::trace!("Stop command received.");
+            tracing::debug!("Stop command received.");
             let _ = writer.send(Message::Binary(Bytes::new())).await;
             let _ = writer.close().await;
             Ok(StreamAction::Stop)
         }
         None => {
-            tracing::trace!("Audio channel closed.");
+            tracing::debug!("Audio channel closed.");
             Ok(StreamAction::Stop)
         }
     }
@@ -163,11 +163,11 @@ async fn listen_soniox_stream(
             .into_client_request()
             .map_err(|_| SonioxWindowsErrors::WssConnectionError)?;
 
-        tracing::trace!("Connecting... (Attempt {})", retry_count + 1);
+        tracing::debug!("Connecting... (Attempt {})", retry_count + 1);
 
         match connect_async(url).await {
             Ok((ws_stream, _)) => {
-                tracing::trace!("Connected!");
+                tracing::debug!("Connected!");
                 retry_count = 0;
 
                 let action = run_active_session(
@@ -181,7 +181,7 @@ async fn listen_soniox_stream(
 
                 match action {
                     StreamAction::Stop => {
-                        tracing::trace!("Stream finished normally.");
+                        tracing::debug!("Stream finished normally.");
                         return Ok(());
                     }
                     StreamAction::Reconnect => {
