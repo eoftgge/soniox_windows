@@ -1,6 +1,7 @@
 use crate::gui::draw::draw_subtitles;
 use crate::soniox::transcription::TranscriptionStore;
 use crate::types::audio::AudioMessage;
+use crate::types::settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::windows::utils::{initialize_tool_window, initialize_window, make_window_click_through};
 use eframe::egui::{Align, Area, Context, Id, Layout, Order, Pos2, Visuals};
@@ -30,21 +31,17 @@ impl SubtitlesApp {
         rx_transcription: UnboundedReceiver<SonioxTranscriptionResponse>,
         tx_exit: UnboundedSender<bool>,
         tx_audio: UnboundedSender<AudioMessage>,
-        enable_high_priority: bool,
-        font_size: f32,
-        text_color: Color32,
-        background_color: Color32,
-        position: Pos2,
+        settings: SettingsApp, // maybe add builder?
     ) -> Self {
         Self {
             rx_transcription,
             tx_exit,
             tx_audio,
-            enable_high_priority,
-            font_size,
-            text_color,
-            background_color,
-            position,
+            enable_high_priority: settings.enable_high_priority(),
+            font_size: settings.font_size(),
+            text_color: settings.text_color(),
+            background_color: settings.get_background_color(),
+            position: settings.get_position(),
             initialized_windows: false,
             transcription_store: TranscriptionStore::new(3),
         }
