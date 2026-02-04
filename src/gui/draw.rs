@@ -1,53 +1,78 @@
-use crate::gui::text::trim_text_to_fit_precise;
-use crate::types::audio::AudioSubtitle;
-use eframe::egui::{Ui, pos2};
-use eframe::emath::Align2;
-use eframe::epaint::{Color32, FontId, vec2};
+use crate::gui::color::get_interim_color;
+use crate::gui::replicas::{VisualReplica, prepare_replicas};
+use crate::soniox::transcription::TranscriptionStore;
+use eframe::egui::{Color32, Frame, RichText, Ui};
 
-pub(crate) fn draw_text_with_shadow<'a>(
+pub fn draw_subtitles(
     ui: &mut Ui,
-    lines: impl Iterator<Item = &'a AudioSubtitle>,
+    store: &TranscriptionStore,
     font_size: f32,
     text_color: Color32,
+    background_color: Color32,
 ) {
-    let font = FontId::proportional(font_size);
-    let painter = ui.painter();
-    let rect = ui.ctx().content_rect();
-    let outline_color = Color32::BLACK;
-    let thickness = 2.0;
-    let mut y = rect.bottom() - 10.0;
+    let replicas = prepare_replicas(store);
+    if replicas.is_empty() {
+        return;
+    }
 
-    for line in lines {
-        let mut text = String::new();
-        if let Some(speaker) = line.speaker.to_owned() {
-            text.push_str(&(speaker + " >> "));
-        }
-        let trimmed = trim_text_to_fit_precise(&line.text, ui, &font, 0.8);
-        text.push_str(&trimmed);
+    let max_visual_replicas = store.max_blocks();
+    let total_count = replicas.len();
+    let start_index = total_count.saturating_sub(max_visual_replicas);
+    let visible_replicas = replicas.iter().skip(start_index);
 
-        let pos = pos2(rect.left() + 10., y);
-        let offsets = [
-            vec2(-thickness, 0.0),
-            vec2(thickness, 0.0),
-            vec2(0.0, -thickness),
-            vec2(0.0, thickness),
-            vec2(-thickness, -thickness),
-            vec2(-thickness, thickness),
-            vec2(thickness, -thickness),
-            vec2(thickness, thickness),
-        ];
+    let screen_width = ui.ctx().content_rect().width();
+    let max_width = (screen_width * 0.8).min(1200.0);
+    let interim_color = get_interim_color(text_color);
 
-        for offset in offsets {
-            painter.text(
-                pos + offset,
-                Align2::LEFT_BOTTOM,
-                &text,
-                font.clone(),
-                outline_color,
+    Frame::new()
+        .fill(background_color)
+        .corner_radius(12.0)
+        .inner_margin(16.0)
+        .show(ui, |ui| {
+            ui.set_max_width(max_width);
+
+            ui.vertical(|ui| {
+                for replica in visible_replicas {
+                    draw_replica_row(ui, replica, font_size, text_color, interim_color);
+
+                    ui.add_space(4.0);
+                }
+            });
+        });
+}
+
+fn draw_replica_row(
+    ui: &mut Ui,
+    replica: &VisualReplica,
+    font_size: f32,
+    text_color: Color32,
+    interim_color: Color32,
+) {
+    ui.horizontal_wrapped(|ui| {
+        ui.spacing_mut().item_spacing.x = 0.0;
+
+        if let Some(id) = &replica.speaker {
+            ui.label(
+                RichText::new(format!("{}: ", id))
+                    .size(font_size)
+                    .color(text_color)
+                    .strong(),
             );
         }
-        painter.text(pos, Align2::LEFT_BOTTOM, &text, font.clone(), text_color);
 
-        y -= font_size * 1.2;
-    }
+        for elem in replica.elements.iter() {
+            let color = if elem.is_interim {
+                interim_color
+            } else {
+                text_color
+            };
+
+            ui.label(
+                RichText::new(&elem.text)
+                    .size(font_size)
+                    .strong()
+                    .color(color),
+            );
+        }
+    });
 }

@@ -1,90 +1,217 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::soniox::URL;
 use crate::soniox::request::create_request;
-use crate::types::audio::AudioMessage;
+use crate::types::audio::{AudioMessage, AudioSample};
 use crate::types::settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use futures_util::{SinkExt, StreamExt};
+use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::time::sleep;
 use tokio_tungstenite::connect_async;
 use tungstenite::client::IntoClientRequest;
 use tungstenite::{Bytes, Message, Utf8Bytes};
 
-async fn listen_soniox_stream(
-    bytes: Vec<u8>,
-    tx_transcription: UnboundedSender<SonioxTranscriptionResponse>,
-    mut rx_audio: UnboundedReceiver<AudioMessage>,
-) -> Result<(), SonioxWindowsErrors> {
-    'stream: loop {
-        let url = URL.into_client_request()?;
-        let (ws_stream, _) = connect_async(url).await?;
-        let (mut write, mut read) = ws_stream.split();
-        write
-            .send(Message::Text(Utf8Bytes::try_from(bytes.clone())?))
-            .await?;
+const MAX_RETRIES: u32 = 5;
+const RECONNECT_DELAY: u64 = 1000; // ms
 
-        let tx_subs = tx_transcription.clone();
-        let reader = async move {
-            while let Some(msg) = read.next().await {
-                if let Message::Text(txt) = msg? {
-                    let response: SonioxTranscriptionResponse = serde_json::from_str(&txt)?;
-                    let _ = tx_subs.send(response);
+enum StreamAction {
+    Continue,
+    Reconnect,
+    Stop,
+}
+
+fn convert_audio_chunk(input: &[f32], output: &mut Vec<u8>) {
+    output.clear();
+
+    let required_len = input.len() * 2;
+    output.reserve(required_len);
+
+    const SCALE: f32 = i16::MAX as f32;
+
+    output.extend(input.iter().flat_map(|&s| {
+        let sample = (s.clamp(-1.0, 1.0) * SCALE) as i16;
+        sample.to_le_bytes()
+    }));
+}
+
+async fn handle_audio_message<W>(
+    msg: Option<AudioMessage>,
+    writer: &mut W,
+    tx_recycle: &UnboundedSender<AudioSample>,
+    byte_buffer_pool: &mut Vec<u8>
+) -> Result<StreamAction, W::Error>
+where
+    W: SinkExt<Message> + Unpin,
+{
+    match msg {
+        Some(AudioMessage::Audio(buffer)) => {
+            if !buffer.is_empty() {
+                convert_audio_chunk(&buffer, byte_buffer_pool);
+                writer.send(Message::Binary(Bytes::copy_from_slice(byte_buffer_pool))).await?;
+                let _ = tx_recycle.send(buffer);
+            }
+            Ok(StreamAction::Continue)
+        }
+        Some(AudioMessage::Stop) => {
+            log::info!("Stop command received.");
+            let _ = writer.send(Message::Binary(Bytes::new())).await;
+            let _ = writer.close().await;
+            Ok(StreamAction::Stop)
+        }
+        None => {
+            log::info!("Audio channel closed.");
+            Ok(StreamAction::Stop)
+        }
+    }
+}
+
+async fn handle_ws_message(
+    msg: Option<Result<Message, tungstenite::Error>>,
+    tx_ui: &UnboundedSender<SonioxTranscriptionResponse>,
+    writer: &mut (impl SinkExt<Message, Error = tungstenite::Error> + Unpin),
+) -> StreamAction {
+    match msg {
+        Some(Ok(message)) => match message {
+            Message::Text(txt) => {
+                let response = serde_json::from_str::<SonioxTranscriptionResponse>(&txt);
+                if let Ok(r) = response
+                    && tx_ui.send(r).is_err()
+                {
+                    log::error!("UI channel closed");
+                    return StreamAction::Stop;
+                }
+                StreamAction::Continue
+            }
+            Message::Ping(data) => {
+                let _ = writer.send(Message::Pong(data)).await;
+                StreamAction::Continue
+            }
+            Message::Close(_) => {
+                log::warn!("Server closed connection");
+                StreamAction::Reconnect
+            }
+            _ => StreamAction::Continue,
+        },
+        Some(Err(e)) => {
+            log::error!("WS Read Error: {}", e);
+            StreamAction::Reconnect
+        }
+        None => {
+            log::warn!("WS Stream ended");
+            StreamAction::Reconnect
+        }
+    }
+}
+
+async fn run_active_session(
+    ws_stream: tokio_tungstenite::WebSocketStream<
+        tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+    >,
+    tx_ws: UnboundedSender<SonioxTranscriptionResponse>,
+    rx_audio: &mut UnboundedReceiver<AudioMessage>,
+    init_bytes: &[u8],
+    tx_recycle: &UnboundedSender<AudioSample>,
+) -> Result<StreamAction, SonioxWindowsErrors> {
+    let (mut write, mut read) = ws_stream.split();
+
+    if let Err(e) = write
+        .send(Message::Text(Utf8Bytes::try_from(init_bytes.to_vec())?))
+        .await
+    {
+        log::error!("Init handshake failed: {}", e);
+        return Ok(StreamAction::Reconnect);
+    }
+
+    let mut byte_buffer_pool: Vec<u8> = Vec::with_capacity(16 * 1024);
+
+    loop {
+        tokio::select! {
+            audio_event = rx_audio.recv() => {
+                match handle_audio_message(audio_event, &mut write, tx_recycle, &mut byte_buffer_pool).await {
+                    Ok(StreamAction::Continue) => continue,
+                    Ok(action) => return Ok(action),
+                    Err(e) => {
+                        log::error!("WS Write Error: {}", e);
+                        return Ok(StreamAction::Reconnect);
+                    }
                 }
             }
-            <Result<(), SonioxWindowsErrors>>::Ok(())
-        };
 
-        tokio::spawn(async move {
-            let _ = reader
-                .await
-                .inspect_err(|err| log::error!("error during read message: {}", err));
-        });
-
-        while let Some(message) = rx_audio.recv().await {
-            match message {
-                AudioMessage::Audio(buffer) => {
-                    if buffer.is_empty() {
-                        break;
-                    }
-                    let mut pcm16 = Vec::with_capacity(buffer.len() * 2);
-                    for s in buffer {
-                        let sample = (s.clamp(-1.0, 1.0) * i16::MAX as f32) as i16;
-                        pcm16.extend_from_slice(&sample.to_le_bytes());
-                    }
-
-                    let result = write.send(Message::Binary(Bytes::from(pcm16))).await;
-
-                    if let Err(err) = result {
-                        log::error!("error during sent binary -> {:?}", err);
-                        continue 'stream;
-                    }
-                }
-                AudioMessage::Stop => {
-                    let _ = write.send(Message::Binary(Bytes::new())).await;
-                    break 'stream;
+            ws_event = read.next() => {
+                match handle_ws_message(ws_event, &tx_ws, &mut write).await {
+                    StreamAction::Continue => continue,
+                    action => return Ok(action),
                 }
             }
         }
-
-        let _ = write
-            .send(Message::Binary(Bytes::new()))
-            .await
-            .inspect_err(|err| log::error!("error during write message: {}", err));
-        break 'stream;
     }
+}
 
-    Ok(())
+async fn listen_soniox_stream(
+    init_bytes: Vec<u8>,
+    tx_ws: UnboundedSender<SonioxTranscriptionResponse>,
+    mut rx_audio: UnboundedReceiver<AudioMessage>,
+    tx_recycle: &UnboundedSender<AudioSample>,
+) -> Result<(), SonioxWindowsErrors> {
+    let mut retry_count = 0;
+
+    loop {
+        let url = URL
+            .into_client_request()
+            .map_err(|_| SonioxWindowsErrors::WssConnectionError)?;
+
+        log::info!("Connecting... (Attempt {})", retry_count + 1);
+
+        match connect_async(url).await {
+            Ok((ws_stream, _)) => {
+                log::info!("Connected!");
+                retry_count = 0;
+
+                let action = run_active_session(
+                    ws_stream,
+                    tx_ws.clone(),
+                    &mut rx_audio,
+                    &init_bytes,
+                    tx_recycle,
+                )
+                .await?;
+
+                match action {
+                    StreamAction::Stop => {
+                        log::info!("Stream finished normally.");
+                        return Ok(());
+                    }
+                    StreamAction::Reconnect => {
+                        log::warn!("Session lost. Reconnecting...");
+                    }
+                    StreamAction::Continue => unreachable!(),
+                }
+            }
+            Err(e) => {
+                log::error!("Connection failed: {}", e);
+            }
+        }
+
+        sleep(Duration::from_millis(RECONNECT_DELAY)).await;
+        retry_count += 1;
+
+        if retry_count > MAX_RETRIES {
+            return Err(SonioxWindowsErrors::WssConnectionError);
+        }
+    }
 }
 
 pub async fn start_soniox_stream(
     settings: &SettingsApp,
-    tx_transcription: UnboundedSender<SonioxTranscriptionResponse>,
+    tx_ws: UnboundedSender<SonioxTranscriptionResponse>,
     rx_audio: UnboundedReceiver<AudioMessage>,
+    tx_recycle: UnboundedSender<AudioSample>,
 ) -> Result<(), SonioxWindowsErrors> {
     let request = create_request(settings)?;
     let bytes = serde_json::to_vec(&request)?;
 
     log::info!("Started Soniox stream!");
     log::info!("Starting to listen websocket stream Soniox...");
-    listen_soniox_stream(bytes, tx_transcription, rx_audio).await
+    listen_soniox_stream(bytes, tx_ws, rx_audio, &tx_recycle).await
 }

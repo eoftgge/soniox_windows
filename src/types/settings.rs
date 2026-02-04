@@ -1,7 +1,7 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::types::languages::LanguageHint;
-use crate::types::offset::{OFFSET_WIDTH, WINDOW_HEIGHT};
 use config::{Config, ConfigError, File};
+use eframe::egui::{Color32, Pos2, pos2};
 use log::LevelFilter;
 use serde::Deserialize;
 use std::str::FromStr;
@@ -15,10 +15,12 @@ pub struct SettingsApp {
     pub(crate) enable_translate: bool,
     enable_high_priority: bool,
     enable_speakers: bool,
+    enable_background: bool,
     level: String,
     position: (f32, f32),
     font_size: f32,
     text_color: (u8, u8, u8),
+    max_blocks: usize,
 }
 
 impl SettingsApp {
@@ -61,6 +63,10 @@ impl SettingsApp {
         self.font_size
     }
 
+    pub fn max_blocks(&self) -> usize {
+        self.max_blocks
+    }
+
     pub fn level(&self) -> Result<LevelFilter, SonioxWindowsErrors> {
         LevelFilter::from_str(&self.level).map_err(|_| {
             SonioxWindowsErrors::Internal(
@@ -69,18 +75,18 @@ impl SettingsApp {
         })
     }
 
-    pub fn text_color(&self) -> eframe::egui::Color32 {
-        eframe::egui::Color32::from_rgb(self.text_color.0, self.text_color.1, self.text_color.2)
+    pub fn text_color(&self) -> Color32 {
+        Color32::from_rgb(self.text_color.0, self.text_color.1, self.text_color.2)
     }
 
-    pub fn get_position(&self, height: usize) -> (f32, f32) {
-        if self.position == (0., 0.) {
-            let window_height = WINDOW_HEIGHT;
-            let pos_x = OFFSET_WIDTH;
-            let pos_y = height as f32 - window_height - 100.;
-
-            return (pos_x, pos_y);
+    pub fn get_background_color(&self) -> Color32 {
+        if self.enable_background {
+            return Color32::from_black_alpha(155);
         }
-        self.position
+        Color32::TRANSPARENT
+    }
+
+    pub fn get_position(&self) -> Pos2 {
+        pos2(self.position.0, self.position.1)
     }
 }

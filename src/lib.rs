@@ -1,7 +1,7 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::gui::app::SubtitlesApp;
 use crate::soniox::stream::start_soniox_stream;
-use crate::types::audio::AudioMessage;
+use crate::types::audio::{AudioMessage, AudioSample};
 use crate::types::settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::windows::audio::start_capture_audio;
@@ -18,6 +18,7 @@ pub mod types;
 pub mod windows;
 
 const FILE_LOG: &str = "soniox.log";
+pub const ICON_BYTES: &[u8] = include_bytes!("../assets/icon.png");
 
 pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindowsErrors> {
     let level = settings.level()?;
@@ -31,21 +32,20 @@ pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindo
     let (tx_audio, rx_audio) = unbounded_channel::<AudioMessage>();
     let (tx_transcription, rx_transcription) = unbounded_channel::<SonioxTranscriptionResponse>();
     let (tx_exit, rx_exit) = unbounded_channel::<bool>();
+    let (tx_recycle, rx_recycle) = unbounded_channel::<AudioSample>();
     let app = SubtitlesApp::new(
         rx_transcription,
         tx_exit,
         tx_audio.clone(),
-        settings.enable_high_priority(),
-        settings.font_size(),
-        settings.text_color(),
+        &settings,
     );
     tokio::task::spawn_blocking(move || {
-        if let Err(err) = start_capture_audio(tx_audio, rx_exit) {
+        if let Err(err) = start_capture_audio(tx_audio, rx_exit, rx_recycle) {
             log::error!("{}", err);
         }
     });
     tokio::spawn(async move {
-        if let Err(err) = start_soniox_stream(&settings, tx_transcription, rx_audio).await {
+        if let Err(err) = start_soniox_stream(&settings, tx_transcription, rx_audio, tx_recycle).await {
             log::error!("{}", err);
         }
     });

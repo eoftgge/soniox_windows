@@ -2,10 +2,10 @@ use eframe::Frame;
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
 use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::WindowsAndMessaging::{
-    GWL_EXSTYLE, GWL_STYLE, GetSystemMetrics, GetWindowLongW, HWND_TOPMOST, MB_ICONERROR, MB_OK,
-    MessageBoxW, SM_CXSCREEN, SM_CYSCREEN, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW,
-    SetWindowLongW, SetWindowPos, WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
-    WS_EX_TRANSPARENT, WS_MAXIMIZEBOX, WS_MINIMIZEBOX,
+    GWL_EXSTYLE, GWL_STYLE, GetWindowLongW, HWND_TOPMOST, MB_ICONERROR, MB_OK, MessageBoxW,
+    SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, SetWindowLongW, SetWindowPos,
+    WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TRANSPARENT, WS_MAXIMIZEBOX,
+    WS_MINIMIZEBOX,
 };
 use windows::core::PCWSTR;
 
@@ -90,9 +90,4 @@ pub fn show_error(msg: &str) {
             MB_OK | MB_ICONERROR,
         );
     }
-}
-
-pub fn get_screen_size() -> (usize, usize) {
-    let (width, height) = unsafe { (GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)) };
-    (width as usize, height as usize)
 }

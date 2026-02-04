@@ -1,4 +1,5 @@
 pub mod app;
+pub mod color;
 pub mod draw;
-pub mod text;
-pub mod utils;
+pub mod font;
+pub mod replicas;
