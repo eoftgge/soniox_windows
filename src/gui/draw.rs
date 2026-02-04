@@ -1,7 +1,7 @@
-use eframe::egui::{self, Color32, RichText, Ui, Frame, Rounding};
 use crate::gui::color::get_interim_color;
 use crate::gui::replicas::{prepare_replicas, VisualReplica};
 use crate::soniox::store::TranscriptionStore;
+use eframe::egui::{Color32, Frame, RichText, Ui};
 
 pub fn draw_subtitles(
     ui: &mut Ui,
@@ -43,7 +43,7 @@ fn draw_replica_row(
     replica: &VisualReplica,
     font_size: f32,
     text_color: Color32,
-    interim_color: Color32
+    interim_color: Color32,
 ) {
     ui.horizontal_wrapped(|ui| {
         ui.spacing_mut().item_spacing.x = 0.0;

@@ -30,7 +30,7 @@ impl TranscriptionStore {
                 let needs_new = match self.blocks.back() {
                     Some(last) => {
                         last.speaker != speaker || last.final_text.len() > 200
-                    },
+                    }
                     None => true,
                 };
 

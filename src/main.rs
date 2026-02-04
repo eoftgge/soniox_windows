@@ -3,9 +3,9 @@
 use eframe::egui::ViewportBuilder;
 use eframe::icon_data::from_png_bytes;
 use soniox_windows::errors::SonioxWindowsErrors;
-use soniox_windows::{initialize_app, ICON_BYTES};
 use soniox_windows::types::settings::SettingsApp;
 use soniox_windows::windows::utils::show_error;
+use soniox_windows::{initialize_app, ICON_BYTES};
 
 async fn run() -> Result<(), SonioxWindowsErrors> {
     let settings = SettingsApp::new("soniox.toml")?;
@@ -26,7 +26,6 @@ async fn run() -> Result<(), SonioxWindowsErrors> {
         "Subtitles Live",
         native_options,
         Box::new(move |cc| {
-
             Ok(Box::new(app))
         }),
     )?;

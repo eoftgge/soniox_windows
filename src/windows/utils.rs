@@ -1,13 +1,13 @@
 use eframe::Frame;
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+use windows::core::PCWSTR;
 use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::WindowsAndMessaging::{
-    GWL_EXSTYLE, GWL_STYLE, GetWindowLongW, HWND_TOPMOST, MB_ICONERROR, MB_OK,
-    MessageBoxW, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW,
-    SetWindowLongW, SetWindowPos, WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
+    GetWindowLongW, MessageBoxW, SetWindowLongW, SetWindowPos, GWL_EXSTYLE, GWL_STYLE,
+    HWND_TOPMOST, MB_ICONERROR, MB_OK, SWP_NOACTIVATE, SWP_NOMOVE,
+    SWP_NOSIZE, SWP_SHOWWINDOW, WS_EX_LAYERED, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
     WS_EX_TRANSPARENT, WS_MAXIMIZEBOX, WS_MINIMIZEBOX,
 };
-use windows::core::PCWSTR;
 
 fn from_frame_to_hwnd(frame: &Frame) -> Option<HWND> {
     if let Ok(handle) = frame.window_handle() {

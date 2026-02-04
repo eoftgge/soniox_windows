@@ -69,7 +69,7 @@ impl App for SubtitlesApp {
                         ui,
                         &self.transcription_store,
                         self.font_size,
-                        self.text_color
+                        self.text_color,
                     );
                 });
 
