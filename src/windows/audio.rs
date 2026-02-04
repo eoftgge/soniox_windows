@@ -1,5 +1,5 @@
 use crate::errors::SonioxWindowsErrors;
-use crate::types::audio::AudioMessage;
+use crate::types::audio::{AudioMessage, AudioSample};
 use bytemuck::cast_slice;
 use std::thread::sleep;
 use std::time::Duration;
@@ -9,6 +9,7 @@ use wasapi::{DeviceEnumerator, Direction, StreamMode, initialize_mta};
 pub fn start_capture_audio(
     tx_audio: UnboundedSender<AudioMessage>,
     mut rx_stop: UnboundedReceiver<bool>,
+    mut rx_recycle: UnboundedReceiver<AudioSample>,
 ) -> Result<(), SonioxWindowsErrors> {
     initialize_mta()
         .ok()
@@ -62,9 +63,18 @@ pub fn start_capture_audio(
             log::warn!("Read error: {:?}", e);
             continue;
         }
-        let data: Vec<f32> = cast_slice(&raw_buffer).to_vec();
+        let mut buffer = match rx_recycle.try_recv() {
+            Ok(mut vec) => {
+                vec.clear();
+                vec
+            },
+            Err(_) => Vec::with_capacity(raw_buffer.len() / 4),
+        };
 
-        if tx_audio.send(AudioMessage::Audio(data)).is_err() {
+        let data: &[f32] = cast_slice(&raw_buffer);
+        buffer.extend_from_slice(data);
+
+        if tx_audio.send(AudioMessage::Audio(buffer)).is_err() {
             break;
         }
     }

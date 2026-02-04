@@ -1,7 +1,7 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::soniox::URL;
 use crate::soniox::request::create_request;
-use crate::types::audio::AudioMessage;
+use crate::types::audio::{AudioMessage, AudioSample};
 use crate::types::settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use futures_util::{SinkExt, StreamExt};
@@ -21,18 +21,25 @@ enum StreamAction {
     Stop,
 }
 
-fn convert_audio_chunk(buffer: Vec<f32>) -> Vec<u8> {
-    let mut pcm16 = Vec::with_capacity(buffer.len() * 2);
-    for s in buffer {
-        let sample = (s.clamp(-1.0, 1.0) * i16::MAX as f32) as i16;
-        pcm16.extend_from_slice(&sample.to_le_bytes());
-    }
-    pcm16
+fn convert_audio_chunk(input: &[f32], output: &mut Vec<u8>) {
+    output.clear();
+
+    let required_len = input.len() * 2;
+    output.reserve(required_len);
+
+    const SCALE: f32 = i16::MAX as f32;
+
+    output.extend(input.iter().flat_map(|&s| {
+        let sample = (s.clamp(-1.0, 1.0) * SCALE) as i16;
+        sample.to_le_bytes()
+    }));
 }
 
 async fn handle_audio_message<W>(
     msg: Option<AudioMessage>,
     writer: &mut W,
+    tx_recycle: &UnboundedSender<AudioSample>,
+    byte_buffer_pool: &mut Vec<u8>
 ) -> Result<StreamAction, W::Error>
 where
     W: SinkExt<Message> + Unpin,
@@ -40,8 +47,9 @@ where
     match msg {
         Some(AudioMessage::Audio(buffer)) => {
             if !buffer.is_empty() {
-                let binary = convert_audio_chunk(buffer);
-                writer.send(Message::Binary(Bytes::from(binary))).await?;
+                convert_audio_chunk(&buffer, byte_buffer_pool);
+                writer.send(Message::Binary(Bytes::copy_from_slice(byte_buffer_pool))).await?;
+                let _ = tx_recycle.send(buffer);
             }
             Ok(StreamAction::Continue)
         }
@@ -100,9 +108,10 @@ async fn run_active_session(
     ws_stream: tokio_tungstenite::WebSocketStream<
         tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
     >,
-    tx_ui: UnboundedSender<SonioxTranscriptionResponse>,
+    tx_ws: UnboundedSender<SonioxTranscriptionResponse>,
     rx_audio: &mut UnboundedReceiver<AudioMessage>,
     init_bytes: &[u8],
+    tx_recycle: &UnboundedSender<AudioSample>,
 ) -> Result<StreamAction, SonioxWindowsErrors> {
     let (mut write, mut read) = ws_stream.split();
 
@@ -114,10 +123,12 @@ async fn run_active_session(
         return Ok(StreamAction::Reconnect);
     }
 
+    let mut byte_buffer_pool: Vec<u8> = Vec::with_capacity(16 * 1024);
+
     loop {
         tokio::select! {
             audio_event = rx_audio.recv() => {
-                match handle_audio_message(audio_event, &mut write).await {
+                match handle_audio_message(audio_event, &mut write, tx_recycle, &mut byte_buffer_pool).await {
                     Ok(StreamAction::Continue) => continue,
                     Ok(action) => return Ok(action),
                     Err(e) => {
@@ -128,7 +139,7 @@ async fn run_active_session(
             }
 
             ws_event = read.next() => {
-                match handle_ws_message(ws_event, &tx_ui, &mut write).await {
+                match handle_ws_message(ws_event, &tx_ws, &mut write).await {
                     StreamAction::Continue => continue,
                     action => return Ok(action),
                 }
@@ -139,8 +150,9 @@ async fn run_active_session(
 
 async fn listen_soniox_stream(
     init_bytes: Vec<u8>,
-    tx_transcription: UnboundedSender<SonioxTranscriptionResponse>,
+    tx_ws: UnboundedSender<SonioxTranscriptionResponse>,
     mut rx_audio: UnboundedReceiver<AudioMessage>,
+    tx_recycle: &UnboundedSender<AudioSample>,
 ) -> Result<(), SonioxWindowsErrors> {
     let mut retry_count = 0;
 
@@ -158,9 +170,10 @@ async fn listen_soniox_stream(
 
                 let action = run_active_session(
                     ws_stream,
-                    tx_transcription.clone(),
+                    tx_ws.clone(),
                     &mut rx_audio,
                     &init_bytes,
+                    tx_recycle,
                 )
                 .await?;
 
@@ -191,13 +204,14 @@ async fn listen_soniox_stream(
 
 pub async fn start_soniox_stream(
     settings: &SettingsApp,
-    tx_transcription: UnboundedSender<SonioxTranscriptionResponse>,
+    tx_ws: UnboundedSender<SonioxTranscriptionResponse>,
     rx_audio: UnboundedReceiver<AudioMessage>,
+    tx_recycle: UnboundedSender<AudioSample>,
 ) -> Result<(), SonioxWindowsErrors> {
     let request = create_request(settings)?;
     let bytes = serde_json::to_vec(&request)?;
 
     log::info!("Started Soniox stream!");
     log::info!("Starting to listen websocket stream Soniox...");
-    listen_soniox_stream(bytes, tx_transcription, rx_audio).await
+    listen_soniox_stream(bytes, tx_ws, rx_audio, &tx_recycle).await
 }
