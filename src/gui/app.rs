@@ -3,9 +3,9 @@ use crate::soniox::store::TranscriptionStore;
 use crate::types::audio::AudioMessage;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::windows::utils::{initialize_tool_window, initialize_window, make_window_click_through};
-use eframe::egui::{Align, Area, Context, Id, Layout, Order, Visuals};
+use eframe::egui::{Align, Area, Context, Id, Layout, Order, Pos2, Visuals};
 use eframe::epaint::Color32;
-use eframe::{egui, App, Frame};
+use eframe::{App, Frame};
 use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
@@ -16,11 +16,12 @@ pub struct SubtitlesApp {
     rx_transcription: UnboundedReceiver<SonioxTranscriptionResponse>,
     tx_audio: UnboundedSender<AudioMessage>,
     tx_exit: UnboundedSender<bool>,
-    initialized_windows: bool,
     enable_high_priority: bool,
     font_size: f32,
     text_color: Color32,
     background_color: Color32,
+    position: Pos2,
+    initialized_windows: bool,
     transcription_store: TranscriptionStore,
 }
 
@@ -33,6 +34,7 @@ impl SubtitlesApp {
         font_size: f32,
         text_color: Color32,
         background_color: Color32,
+        position: Pos2,
     ) -> Self {
         Self {
             rx_transcription,
@@ -42,6 +44,7 @@ impl SubtitlesApp {
             font_size,
             text_color,
             background_color,
+            position,
             initialized_windows: false,
             transcription_store: TranscriptionStore::new(3),
         }
@@ -51,7 +54,7 @@ impl SubtitlesApp {
 impl App for SubtitlesApp {
     fn update(&mut self, ctx: &Context, frame: &mut Frame) {
         Area::new(Id::from("subtitles_area"))
-            .fixed_pos(egui::pos2(50., 900.))
+            .fixed_pos(self.position)
             .order(Order::Foreground)
             .show(ctx, |ui| {
                 make_window_click_through(frame);

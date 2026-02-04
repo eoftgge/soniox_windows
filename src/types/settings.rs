@@ -1,11 +1,10 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::types::languages::LanguageHint;
-use crate::types::offset::{OFFSET_WIDTH, WINDOW_HEIGHT};
 use config::{Config, ConfigError, File};
 use log::LevelFilter;
 use serde::Deserialize;
 use std::str::FromStr;
-use eframe::egui::Color32;
+use eframe::egui::{pos2, Color32, Pos2};
 
 #[derive(Deserialize)]
 pub struct SettingsApp {
@@ -82,14 +81,7 @@ impl SettingsApp {
         Color32::TRANSPARENT
     }
 
-    pub fn get_position(&self, height: usize) -> (f32, f32) {
-        if self.position == (0., 0.) {
-            let window_height = WINDOW_HEIGHT;
-            let pos_x = OFFSET_WIDTH;
-            let pos_y = height as f32 - window_height - 100.;
-
-            return (pos_x, pos_y);
-        }
-        self.position
+    pub fn get_position(&self) -> Pos2 {
+        pos2(self.position.0, self.position.1)
     }
 }

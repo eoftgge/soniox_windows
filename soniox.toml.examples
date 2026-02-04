@@ -25,8 +25,8 @@ enable_speakers = false
 # enable background
 enable_background = true
 
-# [0, 0] = default dynamic size
-position = [0, 0]
+# position
+position = [100, 150]
 
 # font size
 font_size = 24
