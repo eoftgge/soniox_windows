@@ -77,7 +77,7 @@ impl SettingsApp {
 
     pub fn get_background_color(&self) -> Color32 {
         if self.enable_background {
-            return Color32::from_black_alpha(200);
+            return Color32::from_black_alpha(155);
         }
         Color32::TRANSPARENT
     }
