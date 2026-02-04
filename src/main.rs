@@ -15,7 +15,7 @@ async fn run() -> Result<(), SonioxWindowsErrors> {
         viewport: ViewportBuilder::default()
             .with_app_id("sublive")
             .with_icon(from_png_bytes(ICON_BYTES).expect("Failed to load icon"))
-            .with_inner_size([400., 600.])
+            .with_inner_size([500., 700.])
             .with_resizable(false)
             .with_decorations(true)
             .with_always_on_top()

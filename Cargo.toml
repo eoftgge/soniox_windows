@@ -23,6 +23,7 @@ tracing-appender = "0.2.4"
 config = "0.15.19"
 bytemuck = "1.24.0"
 toml = "0.9.7"
+egui-notify = "0.21.0"
 
 [profile.release]
 lto = true

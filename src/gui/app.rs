@@ -3,12 +3,13 @@ use crate::soniox::transcription::TranscriptionStore;
 use crate::types::audio::AudioMessage;
 use crate::settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
-use crate::windows::utils::{initialize_tool_window, initialize_window, make_window_click_through};
-use eframe::egui::{Align, Area, Context, Id, Layout, Order, Pos2, Visuals};
-use eframe::epaint::Color32;
+use eframe::egui::{Align, Area, Context, Id, Layout, Order, Visuals};
 use eframe::{App, Frame};
+use egui_notify::Toasts;
 use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use crate::gui::settings::show_settings_window;
+use crate::gui::state::AppState;
 
 const MAX_FPS: u64 = 30;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
@@ -17,13 +18,11 @@ pub struct SubtitlesApp {
     rx_transcription: UnboundedReceiver<SonioxTranscriptionResponse>,
     tx_audio: UnboundedSender<AudioMessage>,
     tx_exit: UnboundedSender<bool>,
-    enable_high_priority: bool,
-    font_size: f32,
-    text_color: Color32,
-    background_color: Color32,
-    position: Pos2,
-    initialized_windows: bool,
+    settings: SettingsApp,
+    state: AppState,
+    last_state: Option<AppState>,
     transcription_store: TranscriptionStore,
+    toasts: Toasts,
 }
 
 impl SubtitlesApp {
@@ -31,55 +30,67 @@ impl SubtitlesApp {
         rx_transcription: UnboundedReceiver<SonioxTranscriptionResponse>,
         tx_exit: UnboundedSender<bool>,
         tx_audio: UnboundedSender<AudioMessage>,
-        settings: &SettingsApp, // maybe add builder?
+        settings: SettingsApp,
     ) -> Self {
         Self {
+            transcription_store: TranscriptionStore::new(settings.max_blocks()),
             rx_transcription,
             tx_exit,
             tx_audio,
-            enable_high_priority: settings.enable_high_priority(),
-            font_size: settings.font_size(),
-            text_color: settings.text_color(),
-            background_color: settings.get_background_color(),
-            position: settings.get_position(),
-            initialized_windows: false,
-            transcription_store: TranscriptionStore::new(settings.max_blocks()),
+            settings,
+            toasts: Toasts::new(),
+            state: AppState::Config,
+            last_state: None,
         }
     }
 }
 
 impl App for SubtitlesApp {
-    fn update(&mut self, ctx: &Context, frame: &mut Frame) {
-        Area::new(Id::from("subtitles_area"))
-            .fixed_pos(self.position)
-            .order(Order::Foreground)
-            .show(ctx, |ui| {
-                make_window_click_through(frame);
-                if !self.initialized_windows {
-                    initialize_window(frame);
-                    self.initialized_windows = true;
-                }
-                if self.enable_high_priority {
-                    initialize_tool_window(frame);
-                }
+    fn update(&mut self, ctx: &Context, _: &mut Frame) {
+        if Some(self.state) != self.last_state {
+            self.state.apply_window_state(ctx, self.settings.enable_high_priority());
 
+            if self.state == AppState::Overlay {
+                self.transcription_store.resize(self.settings.max_blocks);
+            }
+
+            self.last_state = Some(self.state);
+        }
+
+        match self.state {
+            AppState::Config => {
+                show_settings_window(
+                    ctx,
+                    &mut self.settings,
+                    &mut self.state,
+                    &mut self.toasts,
+                )
+            },
+            AppState::Overlay => {
+                self.transcription_store.clear_if_silent(Duration::from_secs(15));
                 while let Ok(transcription) = self.rx_transcription.try_recv() {
                     self.transcription_store.update(transcription);
                 }
 
-                self.transcription_store.clear_if_silent(Duration::from_secs(15));
-                ui.with_layout(Layout::top_down(Align::LEFT), |ui| {
-                    draw_subtitles(
-                        ui,
-                        &self.transcription_store,
-                        self.font_size,
-                        self.text_color,
-                        self.background_color,
-                    );
-                });
+                Area::new(Id::from("subtitles_area"))
+                    .fixed_pos(self.settings.get_position())
+                    .order(Order::Foreground)
+                    .show(ctx, |ui| {
+                        ui.with_layout(Layout::top_down(Align::LEFT), |ui| {
+                            draw_subtitles(
+                                ui,
+                                &self.transcription_store,
+                                self.settings.font_size,
+                                self.settings.text_color(),
+                                self.settings.get_background_color(),
+                            );
+                        });
+                        ctx.request_repaint_after(FRAME_TIME);
+                    });
 
-                ctx.request_repaint_after(FRAME_TIME);
-            });
+            }
+        }
+        self.toasts.show(ctx);
     }
 
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
