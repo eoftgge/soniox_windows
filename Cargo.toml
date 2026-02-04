@@ -23,10 +23,10 @@ log4rs = "1.4.0"
 bytemuck = "1.24.0"
 
 [profile.release]
-lto = "fat"
+lto = true
 strip = true
-opt-level = 3
-codegen-units = 32
+opt-level = "z"
+codegen-units = 1
 panic = "abort"
 
 # The profile that 'dist' will build with

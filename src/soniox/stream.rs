@@ -2,7 +2,7 @@ use crate::errors::SonioxWindowsErrors;
 use crate::soniox::URL;
 use crate::soniox::request::create_request;
 use crate::types::audio::{AudioMessage, AudioSample};
-use crate::types::settings::SettingsApp;
+use crate::settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use futures_util::{SinkExt, StreamExt};
 use std::time::Duration;

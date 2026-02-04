@@ -2,7 +2,7 @@ use crate::errors::SonioxWindowsErrors;
 use crate::gui::app::SubtitlesApp;
 use crate::soniox::stream::start_soniox_stream;
 use crate::types::audio::{AudioMessage, AudioSample};
-use crate::types::settings::SettingsApp;
+use settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::windows::audio::start_capture_audio;
 use log4rs::Config;
@@ -16,6 +16,7 @@ pub mod gui;
 pub mod soniox;
 pub mod types;
 pub mod windows;
+pub mod settings;
 
 const FILE_LOG: &str = "soniox.log";
 pub const ICON_BYTES: &[u8] = include_bytes!("../assets/icon.png");
