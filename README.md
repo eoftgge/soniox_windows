@@ -14,17 +14,7 @@ It supports only the Windows operating system, there can be no question of suppo
 
 **Disadvantages**
 
-* A quite inconvenient setup for inexperienced users. However, you can figure it out quickly, I think.
-
-### TODO
-
-1. [x] Add translate as field to application
-2. [x] Add binary-execution files
-3. [ ] Add the separate window for settings application (In the distant future)
-4. [x] Add mark speaker ID for conversation
-5. [x] Fix exit application (in some instances)
-6. [x] Add display messages errors
-7. [ ] Add advanced error handling responses Soniox
+* Nothing!!!!
 
 ### Launch
 
