@@ -3,24 +3,24 @@ use crate::errors::SonioxWindowsErrors;
 use crate::types::languages::LanguageHint;
 use config::{Config, ConfigError, File};
 use eframe::egui::{Color32, Pos2, pos2};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tracing_subscriber::filter::LevelFilter;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct SettingsApp {
     pub(crate) language_hints: Vec<LanguageHint>,
     pub(crate) context: String,
     pub(crate) api_key: String,
     pub(crate) target_language: LanguageHint,
     pub(crate) enable_translate: bool,
-    enable_high_priority: bool,
-    enable_speakers: bool,
-    enable_background: bool,
-    level: String,
-    position: (f32, f32),
-    font_size: f32,
-    text_color: (u8, u8, u8),
-    max_blocks: usize,
+    pub(crate) enable_high_priority: bool,
+    pub(crate) enable_speakers: bool,
+    pub(crate) enable_background: bool,
+    pub(crate) level: String,
+    pub(crate) position: (f32, f32),
+    pub(crate) font_size: f32,
+    pub(crate) text_color: (u8, u8, u8),
+    pub(crate) max_blocks: usize,
 }
 
 impl SettingsApp {
@@ -88,5 +88,14 @@ impl SettingsApp {
 
     pub fn get_position(&self) -> Pos2 {
         pos2(self.position.0, self.position.1)
+    }
+
+    pub fn save(&self, path: &str) -> Result<(), SonioxWindowsErrors> {
+        let toml_string = toml::to_string_pretty(self)
+            .map_err(|_| SonioxWindowsErrors::Internal("Failed to serialize settings"))?;
+        std::fs::write(path, toml_string)
+            .map_err(|_| SonioxWindowsErrors::Internal("Failed to write settings file"))?;
+
+        Ok(())
     }
 }
