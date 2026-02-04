@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq)]
 pub enum LanguageHint {
     #[serde(rename = "af")]
     Afrikaans,
@@ -122,4 +122,27 @@ pub enum LanguageHint {
     Vietnamese,
     #[serde(rename = "cy")]
     Welsh,
+}
+
+impl LanguageHint {
+    pub fn all() -> &'static [LanguageHint] {
+        &[
+            Self::Russian, Self::English, Self::German, Self::French, Self::Spanish, Self::Chinese, Self::Japanese,
+            Self::Ukrainian, Self::Belarusian, Self::Kazakh, Self::Polish, Self::Turkish, Self::Italian,
+            Self::Afrikaans, Self::Albanian, Self::Arabic, Self::Azerbaijani, Self::Basque, Self::Bengali,
+            Self::Bosnian, Self::Bulgarian, Self::Catalan, Self::Croatian, Self::Czech, Self::Danish,
+            Self::Dutch, Self::Estonian, Self::Finnish, Self::Galician, Self::Greek, Self::Gujarati,
+            Self::Hebrew, Self::Hindi, Self::Hungarian, Self::Indonesian, Self::Kannada, Self::Korean,
+            Self::Latvian, Self::Lithuanian, Self::Macedonian, Self::Malay, Self::Malayalam, Self::Marathi,
+            Self::Norwegian, Self::Persian, Self::Portuguese, Self::Punjabi, Self::Romanian, Self::Serbian,
+            Self::Slovak, Self::Slovenian, Self::Swahili, Self::Swedish, Self::Tagalog, Self::Tamil,
+            Self::Telugu, Self::Thai, Self::Urdu, Self::Vietnamese, Self::Welsh,
+        ]
+    }
+}
+
+impl std::fmt::Display for LanguageHint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
