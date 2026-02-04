@@ -24,5 +24,5 @@ pub enum SonioxWindowsErrors {
     #[error("Internal error: {0}")]
     Internal(&'static str),
     #[error("Error in WebSocket... Maybe he is dead")]
-    WssConnectionError
+    WssConnectionError,
 }

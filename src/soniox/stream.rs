@@ -1,6 +1,6 @@
 use crate::errors::SonioxWindowsErrors;
-use crate::soniox::request::create_request;
 use crate::soniox::URL;
+use crate::soniox::request::create_request;
 use crate::types::audio::AudioMessage;
 use crate::types::settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
@@ -67,7 +67,9 @@ async fn handle_ws_message(
         Some(Ok(message)) => match message {
             Message::Text(txt) => {
                 let response = serde_json::from_str::<SonioxTranscriptionResponse>(&txt);
-                if let Ok(r) = response && tx_ui.send(r).is_err() {
+                if let Ok(r) = response
+                    && tx_ui.send(r).is_err()
+                {
                     log::error!("UI channel closed");
                     return StreamAction::Stop;
                 }
@@ -95,14 +97,19 @@ async fn handle_ws_message(
 }
 
 async fn run_active_session(
-    ws_stream: tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
+    ws_stream: tokio_tungstenite::WebSocketStream<
+        tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+    >,
     tx_ui: UnboundedSender<SonioxTranscriptionResponse>,
     rx_audio: &mut UnboundedReceiver<AudioMessage>,
     init_bytes: &[u8],
 ) -> Result<StreamAction, SonioxWindowsErrors> {
     let (mut write, mut read) = ws_stream.split();
 
-    if let Err(e) = write.send(Message::Text(Utf8Bytes::try_from(init_bytes.to_vec())?)).await {
+    if let Err(e) = write
+        .send(Message::Text(Utf8Bytes::try_from(init_bytes.to_vec())?))
+        .await
+    {
         log::error!("Init handshake failed: {}", e);
         return Ok(StreamAction::Reconnect);
     }
@@ -138,7 +145,9 @@ async fn listen_soniox_stream(
     let mut retry_count = 0;
 
     loop {
-        let url = URL.into_client_request().map_err(|_| SonioxWindowsErrors::WssConnectionError)?;
+        let url = URL
+            .into_client_request()
+            .map_err(|_| SonioxWindowsErrors::WssConnectionError)?;
 
         log::info!("Connecting... (Attempt {})", retry_count + 1);
 
@@ -151,8 +160,9 @@ async fn listen_soniox_stream(
                     ws_stream,
                     tx_transcription.clone(),
                     &mut rx_audio,
-                    &init_bytes
-                ).await?;
+                    &init_bytes,
+                )
+                .await?;
 
                 match action {
                     StreamAction::Stop => {
