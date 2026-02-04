@@ -2,13 +2,13 @@ use crate::types::subtitles::AudioSubtitle;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use std::collections::VecDeque;
 
-pub struct TranscriptionState {
+pub struct TranscriptionStore {
     finishes_lines: VecDeque<AudioSubtitle>,
     interim_line: AudioSubtitle,
     max_lines: usize,
 }
 
-impl TranscriptionState {
+impl TranscriptionStore {
     pub fn new(max_lines: usize) -> Self {
         assert!(max_lines > 0);
 
