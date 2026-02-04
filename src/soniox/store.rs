@@ -23,14 +23,14 @@ impl TranscriptionStore {
 
     pub fn update(&mut self, response: SonioxTranscriptionResponse) {
         for token in &response.tokens {
-            if token.translation_status.as_deref() == Some("original") { continue; }
+            if token.translation_status.as_deref() == Some("original") {
+                continue;
+            }
 
             if token.is_final {
                 let speaker = token.speaker.clone();
                 let needs_new = match self.blocks.back() {
-                    Some(last) => {
-                        last.speaker != speaker || last.final_text.len() > 200
-                    }
+                    Some(last) => last.speaker != speaker || last.final_text.len() > 200,
                     None => true,
                 };
 

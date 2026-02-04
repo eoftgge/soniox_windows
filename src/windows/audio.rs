@@ -4,7 +4,7 @@ use bytemuck::cast_slice;
 use std::thread::sleep;
 use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use wasapi::{initialize_mta, DeviceEnumerator, Direction, StreamMode};
+use wasapi::{DeviceEnumerator, Direction, StreamMode, initialize_mta};
 
 pub fn start_capture_audio(
     tx_audio: UnboundedSender<AudioMessage>,

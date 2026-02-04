@@ -1,6 +1,6 @@
 use crate::errors::SonioxWindowsErrors;
-use crate::soniox::request::create_request;
 use crate::soniox::URL;
+use crate::soniox::request::create_request;
 use crate::types::audio::AudioMessage;
 use crate::types::settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;

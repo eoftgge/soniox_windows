@@ -12,7 +12,10 @@ pub struct TextElement {
 
 impl VisualReplica {
     pub fn new(speaker: Option<String>) -> Self {
-        Self { speaker, elements: Vec::new() }
+        Self {
+            speaker,
+            elements: Vec::new(),
+        }
     }
 
     pub fn add_text(&mut self, text: String, is_interim: bool) {
@@ -25,10 +28,13 @@ pub fn prepare_replicas(store: &TranscriptionStore) -> Vec<VisualReplica> {
     let all_blocks = store.blocks.iter().chain(store.interim_blocks.iter());
 
     for block in all_blocks {
-        if block.final_text.is_empty() && block.interim_text.is_empty() { continue; }
+        if block.final_text.is_empty() && block.interim_text.is_empty() {
+            continue;
+        }
 
         let speaker = block.speaker.clone();
-        let should_merge = replicas.last()
+        let should_merge = replicas
+            .last()
             .map(|last| last.speaker == speaker)
             .unwrap_or(false);
 

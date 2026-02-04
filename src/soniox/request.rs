@@ -2,7 +2,7 @@ use crate::errors::SonioxWindowsErrors;
 use crate::soniox::MODEL;
 use crate::types::settings::SettingsApp;
 use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranslationObject};
-use wasapi::{initialize_mta, DeviceEnumerator, Direction};
+use wasapi::{DeviceEnumerator, Direction, initialize_mta};
 
 pub(crate) fn create_request(
     settings: &'_ SettingsApp,

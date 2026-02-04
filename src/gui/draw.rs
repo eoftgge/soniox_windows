@@ -1,5 +1,5 @@
 use crate::gui::color::get_interim_color;
-use crate::gui::replicas::{prepare_replicas, VisualReplica};
+use crate::gui::replicas::{VisualReplica, prepare_replicas};
 use crate::soniox::store::TranscriptionStore;
 use eframe::egui::{Color32, Frame, RichText, Ui};
 
@@ -11,7 +11,9 @@ pub fn draw_subtitles(
     background_color: Color32,
 ) {
     let replicas = prepare_replicas(store);
-    if replicas.is_empty() { return; }
+    if replicas.is_empty() {
+        return;
+    }
 
     let max_visual_replicas = store.max_blocks();
     let total_count = replicas.len();
@@ -50,19 +52,27 @@ fn draw_replica_row(
         ui.spacing_mut().item_spacing.x = 0.0;
 
         if let Some(id) = &replica.speaker {
-            ui.label(RichText::new(format!("{}: ", id))
-                .size(font_size)
-                .color(text_color)
-                .strong());
+            ui.label(
+                RichText::new(format!("{}: ", id))
+                    .size(font_size)
+                    .color(text_color)
+                    .strong(),
+            );
         }
 
         for elem in replica.elements.iter() {
-            let color = if elem.is_interim { interim_color } else { text_color };
+            let color = if elem.is_interim {
+                interim_color
+            } else {
+                text_color
+            };
 
-            ui.label(RichText::new(&elem.text)
-                .size(font_size)
-                .strong()
-                .color(color));
+            ui.label(
+                RichText::new(&elem.text)
+                    .size(font_size)
+                    .strong()
+                    .color(color),
+            );
         }
     });
 }

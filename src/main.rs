@@ -3,10 +3,10 @@
 use eframe::egui::ViewportBuilder;
 use eframe::icon_data::from_png_bytes;
 use soniox_windows::errors::SonioxWindowsErrors;
+use soniox_windows::gui::font::setup_custom_fonts;
 use soniox_windows::types::settings::SettingsApp;
 use soniox_windows::windows::utils::show_error;
-use soniox_windows::{initialize_app, ICON_BYTES};
-use soniox_windows::gui::font::setup_custom_fonts;
+use soniox_windows::{ICON_BYTES, initialize_app};
 
 async fn run() -> Result<(), SonioxWindowsErrors> {
     let settings = SettingsApp::new("soniox.toml")?;

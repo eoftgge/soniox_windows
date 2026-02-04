@@ -1,10 +1,10 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::types::languages::LanguageHint;
 use config::{Config, ConfigError, File};
+use eframe::egui::{Color32, Pos2, pos2};
 use log::LevelFilter;
 use serde::Deserialize;
 use std::str::FromStr;
-use eframe::egui::{pos2, Color32, Pos2};
 
 #[derive(Deserialize)]
 pub struct SettingsApp {

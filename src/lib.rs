@@ -5,10 +5,10 @@ use crate::types::audio::AudioMessage;
 use crate::types::settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::windows::audio::start_capture_audio;
+use log4rs::Config;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Root};
 use log4rs::encode::pattern::PatternEncoder;
-use log4rs::Config;
 use tokio::sync::mpsc::unbounded_channel;
 
 pub mod errors;
