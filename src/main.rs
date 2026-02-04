@@ -22,7 +22,7 @@ async fn run() -> Result<(), SonioxWindowsErrors> {
         ..Default::default()
     };
 
-    log::info!("Starting application");
+    tracing::info!("Starting application");
     eframe::run_native(
         "Subtitles Live",
         native_options,
@@ -39,7 +39,7 @@ async fn run() -> Result<(), SonioxWindowsErrors> {
 async fn main() {
     if let Err(err) = run().await {
         show_error(&format!("{}", err));
-        log::error!("error in soniox_windows!: {:?}", err);
+        tracing::error!("error in soniox_windows!: {:?}", err);
         std::process::exit(1);
     }
 }

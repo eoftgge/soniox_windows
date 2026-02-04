@@ -17,9 +17,10 @@ futures-util = "0.3.31"
 eframe = { version = "0.33.2", features = ["glow"] }
 windows = { version = "0.62.2", features = ["Win32_UI_WindowsAndMessaging"] }
 raw-window-handle = "0.6.2"
-log = "0.4.29"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", features = ["fmt"] }
+tracing-appender = "0.2.4"
 config = "0.15.19"
-log4rs = "1.4.0"
 bytemuck = "1.24.0"
 
 [profile.release]

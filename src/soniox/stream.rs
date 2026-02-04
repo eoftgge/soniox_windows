@@ -54,13 +54,13 @@ where
             Ok(StreamAction::Continue)
         }
         Some(AudioMessage::Stop) => {
-            log::info!("Stop command received.");
+            tracing::trace!("Stop command received.");
             let _ = writer.send(Message::Binary(Bytes::new())).await;
             let _ = writer.close().await;
             Ok(StreamAction::Stop)
         }
         None => {
-            log::info!("Audio channel closed.");
+            tracing::trace!("Audio channel closed.");
             Ok(StreamAction::Stop)
         }
     }
@@ -78,7 +78,7 @@ async fn handle_ws_message(
                 if let Ok(r) = response
                     && tx_ui.send(r).is_err()
                 {
-                    log::error!("UI channel closed");
+                    tracing::error!("UI channel closed");
                     return StreamAction::Stop;
                 }
                 StreamAction::Continue
@@ -88,17 +88,17 @@ async fn handle_ws_message(
                 StreamAction::Continue
             }
             Message::Close(_) => {
-                log::warn!("Server closed connection");
+                tracing::warn!("Server closed connection");
                 StreamAction::Reconnect
             }
             _ => StreamAction::Continue,
         },
         Some(Err(e)) => {
-            log::error!("WS Read Error: {}", e);
+            tracing::error!("WS Read Error: {}", e);
             StreamAction::Reconnect
         }
         None => {
-            log::warn!("WS Stream ended");
+            tracing::warn!("WS Stream ended");
             StreamAction::Reconnect
         }
     }
@@ -119,7 +119,7 @@ async fn run_active_session(
         .send(Message::Text(Utf8Bytes::try_from(init_bytes.to_vec())?))
         .await
     {
-        log::error!("Init handshake failed: {}", e);
+        tracing::error!("Init handshake failed: {}", e);
         return Ok(StreamAction::Reconnect);
     }
 
@@ -132,7 +132,7 @@ async fn run_active_session(
                     Ok(StreamAction::Continue) => continue,
                     Ok(action) => return Ok(action),
                     Err(e) => {
-                        log::error!("WS Write Error: {}", e);
+                        tracing::error!("WS Write Error: {}", e);
                         return Ok(StreamAction::Reconnect);
                     }
                 }
@@ -161,11 +161,11 @@ async fn listen_soniox_stream(
             .into_client_request()
             .map_err(|_| SonioxWindowsErrors::WssConnectionError)?;
 
-        log::info!("Connecting... (Attempt {})", retry_count + 1);
+        tracing::trace!("Connecting... (Attempt {})", retry_count + 1);
 
         match connect_async(url).await {
             Ok((ws_stream, _)) => {
-                log::info!("Connected!");
+                tracing::trace!("Connected!");
                 retry_count = 0;
 
                 let action = run_active_session(
@@ -179,17 +179,17 @@ async fn listen_soniox_stream(
 
                 match action {
                     StreamAction::Stop => {
-                        log::info!("Stream finished normally.");
+                        tracing::trace!("Stream finished normally.");
                         return Ok(());
                     }
                     StreamAction::Reconnect => {
-                        log::warn!("Session lost. Reconnecting...");
+                        tracing::warn!("Session lost. Reconnecting...");
                     }
                     StreamAction::Continue => unreachable!(),
                 }
             }
             Err(e) => {
-                log::error!("Connection failed: {}", e);
+                tracing::error!("Connection failed: {}", e);
             }
         }
 
@@ -211,7 +211,7 @@ pub async fn start_soniox_stream(
     let request = create_request(settings)?;
     let bytes = serde_json::to_vec(&request)?;
 
-    log::info!("Started Soniox stream!");
-    log::info!("Starting to listen websocket stream Soniox...");
+    tracing::info!("Started Soniox stream!");
+    tracing::info!("Starting to listen websocket stream Soniox...");
     listen_soniox_stream(bytes, tx_ws, rx_audio, &tx_recycle).await
 }

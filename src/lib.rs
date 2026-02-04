@@ -5,11 +5,10 @@ use crate::types::audio::{AudioMessage, AudioSample};
 use settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::windows::audio::start_capture_audio;
-use log4rs::Config;
-use log4rs::append::file::FileAppender;
-use log4rs::config::{Appender, Root};
-use log4rs::encode::pattern::PatternEncoder;
 use tokio::sync::mpsc::unbounded_channel;
+use tracing_subscriber::filter::LevelFilter;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 
 pub mod errors;
 pub mod gui;
@@ -18,18 +17,36 @@ pub mod types;
 pub mod windows;
 pub mod settings;
 
-const FILE_LOG: &str = "soniox.log";
 pub const ICON_BYTES: &[u8] = include_bytes!("../assets/icon.png");
+
+fn setup_logging(level: LevelFilter) -> tracing_appender::non_blocking::WorkerGuard {
+    let file_appender = tracing_appender::rolling::daily("logs", "soniox.log");
+    let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
+
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_writer(std::io::stdout)
+                .with_ansi(true)
+        )
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_writer(non_blocking)
+                .with_ansi(false)
+                .with_target(false)
+        )
+        .with(
+            level
+        )
+        .init();
+
+    guard
+}
 
 pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindowsErrors> {
     let level = settings.level()?;
-    let logfile = FileAppender::builder()
-        .encoder(Box::new(PatternEncoder::new("{d} - {m}\n")))
-        .build(FILE_LOG)?;
-    let config = Config::builder()
-        .appender(Appender::builder().build("logfile", Box::new(logfile)))
-        .build(Root::builder().appender("logfile").build(level))?;
-    let _ = log4rs::init_config(config);
+    let _ = setup_logging(level);
+
     let (tx_audio, rx_audio) = unbounded_channel::<AudioMessage>();
     let (tx_transcription, rx_transcription) = unbounded_channel::<SonioxTranscriptionResponse>();
     let (tx_exit, rx_exit) = unbounded_channel::<bool>();
@@ -42,12 +59,12 @@ pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindo
     );
     tokio::task::spawn_blocking(move || {
         if let Err(err) = start_capture_audio(tx_audio, rx_exit, rx_recycle) {
-            log::error!("{}", err);
+            tracing::error!("{}", err);
         }
     });
     tokio::spawn(async move {
         if let Err(err) = start_soniox_stream(&settings, tx_transcription, rx_audio, tx_recycle).await {
-            log::error!("{}", err);
+            tracing::error!("{}", err);
         }
     });
 

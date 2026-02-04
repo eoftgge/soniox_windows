@@ -1,4 +1,3 @@
-use log4rs::config::runtime::ConfigErrors;
 use wasapi::WasapiError;
 
 #[derive(thiserror::Error, Debug)]
@@ -17,8 +16,6 @@ pub enum SonioxWindowsErrors {
     Config(#[from] config::ConfigError),
     #[error("Error in IO: {0}")]
     Io(#[from] std::io::Error),
-    #[error("Error in log: {0}")]
-    LoggingRuntime(#[from] ConfigErrors),
     #[error("Error in string UTF-8: {0}")]
     Utf8(#[from] std::str::Utf8Error),
     #[error("Internal error: {0}")]

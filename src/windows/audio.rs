@@ -31,21 +31,21 @@ pub fn start_capture_audio(
     audio_client.start_stream()?;
 
     let mut raw_buffer: Vec<u8> = Vec::with_capacity(16 * 1024);
-    log::info!("Started audio stream!");
+    tracing::info!("Started audio stream!");
     loop {
         if let Ok(true) = rx_stop.try_recv() {
-            log::info!("Audio thread terminated!");
+            tracing::info!("Audio thread terminated!");
             break;
         }
 
         let frames_available = match capture.get_next_packet_size() {
             Ok(Some(f)) => f,
             Err(e) => {
-                log::error!("Error getting packet size: {:?}", e);
+                tracing::error!("Error getting packet size: {:?}", e);
                 continue;
             },
             _ => {
-                log::error!("Unknown error in `get_next_packet_size`");
+                tracing::error!("Unknown error in `get_next_packet_size`");
                 break;
             }
         };
@@ -60,7 +60,7 @@ pub fn start_capture_audio(
             raw_buffer.resize(bytes_needed, 0);
         }
         if let Err(e) = capture.read_from_device(&mut raw_buffer) {
-            log::warn!("Read error: {:?}", e);
+            tracing::warn!("Read error: {:?}", e);
             continue;
         }
         let mut buffer = match rx_recycle.try_recv() {

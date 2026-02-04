@@ -1,10 +1,10 @@
+use std::str::FromStr;
 use crate::errors::SonioxWindowsErrors;
 use crate::types::languages::LanguageHint;
 use config::{Config, ConfigError, File};
 use eframe::egui::{Color32, Pos2, pos2};
-use log::LevelFilter;
 use serde::Deserialize;
-use std::str::FromStr;
+use tracing_subscriber::filter::LevelFilter;
 
 #[derive(Deserialize)]
 pub struct SettingsApp {
@@ -70,7 +70,7 @@ impl SettingsApp {
     pub fn level(&self) -> Result<LevelFilter, SonioxWindowsErrors> {
         LevelFilter::from_str(&self.level).map_err(|_| {
             SonioxWindowsErrors::Internal(
-                "field `level` isn't valid. did u mean `info`, `debug` and `warn`?",
+                "field `level` isn't valid. did u mean `trace`, `debug` and `warn`?",
             )
         })
     }

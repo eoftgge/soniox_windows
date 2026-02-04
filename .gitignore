@@ -1,4 +1,5 @@
 /target
+/logs
 .idea
 Cargo.lock
 soniox.toml
