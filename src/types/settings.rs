@@ -20,6 +20,7 @@ pub struct SettingsApp {
     position: (f32, f32),
     font_size: f32,
     text_color: (u8, u8, u8),
+    max_blocks: usize,
 }
 
 impl SettingsApp {
@@ -60,6 +61,10 @@ impl SettingsApp {
 
     pub fn font_size(&self) -> f32 {
         self.font_size
+    }
+
+    pub fn max_blocks(&self) -> usize {
+        self.max_blocks
     }
 
     pub fn level(&self) -> Result<LevelFilter, SonioxWindowsErrors> {

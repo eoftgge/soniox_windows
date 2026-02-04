@@ -31,7 +31,7 @@ impl SubtitlesApp {
         rx_transcription: UnboundedReceiver<SonioxTranscriptionResponse>,
         tx_exit: UnboundedSender<bool>,
         tx_audio: UnboundedSender<AudioMessage>,
-        settings: SettingsApp, // maybe add builder?
+        settings: &SettingsApp, // maybe add builder?
     ) -> Self {
         Self {
             rx_transcription,
@@ -43,7 +43,7 @@ impl SubtitlesApp {
             background_color: settings.get_background_color(),
             position: settings.get_position(),
             initialized_windows: false,
-            transcription_store: TranscriptionStore::new(3),
+            transcription_store: TranscriptionStore::new(settings.max_blocks()),
         }
     }
 }
