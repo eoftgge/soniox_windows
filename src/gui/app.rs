@@ -1,5 +1,5 @@
 use crate::gui::draw::draw_subtitles;
-use crate::soniox::store::TranscriptionStore;
+use crate::soniox::transcription::TranscriptionStore;
 use crate::types::audio::AudioMessage;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::windows::utils::{initialize_tool_window, initialize_window, make_window_click_through};

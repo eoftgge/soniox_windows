@@ -1,6 +1,6 @@
 use crate::gui::color::get_interim_color;
 use crate::gui::replicas::{VisualReplica, prepare_replicas};
-use crate::soniox::store::TranscriptionStore;
+use crate::soniox::transcription::TranscriptionStore;
 use eframe::egui::{Color32, Frame, RichText, Ui};
 
 pub fn draw_subtitles(
