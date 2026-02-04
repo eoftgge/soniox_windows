@@ -1,8 +1,8 @@
 use crate::errors::SonioxWindowsErrors;
+use crate::settings::SettingsApp;
 use crate::soniox::URL;
 use crate::soniox::request::create_request;
 use crate::types::audio::{AudioMessage, AudioSample};
-use crate::settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use futures_util::{SinkExt, StreamExt};
 use std::time::Duration;
@@ -39,7 +39,7 @@ async fn handle_audio_message<W>(
     msg: Option<AudioMessage>,
     writer: &mut W,
     tx_recycle: &UnboundedSender<AudioSample>,
-    byte_buffer_pool: &mut Vec<u8>
+    byte_buffer_pool: &mut Vec<u8>,
 ) -> Result<StreamAction, W::Error>
 where
     W: SinkExt<Message> + Unpin,
@@ -48,7 +48,9 @@ where
         Some(AudioMessage::Audio(buffer)) => {
             if !buffer.is_empty() {
                 convert_audio_chunk(&buffer, byte_buffer_pool);
-                writer.send(Message::Binary(Bytes::copy_from_slice(byte_buffer_pool))).await?;
+                writer
+                    .send(Message::Binary(Bytes::copy_from_slice(byte_buffer_pool)))
+                    .await?;
                 let _ = tx_recycle.send(buffer);
             }
             Ok(StreamAction::Continue)

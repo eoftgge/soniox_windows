@@ -1,6 +1,6 @@
 use crate::errors::SonioxWindowsErrors;
-use crate::soniox::MODEL;
 use crate::settings::SettingsApp;
+use crate::soniox::MODEL;
 use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranslationObject};
 use wasapi::{DeviceEnumerator, Direction, initialize_mta};
 

@@ -87,8 +87,8 @@ impl TranscriptionStore {
 
     pub fn clear_if_silent(&mut self, timeout: Duration) {
         if self.last_activity.elapsed() > timeout
-            && (!self.blocks.is_empty()
-            || !self.interim_blocks.is_empty()) {
+            && (!self.blocks.is_empty() || !self.interim_blocks.is_empty())
+        {
             self.blocks.clear();
             self.interim_blocks.clear();
         }

@@ -1,6 +1,4 @@
-use windows::Win32::UI::WindowsAndMessaging::{
-    MB_ICONERROR, MB_OK, MessageBoxW,
-};
+use windows::Win32::UI::WindowsAndMessaging::{MB_ICONERROR, MB_OK, MessageBoxW};
 use windows::core::PCWSTR;
 
 pub fn show_error(msg: &str) {

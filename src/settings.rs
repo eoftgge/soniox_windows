@@ -1,9 +1,9 @@
-use std::str::FromStr;
 use crate::errors::SonioxWindowsErrors;
 use crate::types::languages::LanguageHint;
 use config::{Config, ConfigError, File};
 use eframe::egui::{Color32, Pos2, pos2};
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use tracing_subscriber::filter::LevelFilter;
 
 #[derive(Deserialize, Serialize, Clone)]

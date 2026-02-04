@@ -2,9 +2,9 @@ use crate::errors::SonioxWindowsErrors;
 use crate::gui::app::SubtitlesApp;
 use crate::soniox::stream::start_soniox_stream;
 use crate::types::audio::{AudioMessage, AudioSample};
-use settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::windows::audio::start_capture_audio;
+use settings::SettingsApp;
 use tokio::sync::mpsc::unbounded_channel;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
@@ -12,10 +12,10 @@ use tracing_subscriber::util::SubscriberInitExt;
 
 pub mod errors;
 pub mod gui;
+pub mod settings;
 pub mod soniox;
 pub mod types;
 pub mod windows;
-pub mod settings;
 
 pub const ICON_BYTES: &[u8] = include_bytes!("../assets/icon.png");
 
@@ -27,17 +27,15 @@ fn setup_logging(level: LevelFilter) -> tracing_appender::non_blocking::WorkerGu
         .with(
             tracing_subscriber::fmt::layer()
                 .with_writer(std::io::stdout)
-                .with_ansi(true)
+                .with_ansi(true),
         )
         .with(
             tracing_subscriber::fmt::layer()
                 .with_writer(non_blocking)
                 .with_ansi(false)
-                .with_target(false)
+                .with_target(false),
         )
-        .with(
-            level
-        )
+        .with(level)
         .init();
 
     guard
@@ -63,7 +61,9 @@ pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindo
         }
     });
     tokio::spawn(async move {
-        if let Err(err) = start_soniox_stream(&settings, tx_transcription, rx_audio, tx_recycle).await {
+        if let Err(err) =
+            start_soniox_stream(&settings, tx_transcription, rx_audio, tx_recycle).await
+        {
             tracing::error!("{}", err);
         }
     });

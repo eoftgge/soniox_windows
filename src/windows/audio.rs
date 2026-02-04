@@ -43,7 +43,7 @@ pub fn start_capture_audio(
             Err(e) => {
                 tracing::error!("Error getting packet size: {:?}", e);
                 continue;
-            },
+            }
             _ => {
                 tracing::error!("Unknown error in `get_next_packet_size`");
                 break;
@@ -67,7 +67,7 @@ pub fn start_capture_audio(
             Ok(mut vec) => {
                 vec.clear();
                 vec
-            },
+            }
             Err(_) => Vec::with_capacity(raw_buffer.len() / 4),
         };
 

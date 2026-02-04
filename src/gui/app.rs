@@ -1,15 +1,15 @@
 use crate::gui::draw::draw_subtitles;
+use crate::gui::settings::show_settings_window;
+use crate::gui::state::AppState;
+use crate::settings::SettingsApp;
 use crate::soniox::transcription::TranscriptionStore;
 use crate::types::audio::AudioMessage;
-use crate::settings::SettingsApp;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use eframe::egui::{Align, Area, Context, Id, Layout, Order, Visuals};
 use eframe::{App, Frame};
 use egui_notify::Toasts;
 use std::time::Duration;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use crate::gui::settings::show_settings_window;
-use crate::gui::state::AppState;
 
 const MAX_FPS: u64 = 30;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
@@ -48,7 +48,8 @@ impl SubtitlesApp {
 impl App for SubtitlesApp {
     fn update(&mut self, ctx: &Context, _: &mut Frame) {
         if Some(self.state) != self.last_state {
-            self.state.apply_window_state(ctx, self.settings.enable_high_priority());
+            self.state
+                .apply_window_state(ctx, self.settings.enable_high_priority());
 
             if self.state == AppState::Overlay {
                 self.transcription_store.resize(self.settings.max_blocks);
@@ -59,15 +60,11 @@ impl App for SubtitlesApp {
 
         match self.state {
             AppState::Config => {
-                show_settings_window(
-                    ctx,
-                    &mut self.settings,
-                    &mut self.state,
-                    &mut self.toasts,
-                )
-            },
+                show_settings_window(ctx, &mut self.settings, &mut self.state, &mut self.toasts)
+            }
             AppState::Overlay => {
-                self.transcription_store.clear_if_silent(Duration::from_secs(15));
+                self.transcription_store
+                    .clear_if_silent(Duration::from_secs(15));
                 while let Ok(transcription) = self.rx_transcription.try_recv() {
                     self.transcription_store.update(transcription);
                 }
@@ -87,7 +84,6 @@ impl App for SubtitlesApp {
                         });
                         ctx.request_repaint_after(FRAME_TIME);
                     });
-
             }
         }
         self.toasts.show(ctx);
