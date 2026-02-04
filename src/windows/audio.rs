@@ -12,7 +12,8 @@ pub fn start_capture_audio(
 ) -> Result<(), SonioxWindowsErrors> {
     initialize_mta()
         .ok()
-        .map_err(|_| SonioxWindowsErrors::Internal(""))?;
+        .map_err(|_| SonioxWindowsErrors::Internal("Failed to init MTA"))?;
+
     let enumerator = DeviceEnumerator::new()?;
     let device = enumerator.get_default_device(&Direction::Render)?;
     let mut audio_client = device.get_iaudioclient()?;
@@ -28,6 +29,7 @@ pub fn start_capture_audio(
     let capture = audio_client.get_audiocaptureclient()?;
     audio_client.start_stream()?;
 
+    let mut raw_buffer: Vec<u8> = Vec::with_capacity(16 * 1024);
     log::info!("Started audio stream!");
     loop {
         if let Ok(true) = rx_stop.try_recv() {
@@ -35,27 +37,34 @@ pub fn start_capture_audio(
             break;
         }
 
-        let frames = match capture.get_next_packet_size()? {
-            Some(f) if f > 0 => f,
-            _ => {
-                sleep(Duration::from_millis(50));
+        let frames_available = match capture.get_next_packet_size() {
+            Ok(Some(f)) => f,
+            Err(e) => {
+                log::error!("Error getting packet size: {:?}", e);
                 continue;
+            },
+            _ => {
+                log::error!("Unknown error in `get_next_packet_size`");
+                break;
             }
         };
 
-        let mut buffer = vec![0u8; frames as usize * bytes_per_frame];
-        let _ = capture.read_from_device(&mut buffer)?;
+        if frames_available == 0 {
+            sleep(Duration::from_millis(1));
+            continue;
+        }
 
-        let final_buffer: Vec<f32> = if !buffer.len().is_multiple_of(4) {
-            log::warn!("Buffer size not multiple of 4: {}", buffer.len());
-            Vec::new()
-        } else {
-            cast_slice::<u8, f32>(&buffer).to_vec()
-        };
-        let result = tx_audio.send(AudioMessage::Audio(final_buffer));
+        let bytes_needed = frames_available as usize * bytes_per_frame;
+        if raw_buffer.len() != bytes_needed {
+            raw_buffer.resize(bytes_needed, 0);
+        }
+        if let Err(e) = capture.read_from_device(&mut raw_buffer) {
+            log::warn!("Read error: {:?}", e);
+            continue;
+        }
+        let data: Vec<f32> = cast_slice(&raw_buffer).to_vec();
 
-        if let Err(err) = result {
-            log::info!("Audio thread terminated, error: {:?}", err);
+        if tx_audio.send(AudioMessage::Audio(data)).is_err() {
             break;
         }
     }
