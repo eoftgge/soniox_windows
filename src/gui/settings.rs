@@ -164,7 +164,7 @@ fn ui_section_api(ui: &mut Ui, settings: &mut SettingsApp) {
                 ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
                     ui.add(egui::Label::new("Options:").extend());
                 });
-                ui.checkbox(&mut settings.enable_speakers, "Speakers ID");
+                ui.checkbox(&mut settings.enable_speakers, "Enable Speakers ID");
                 ui.end_row();
             });
         ui.small("To change configuration Soniox you need restart application.");
@@ -174,7 +174,9 @@ fn ui_section_api(ui: &mut Ui, settings: &mut SettingsApp) {
 fn ui_section_position(ui: &mut Ui, ctx: &Context, settings: &mut SettingsApp) {
     ui.collapsing("Position", |ui| {
         Grid::new("pos_grid").spacing([10.0, 10.0]).show(ui, |ui| {
-            ui.label("Coordinates:");
+            ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                ui.add(egui::Label::new("Coordinates:").extend());
+            });
             ui.horizontal(|ui| {
                 ui.label("X:");
                 ui.add(DragValue::new(&mut settings.position.0));
@@ -183,14 +185,49 @@ fn ui_section_position(ui: &mut Ui, ctx: &Context, settings: &mut SettingsApp) {
             });
             ui.end_row();
 
-            ui.label("Auto-set:");
-            let btn = ui.button("Use current position");
-            if btn.clicked()
-                && let Some(rect) = ctx.input(|i| i.viewport().outer_rect)
-            {
-                settings.position = (rect.min.x, rect.min.y);
-            }
-            btn.on_hover_text("Drag window to location and click");
+            ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                ui.add(egui::Label::new("Snap to:").extend());
+            });
+            ui.vertical(|ui| {
+                let (screen_w, screen_h) = match ctx.input(|i| i.viewport().monitor_size) {
+                    Some(size) => (size.x, size.y),
+                    None => (1920.0, 1080.0),
+                };
+
+                let w = 800.0;
+                let h = 350.0;
+                let pad = 30.0;
+
+                let x_left   = pad;
+                let x_center = (screen_w / 2.0) - (w / 2.0);
+                let x_right  = screen_w - w - pad;
+
+                let y_top    = pad;
+                let y_mid    = (screen_h / 2.0) - (h / 2.0);
+                let y_bot    = screen_h - h - pad;
+
+                Grid::new("snap_buttons").spacing([5.0, 5.0]).show(ui, |ui| {
+                    let btn = |ui: &mut Ui, text: &str| {
+                        ui.add(egui::Button::new(RichText::new(text).size(16.0))
+                            .min_size(egui::vec2(30.0, 30.0)))
+                    };
+
+                    if btn(ui, "↖").clicked() { settings.position = (x_left, y_top); }
+                    else if btn(ui, "⬆").clicked() { settings.position = (x_center, y_top); }
+                    else if btn(ui, "↗").clicked() { settings.position = (x_right, y_top); }
+                    ui.end_row();
+
+                    if btn(ui, "⬅").clicked() { settings.position = (x_left, y_mid); }
+                    else if btn(ui, "◎").clicked() { settings.position = (x_center, y_mid); }
+                    else if btn(ui, "➡").clicked() { settings.position = (x_right, y_mid); }
+                    ui.end_row();
+
+                    if btn(ui, "↙").on_hover_text(format!("Y: {:.0}", y_bot)).clicked() { settings.position = (x_left, y_bot); }
+                    else if btn(ui, "⬇").on_hover_text(format!("Y: {:.0}", y_bot)).clicked() { settings.position = (x_center, y_bot); }
+                    else if btn(ui, "↘").on_hover_text(format!("Y: {:.0}", y_bot)).clicked() { settings.position = (x_right, y_bot); }
+                    ui.end_row();
+                });
+            });
             ui.end_row();
         });
     });
