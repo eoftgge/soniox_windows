@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use eframe::egui::{IconData, ViewportBuilder};
 use eframe::icon_data::from_png_bytes;
 use soniox_live::errors::SonioxLiveErrors;
