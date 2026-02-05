@@ -8,7 +8,7 @@ rust-version = "1.89.0"
 [dependencies]
 thiserror = "2.0.16"
 tungstenite = { version = "0.28.0", features = ["native-tls"] }
-serde = { version = "1.0.219", features = ["derive"] }
+serde = { version = "1.0.219", features = ["derive", "rc"] }
 serde_json = "1.0.143"
 tokio-tungstenite = { version = "0.28.0", features = ["native-tls"] }
 tokio = { version = "1.48.0", features = ["rt", "rt-multi-thread", "macros", "sync", "time"] }
