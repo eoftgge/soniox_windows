@@ -4,6 +4,7 @@ use config::{Config, ConfigError, File};
 use eframe::egui::{Color32, Pos2, pos2};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
+use std::sync::Arc;
 use tracing_subscriber::filter::LevelFilter;
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -31,16 +32,16 @@ impl SettingsApp {
         s.try_deserialize()
     }
 
-    pub fn language_hints(&self) -> &[LanguageHint] {
-        &self.language_hints
+    pub fn language_hints(&self) -> Arc<[LanguageHint]> {
+        Arc::from(&*self.language_hints)
     }
 
-    pub fn context(&self) -> &str {
-        &self.context
+    pub fn context(&self) -> Arc<str> {
+        Arc::from(&*self.context)
     }
 
-    pub fn api_key(&self) -> &str {
-        &self.api_key
+    pub fn api_key(&self) -> Arc<str> {
+        Arc::from(&*self.api_key)
     }
 
     pub fn target_language(&self) -> LanguageHint {
