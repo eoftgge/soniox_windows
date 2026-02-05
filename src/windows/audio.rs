@@ -3,13 +3,13 @@ use crate::types::audio::{AudioMessage, AudioSample};
 use bytemuck::cast_slice;
 use std::thread::sleep;
 use std::time::Duration;
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::sync::mpsc::{Receiver, Sender};
 use wasapi::{DeviceEnumerator, Direction, StreamMode, initialize_mta};
 
 pub fn start_capture_audio(
-    tx_audio: UnboundedSender<AudioMessage>,
-    mut rx_stop: UnboundedReceiver<bool>,
-    mut rx_recycle: UnboundedReceiver<AudioSample>,
+    tx_audio: Sender<AudioMessage>,
+    mut rx_stop: Receiver<bool>,
+    mut rx_recycle: Receiver<AudioSample>,
 ) -> Result<(), SonioxWindowsErrors> {
     initialize_mta()
         .ok()
@@ -74,8 +74,15 @@ pub fn start_capture_audio(
         let data: &[f32] = cast_slice(&raw_buffer);
         buffer.extend_from_slice(data);
 
-        if tx_audio.send(AudioMessage::Audio(buffer)).is_err() {
-            break;
+        match tx_audio.try_send(AudioMessage::Audio(buffer)) {
+            Err(tokio::sync::mpsc::error::TrySendError::Full(_)) => {
+                tracing::warn!("Audio buffer full, dropping frame");
+                continue;
+            },
+            Err(tokio::sync::mpsc::error::TrySendError::Closed(_)) => {
+                break;
+            },
+            _ => {}
         }
     }
 

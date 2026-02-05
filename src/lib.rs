@@ -5,7 +5,7 @@ use crate::types::audio::{AudioMessage, AudioSample};
 use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::windows::audio::start_capture_audio;
 use settings::SettingsApp;
-use tokio::sync::mpsc::unbounded_channel;
+use tokio::sync::mpsc::channel;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -45,10 +45,10 @@ pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindo
     let level = settings.level()?;
     let _ = setup_logging(level);
 
-    let (tx_audio, rx_audio) = unbounded_channel::<AudioMessage>();
-    let (tx_transcription, rx_transcription) = unbounded_channel::<SonioxTranscriptionResponse>();
-    let (tx_exit, rx_exit) = unbounded_channel::<bool>();
-    let (tx_recycle, rx_recycle) = unbounded_channel::<AudioSample>();
+    let (tx_audio, rx_audio) = channel::<AudioMessage>(256);
+    let (tx_transcription, rx_transcription) = channel::<SonioxTranscriptionResponse>(256);
+    let (tx_exit, rx_exit) = channel::<bool>(1);
+    let (tx_recycle, rx_recycle) = channel::<AudioSample>(256);
     let app = SubtitlesApp::new(
         rx_transcription,
         tx_exit,

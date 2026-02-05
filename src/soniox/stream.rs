@@ -6,7 +6,7 @@ use crate::types::audio::{AudioMessage, AudioSample};
 use crate::types::soniox::SonioxTranscriptionResponse;
 use futures_util::{SinkExt, StreamExt};
 use std::time::Duration;
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::sleep;
 use tokio_tungstenite::connect_async;
 use tungstenite::client::IntoClientRequest;
@@ -38,7 +38,7 @@ fn convert_audio_chunk(input: &[f32], output: &mut Vec<u8>) {
 async fn handle_audio_message<W>(
     msg: Option<AudioMessage>,
     writer: &mut W,
-    tx_recycle: &UnboundedSender<AudioSample>,
+    tx_recycle: &Sender<AudioSample>,
     byte_buffer_pool: &mut Vec<u8>,
 ) -> Result<StreamAction, W::Error>
 where
@@ -70,7 +70,7 @@ where
 
 async fn handle_ws_message(
     msg: Option<Result<Message, tungstenite::Error>>,
-    tx_ui: &UnboundedSender<SonioxTranscriptionResponse>,
+    tx_ui: &Sender<SonioxTranscriptionResponse>,
     writer: &mut (impl SinkExt<Message, Error = tungstenite::Error> + Unpin),
 ) -> StreamAction {
     match msg {
@@ -78,7 +78,7 @@ async fn handle_ws_message(
             Message::Text(txt) => {
                 let response = serde_json::from_str::<SonioxTranscriptionResponse>(&txt);
                 if let Ok(r) = response
-                    && tx_ui.send(r).is_err()
+                    && tx_ui.send(r).await.is_err()
                 {
                     tracing::error!("UI channel closed");
                     return StreamAction::Stop;
@@ -110,10 +110,10 @@ async fn run_active_session(
     ws_stream: tokio_tungstenite::WebSocketStream<
         tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
     >,
-    tx_ws: UnboundedSender<SonioxTranscriptionResponse>,
-    rx_audio: &mut UnboundedReceiver<AudioMessage>,
+    tx_ws: Sender<SonioxTranscriptionResponse>,
+    rx_audio: &mut Receiver<AudioMessage>,
     init_bytes: &[u8],
-    tx_recycle: &UnboundedSender<AudioSample>,
+    tx_recycle: &Sender<AudioSample>,
 ) -> Result<StreamAction, SonioxWindowsErrors> {
     let (mut write, mut read) = ws_stream.split();
 
@@ -152,9 +152,9 @@ async fn run_active_session(
 
 async fn listen_soniox_stream(
     init_bytes: Vec<u8>,
-    tx_ws: UnboundedSender<SonioxTranscriptionResponse>,
-    mut rx_audio: UnboundedReceiver<AudioMessage>,
-    tx_recycle: &UnboundedSender<AudioSample>,
+    tx_ws: Sender<SonioxTranscriptionResponse>,
+    mut rx_audio: Receiver<AudioMessage>,
+    tx_recycle: &Sender<AudioSample>,
 ) -> Result<(), SonioxWindowsErrors> {
     let mut retry_count = 0;
 
@@ -206,9 +206,9 @@ async fn listen_soniox_stream(
 
 pub async fn start_soniox_stream(
     settings: &SettingsApp,
-    tx_ws: UnboundedSender<SonioxTranscriptionResponse>,
-    rx_audio: UnboundedReceiver<AudioMessage>,
-    tx_recycle: UnboundedSender<AudioSample>,
+    tx_ws: Sender<SonioxTranscriptionResponse>,
+    rx_audio: Receiver<AudioMessage>,
+    tx_recycle: Sender<AudioSample>,
 ) -> Result<(), SonioxWindowsErrors> {
     let request = create_request(settings)?;
     let bytes = serde_json::to_vec(&request)?;

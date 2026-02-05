@@ -9,15 +9,15 @@ use eframe::egui::{Align, Area, Context, Id, Layout, Order, Visuals};
 use eframe::{App, Frame};
 use egui_notify::Toasts;
 use std::time::Duration;
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::sync::mpsc::{Receiver, Sender};
 
 const MAX_FPS: u64 = 30;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
 
 pub struct SubtitlesApp {
-    rx_transcription: UnboundedReceiver<SonioxTranscriptionResponse>,
-    tx_audio: UnboundedSender<AudioMessage>,
-    tx_exit: UnboundedSender<bool>,
+    rx_transcription: Receiver<SonioxTranscriptionResponse>,
+    tx_audio: Sender<AudioMessage>,
+    tx_exit: Sender<bool>,
     settings: SettingsApp,
     state: AppState,
     last_state: Option<AppState>,
@@ -27,9 +27,9 @@ pub struct SubtitlesApp {
 
 impl SubtitlesApp {
     pub fn new(
-        rx_transcription: UnboundedReceiver<SonioxTranscriptionResponse>,
-        tx_exit: UnboundedSender<bool>,
-        tx_audio: UnboundedSender<AudioMessage>,
+        rx_transcription: Receiver<SonioxTranscriptionResponse>,
+        tx_exit: Sender<bool>,
+        tx_audio: Sender<AudioMessage>,
         settings: SettingsApp,
     ) -> Self {
         Self {
