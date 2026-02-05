@@ -18,7 +18,6 @@ tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["fmt"] }
 tracing-appender = "0.2.4"
 config = "0.15.19"
-bytemuck = "1.24.0"
 toml = "0.9.7"
 egui-notify = "0.21.0"
 cpal = "0.17.1"

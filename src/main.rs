@@ -40,7 +40,7 @@ async fn run() -> Result<(), SonioxLiveErrors> {
 #[tokio::main]
 async fn main() {
     if let Err(err) = run().await {
-        tracing::error!("SonioxLive {:?}", err);
+        tracing::error!("Soniox Live {:?}", err);
         std::process::exit(1);
     }
 }
