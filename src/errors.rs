@@ -1,5 +1,5 @@
 #[derive(thiserror::Error, Debug)]
-pub enum SonioxWindowsErrors {
+pub enum SonioxLiveErrors {
     #[error("Error in builder stream")]
     BuildStream(#[from] cpal::BuildStreamError),
     #[error("Error in player stream")]

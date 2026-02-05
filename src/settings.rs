@@ -1,4 +1,4 @@
-use crate::errors::SonioxWindowsErrors;
+use crate::errors::SonioxLiveErrors;
 use crate::types::languages::LanguageHint;
 use config::{Config, ConfigError, File};
 use eframe::egui::{Color32, Pos2, pos2};
@@ -68,9 +68,9 @@ impl SettingsApp {
         self.max_blocks
     }
 
-    pub fn level(&self) -> Result<LevelFilter, SonioxWindowsErrors> {
+    pub fn level(&self) -> Result<LevelFilter, SonioxLiveErrors> {
         LevelFilter::from_str(&self.level).map_err(|_| {
-            SonioxWindowsErrors::Internal(
+            SonioxLiveErrors::Internal(
                 "field `level` isn't valid. did u mean `trace`, `debug` and `warn`?",
             )
         })
@@ -91,11 +91,11 @@ impl SettingsApp {
         pos2(self.position.0, self.position.1)
     }
 
-    pub fn save(&self, path: &str) -> Result<(), SonioxWindowsErrors> {
+    pub fn save(&self, path: &str) -> Result<(), SonioxLiveErrors> {
         let toml_string = toml::to_string_pretty(self)
-            .map_err(|_| SonioxWindowsErrors::Internal("Failed to serialize settings"))?;
+            .map_err(|_| SonioxLiveErrors::Internal("Failed to serialize settings"))?;
         std::fs::write(path, toml_string)
-            .map_err(|_| SonioxWindowsErrors::Internal("Failed to write settings file"))?;
+            .map_err(|_| SonioxLiveErrors::Internal("Failed to write settings file"))?;
 
         Ok(())
     }

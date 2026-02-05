@@ -1,8 +1,8 @@
 [package]
-name = "soniox_windows"
+name = "soniox_live"
 version = "1.0.0"
 edition = "2024"
-repository = "https://github.com/eoftgge/soniox_windows"
+repository = "https://github.com/eoftgge/soniox_live"
 rust-version = "1.89.0"
 
 [dependencies]

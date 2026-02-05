@@ -1,4 +1,4 @@
-use crate::errors::SonioxWindowsErrors;
+use crate::errors::SonioxLiveErrors;
 use crate::settings::SettingsApp;
 use crate::soniox::MODEL;
 use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranslationObject};
@@ -7,7 +7,7 @@ use cpal::StreamConfig;
 pub(crate) fn create_request(
     settings: &SettingsApp,
     stream_config: &StreamConfig,
-) -> Result<SonioxTranscriptionRequest, SonioxWindowsErrors> {
+) -> Result<SonioxTranscriptionRequest, SonioxLiveErrors> {
     let mut request = SonioxTranscriptionRequest {
         api_key: settings.api_key(),
         model: MODEL,

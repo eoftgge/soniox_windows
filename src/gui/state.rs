@@ -1,4 +1,4 @@
-use crate::errors::SonioxWindowsErrors;
+use crate::errors::SonioxLiveErrors;
 use crate::settings::SettingsApp;
 use crate::transcription::service::TranscriptionService;
 use crate::transcription::store::TranscriptionStore;
@@ -43,7 +43,7 @@ impl StateManager {
         ctx: &Context,
         store: &mut TranscriptionStore,
         settings: &SettingsApp,
-    ) -> Result<(), SonioxWindowsErrors> {
+    ) -> Result<(), SonioxLiveErrors> {
         let Some(resolved) = self.pending_state.take() else {
             return Ok(());
         };

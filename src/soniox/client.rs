@@ -1,4 +1,4 @@
-use crate::errors::SonioxWindowsErrors;
+use crate::errors::SonioxLiveErrors;
 use crate::soniox::URL;
 use crate::soniox::action::StreamAction;
 use crate::soniox::utils::convert_audio_chunk;
@@ -39,14 +39,14 @@ impl SonioxClient {
     pub async fn start(
         &mut self,
         request: &SonioxTranscriptionRequest,
-    ) -> Result<(), SonioxWindowsErrors> {
+    ) -> Result<(), SonioxLiveErrors> {
         let init_bytes = serde_json::to_vec(request)?;
         let mut retry_count = 0;
 
         loop {
             let url = URL
                 .into_client_request()
-                .map_err(|_| SonioxWindowsErrors::WssConnectionError)?;
+                .map_err(|_| SonioxLiveErrors::WssConnectionError)?;
             tracing::debug!("Connecting to Soniox... (Attempt {})", retry_count + 1);
 
             match connect_async(url).await {
@@ -64,7 +64,7 @@ impl SonioxClient {
             sleep(Duration::from_millis(RECONNECT_DELAY)).await;
             retry_count += 1;
             if retry_count > MAX_RETRIES {
-                return Err(SonioxWindowsErrors::WssConnectionError);
+                return Err(SonioxLiveErrors::WssConnectionError);
             }
         }
     }
@@ -75,7 +75,7 @@ impl SonioxClient {
             tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
         >,
         init_bytes: &[u8],
-    ) -> Result<StreamAction, SonioxWindowsErrors> {
+    ) -> Result<StreamAction, SonioxLiveErrors> {
         let (mut write, mut read) = ws_stream.split();
         write
             .send(Message::Text(Utf8Bytes::try_from(init_bytes.to_vec())?))
@@ -99,7 +99,7 @@ impl SonioxClient {
         &mut self,
         msg: Option<AudioSample>,
         writer: &mut W,
-    ) -> Result<StreamAction, SonioxWindowsErrors>
+    ) -> Result<StreamAction, SonioxLiveErrors>
     where
         W: SinkExt<Message, Error = tungstenite::Error> + Unpin,
     {

@@ -1,4 +1,4 @@
-use crate::errors::SonioxWindowsErrors;
+use crate::errors::SonioxLiveErrors;
 use crate::settings::SettingsApp;
 use crate::soniox::client::SonioxClient;
 use crate::soniox::request::create_request;
@@ -14,7 +14,7 @@ pub struct TranscriptionService {
 }
 
 impl TranscriptionService {
-    pub fn start(settings_app: &SettingsApp) -> Result<Self, SonioxWindowsErrors> {
+    pub fn start(settings_app: &SettingsApp) -> Result<Self, SonioxLiveErrors> {
         let (tx_audio, rx_audio) = channel::<AudioSample>(256);
         let (tx_transcription, rx_transcription) = channel::<SonioxTranscriptionResponse>(256);
         let (tx_recycle, rx_recycle) = channel::<AudioSample>(256);

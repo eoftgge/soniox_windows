@@ -1,4 +1,4 @@
-use crate::errors::SonioxWindowsErrors;
+use crate::errors::SonioxLiveErrors;
 use crate::gui::app::SubtitlesApp;
 use settings::SettingsApp;
 use tracing_subscriber::filter::LevelFilter;
@@ -36,7 +36,7 @@ fn setup_tracing(level: LevelFilter) -> tracing_appender::non_blocking::WorkerGu
     guard
 }
 
-pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindowsErrors> {
+pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxLiveErrors> {
     let level = settings.level()?;
     let _guard = setup_tracing(level);
     let app = SubtitlesApp::new(settings);

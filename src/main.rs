@@ -1,11 +1,11 @@
 use eframe::egui::{IconData, ViewportBuilder};
 use eframe::icon_data::from_png_bytes;
-use soniox_windows::errors::SonioxWindowsErrors;
-use soniox_windows::gui::font::setup_custom_fonts;
-use soniox_windows::settings::SettingsApp;
-use soniox_windows::{ICON_BYTES, initialize_app};
+use soniox_live::errors::SonioxLiveErrors;
+use soniox_live::gui::font::setup_custom_fonts;
+use soniox_live::settings::SettingsApp;
+use soniox_live::{ICON_BYTES, initialize_app};
 
-async fn run() -> Result<(), SonioxWindowsErrors> {
+async fn run() -> Result<(), SonioxLiveErrors> {
     let settings = SettingsApp::new("soniox.toml")?;
     let app = initialize_app(settings)?;
     let native_options = eframe::NativeOptions {
@@ -26,7 +26,7 @@ async fn run() -> Result<(), SonioxWindowsErrors> {
 
     tracing::info!("Starting application");
     eframe::run_native(
-        "Subtitles Live",
+        "Soniox Live",
         native_options,
         Box::new(move |cc| {
             setup_custom_fonts(&cc.egui_ctx);
@@ -40,7 +40,7 @@ async fn run() -> Result<(), SonioxWindowsErrors> {
 #[tokio::main]
 async fn main() {
     if let Err(err) = run().await {
-        tracing::error!("error in soniox_windows!: {:?}", err);
+        tracing::error!("SonioxLive {:?}", err);
         std::process::exit(1);
     }
 }

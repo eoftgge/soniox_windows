@@ -1,4 +1,4 @@
-use crate::errors::SonioxWindowsErrors;
+use crate::errors::SonioxLiveErrors;
 use crate::types::audio::AudioSample;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{Stream, StreamConfig};
@@ -18,11 +18,11 @@ impl AudioSession {
     pub fn open(
         tx_audio: Sender<AudioSample>,
         mut rx_recycle: Receiver<AudioSample>,
-    ) -> Result<Self, SonioxWindowsErrors> {
+    ) -> Result<Self, SonioxLiveErrors> {
         let host = cpal::default_host();
         let device = host
             .default_output_device()
-            .ok_or_else(|| SonioxWindowsErrors::Internal("Output device is not found"))?;
+            .ok_or_else(|| SonioxLiveErrors::Internal("Output device is not found"))?;
 
         let config = device.default_output_config()?.config();
         let stream = device.build_input_stream(
