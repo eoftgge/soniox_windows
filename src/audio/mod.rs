@@ -1,2 +1,1 @@
-pub(crate) mod audio;
-mod wrapper;
+pub mod capture;
