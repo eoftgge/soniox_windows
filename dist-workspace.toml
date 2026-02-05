@@ -15,4 +15,7 @@ targets = ["aarch64-apple-darwin", "aarch64-pc-windows-msvc", "x86_64-unknown-li
 install-path = "CARGO_HOME"
 # Whether to install an updater program
 install-updater = true
-allow-dirty = ["ci"]
+
+[dist.dependencies.apt]
+libasound2-dev = "1.2.15.3-1"
+pkg-config = "0.29.2"

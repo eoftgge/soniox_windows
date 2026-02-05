@@ -8,7 +8,7 @@ on:
 jobs:
   check:
     name: Check
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions-rs/toolchain@v1
@@ -30,6 +30,11 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev pkg-config libudev-dev
       - uses: actions-rs/cargo@v1
         with:
           command: test
