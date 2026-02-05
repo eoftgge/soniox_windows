@@ -1,9 +1,5 @@
-use wasapi::WasapiError;
-
 #[derive(thiserror::Error, Debug)]
 pub enum SonioxWindowsErrors {
-    #[error("Error in audio: {0}")]
-    Wasapi(#[from] WasapiError),
     #[error("Error in WEB: {0}")]
     Websocket(#[from] tungstenite::Error),
     #[error("Error in JSON: {0}")]
@@ -18,6 +14,8 @@ pub enum SonioxWindowsErrors {
     Utf8(#[from] std::str::Utf8Error),
     #[error("Internal error: {0}")]
     Internal(&'static str),
+    #[error("Internal error: {0}")]
+    OwnedInternal(String),
     #[error("Error in WebSocket... Maybe he is dead")]
     WssConnectionError,
 }
