@@ -55,7 +55,7 @@ pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindo
         tx_audio.clone(),
         settings.clone(),
     );
-    tokio::task::spawn_blocking(move || {
+    std::thread::spawn(move || {
         if let Err(err) = start_capture_audio(tx_audio, rx_exit, rx_recycle) {
             tracing::error!("{}", err);
         }
