@@ -1,22 +1,77 @@
 use eframe::egui::{Context, ViewportCommand, WindowLevel};
+use crate::errors::SonioxWindowsErrors;
+use crate::settings::SettingsApp;
+use crate::transcription::service::TranscriptionService;
+use crate::transcription::store::TranscriptionStore;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum AppState {
+pub struct StateManager {
+    app_state: AppState,
+    pending_state: Option<PendingState>
+}
+
+#[derive(Clone, Copy)]
+pub enum PendingState {
     Config,
     Overlay,
 }
 
-impl AppState {
+pub enum AppState {
+    Config,
+    Overlay(TranscriptionService),
+}
+
+impl Default for StateManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl StateManager {
+    pub fn new() -> Self {
+        Self { app_state: AppState::Config, pending_state: Some(PendingState::Config) }
+    }
+
+    pub fn switch(&mut self, new_state: PendingState) {
+        self.pending_state = Some(new_state);
+    }
+
+    pub fn resolve(&mut self, ctx: &Context, store: &mut TranscriptionStore, settings: &SettingsApp) -> Result<(), SonioxWindowsErrors> {
+        let Some(resolved) = self.pending_state.take() else {
+            return Ok(());
+        };
+
+        resolved.apply_window_state(ctx, settings.enable_high_priority);
+        match resolved {
+            PendingState::Config => self.app_state = AppState::Config,
+            PendingState::Overlay => {
+                let service = TranscriptionService::start(&settings)?;
+                store.resize(settings.max_blocks);
+                self.app_state = AppState::Overlay(service);
+            }
+        }
+        Ok(())
+    }
+
+    pub fn app_state(&self) -> &AppState {
+        &self.app_state
+    }
+
+    pub fn app_state_mut(&mut self) -> &mut AppState {
+        &mut self.app_state
+    }
+}
+
+impl PendingState {
     pub fn apply_window_state(&self, ctx: &Context, enable_high_priority: bool) {
         match self {
-            AppState::Config => {
+            Self::Config => {
                 ctx.send_viewport_cmd(ViewportCommand::Decorations(true));
                 ctx.send_viewport_cmd(ViewportCommand::Transparent(false));
                 ctx.send_viewport_cmd(ViewportCommand::MousePassthrough(false));
                 ctx.send_viewport_cmd(ViewportCommand::Resizable(false));
                 ctx.send_viewport_cmd(ViewportCommand::WindowLevel(WindowLevel::Normal));
             }
-            AppState::Overlay => {
+            Self::Overlay => {
                 ctx.send_viewport_cmd(ViewportCommand::Decorations(false));
                 ctx.send_viewport_cmd(ViewportCommand::Transparent(true));
                 ctx.send_viewport_cmd(ViewportCommand::MousePassthrough(true));

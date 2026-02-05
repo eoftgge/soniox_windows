@@ -1,4 +1,4 @@
-use crate::gui::state::AppState;
+use crate::gui::state::{PendingState, StateManager};
 use crate::settings::SettingsApp;
 use crate::types::languages::LanguageHint;
 use eframe::egui::{
@@ -11,10 +11,10 @@ use std::time::Duration;
 pub fn show_settings_window(
     ctx: &Context,
     settings: &mut SettingsApp,
-    state: &mut AppState,
+    manager: &mut StateManager,
     toasts: &mut Toasts,
 ) {
-    ui_bottom_panel(ctx, settings, state, toasts);
+    ui_bottom_panel(ctx, settings, manager, toasts);
 
     egui::CentralPanel::default()
         .frame(egui::Frame::central_panel(&ctx.style()).inner_margin(15.0))
@@ -36,7 +36,7 @@ pub fn show_settings_window(
 fn ui_bottom_panel(
     ctx: &Context,
     settings: &mut SettingsApp,
-    state: &mut AppState,
+    manager: &mut StateManager,
     toasts: &mut Toasts,
 ) {
     egui::TopBottomPanel::bottom("settings_bottom_panel")
@@ -70,7 +70,7 @@ fn ui_bottom_panel(
                         .add(egui::Button::new("🚀 Start").min_size(egui::vec2(0.0, 40.0)))
                         .clicked()
                     {
-                        *state = AppState::Overlay;
+                        manager.switch(PendingState::Overlay);
                         toasts.info("Starting subtitles overlay...");
                     }
                 });

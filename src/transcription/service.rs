@@ -5,10 +5,10 @@ use crate::soniox::request::create_request;
 use crate::transcription::audio::AudioSession;
 use crate::types::audio::AudioSample;
 use crate::types::soniox::SonioxTranscriptionResponse;
-use tokio::sync::mpsc::{Receiver, Sender, channel};
+use tokio::sync::mpsc::{Receiver, channel};
 
 pub struct TranscriptionService {
-    pub(crate) audio: AudioSession,
+    pub(crate) _audio: AudioSession,
     pub transcription: Receiver<SonioxTranscriptionResponse>,
     handle: tokio::task::JoinHandle<()>,
 }
@@ -31,7 +31,7 @@ impl TranscriptionService {
         });
 
         Ok(Self {
-            audio,
+            _audio: audio,
             handle,
             transcription: rx_transcription,
         })
