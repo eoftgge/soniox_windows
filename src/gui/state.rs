@@ -1,12 +1,12 @@
-use eframe::egui::{Context, ViewportCommand, WindowLevel};
 use crate::errors::SonioxWindowsErrors;
 use crate::settings::SettingsApp;
 use crate::transcription::service::TranscriptionService;
 use crate::transcription::store::TranscriptionStore;
+use eframe::egui::{Context, ViewportCommand, WindowLevel};
 
 pub struct StateManager {
     app_state: AppState,
-    pending_state: Option<PendingState>
+    pending_state: Option<PendingState>,
 }
 
 #[derive(Clone, Copy)]
@@ -28,14 +28,22 @@ impl Default for StateManager {
 
 impl StateManager {
     pub fn new() -> Self {
-        Self { app_state: AppState::Config, pending_state: Some(PendingState::Config) }
+        Self {
+            app_state: AppState::Config,
+            pending_state: Some(PendingState::Config),
+        }
     }
 
     pub fn switch(&mut self, new_state: PendingState) {
         self.pending_state = Some(new_state);
     }
 
-    pub fn resolve(&mut self, ctx: &Context, store: &mut TranscriptionStore, settings: &SettingsApp) -> Result<(), SonioxWindowsErrors> {
+    pub fn resolve(
+        &mut self,
+        ctx: &Context,
+        store: &mut TranscriptionStore,
+        settings: &SettingsApp,
+    ) -> Result<(), SonioxWindowsErrors> {
         let Some(resolved) = self.pending_state.take() else {
             return Ok(());
         };
