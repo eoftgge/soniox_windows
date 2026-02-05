@@ -1,5 +1,3 @@
-#![windows_subsystem = "audio"]
-
 use eframe::egui::{IconData, ViewportBuilder};
 use eframe::icon_data::from_png_bytes;
 use soniox_windows::errors::SonioxWindowsErrors;
