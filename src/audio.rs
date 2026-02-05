@@ -1,0 +1,67 @@
+use cpal::{Stream, StreamConfig};
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use tokio::sync::mpsc::error::TrySendError;
+use tokio::sync::mpsc::{Receiver, Sender};
+use crate::errors::SonioxWindowsErrors;
+use crate::types::audio::{AudioMessage, AudioSample};
+
+pub struct AudioSession {
+    stream: Stream,
+    config: StreamConfig,
+}
+
+impl AudioSession {
+    pub fn new(config: StreamConfig, stream: Stream) -> Self {
+        Self {
+            config, stream,
+        }
+    }
+
+    pub fn open(tx_audio: Sender<AudioMessage>, mut rx_recycle: Receiver<AudioSample>) -> Result<Self, SonioxWindowsErrors> {
+        let host = cpal::default_host();
+        let device = host.default_output_device()
+            .ok_or_else(|| SonioxWindowsErrors::Internal("Output device is not found"))?;
+
+        let config = device.default_output_config()?.config();
+        let stream = device.build_input_stream(
+            &config,
+            move |data: &[f32], _: &cpal::InputCallbackInfo| {
+                let mut buffer = match rx_recycle.try_recv() {
+                    Ok(mut vec) => {
+                        vec.clear();
+                        vec
+                    }
+                    Err(_) => Vec::with_capacity(data.len()),
+                };
+
+                buffer.extend_from_slice(data);
+
+                match tx_audio.try_send(AudioMessage::Audio(buffer)) {
+                    Ok(_) => {},
+                    Err(TrySendError::Full(_)) => {
+                        tracing::debug!("Audio buffer is full");
+                    },
+                    Err(TrySendError::Closed(_)) => {
+                        tracing::debug!("Capture channel closed");
+                    }
+                }
+            },
+            |err| {
+                tracing::error!("Error in audio callback: {}", err);
+            },
+            None,
+        )?;
+
+        Ok(Self::new(config, stream))
+    }
+    
+    pub fn config(&self) -> &StreamConfig {
+        &self.config
+    }
+
+    pub fn play(&self) -> Result<(), cpal::PlayStreamError> {
+        self.stream.play()
+    }
+    
+    pub fn pause(&self) -> Result<(), cpal::PauseStreamError> { self.stream.pause() }
+}
