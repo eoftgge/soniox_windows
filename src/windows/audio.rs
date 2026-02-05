@@ -1,10 +1,11 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::types::audio::{AudioMessage, AudioSample};
 use bytemuck::cast_slice;
-use std::thread::sleep;
-use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
 use wasapi::{DeviceEnumerator, Direction, StreamMode, initialize_mta};
+use windows::Win32::Foundation::WAIT_OBJECT_0;
+use windows::Win32::System::Threading::{CreateEventA, WaitForSingleObject};
+use crate::windows::wrapper::HandleWrapper;
 
 pub fn start_capture_audio(
     tx_audio: Sender<AudioMessage>,
@@ -21,42 +22,46 @@ pub fn start_capture_audio(
     let format = audio_client.get_mixformat()?;
     let bytes_per_frame = format.get_blockalign() as usize;
 
-    let mode = StreamMode::PollingShared {
+    let mode = StreamMode::EventsShared {
         autoconvert: false,
         buffer_duration_hns: 1_000_000,
     };
     audio_client.initialize_client(&format, &Direction::Capture, &mode)?;
 
+    let h_event = unsafe {
+        CreateEventA(
+            None,
+            false,
+            false,
+            None
+        ).map_err(|_| SonioxWindowsErrors::Internal("Failed to create event"))?
+    };
+    let _event_guard = HandleWrapper(h_event);
     let capture = audio_client.get_audiocaptureclient()?;
     audio_client.start_stream()?;
 
     let mut raw_buffer: Vec<u8> = Vec::with_capacity(16 * 1024);
     tracing::info!("Started audio stream!");
     loop {
+        let wait_result = unsafe { WaitForSingleObject(h_event, 2000) };
+
         if let Ok(true) = rx_stop.try_recv() {
             tracing::info!("Audio thread terminated!");
             break;
+        } else if wait_result != WAIT_OBJECT_0 {
+            continue;
         }
 
-        let frames_available = match capture.get_next_packet_size() {
-            Ok(Some(f)) => f,
-            Err(e) => {
-                tracing::error!("Error getting packet size: {:?}", e);
-                continue;
-            }
-            _ => {
-                tracing::error!("Unknown error in `get_next_packet_size`");
-                break;
-            }
+        let frames_available = match capture.get_next_packet_size()? {
+            Some(frames_available) => frames_available,
+            _ => continue,
         };
-
         if frames_available == 0 {
-            sleep(Duration::from_millis(1));
             continue;
         }
 
         let bytes_needed = frames_available as usize * bytes_per_frame;
-        if raw_buffer.len() != bytes_needed {
+        if raw_buffer.len() < bytes_needed {
             raw_buffer.resize(bytes_needed, 0);
         }
         if let Err(e) = capture.read_from_device(&mut raw_buffer) {
@@ -87,6 +92,6 @@ pub fn start_capture_audio(
     }
 
     audio_client.stop_stream()?;
-    let _ = tx_audio.send(AudioMessage::Stop);
+    let _ = tx_audio.blocking_send(AudioMessage::Stop);
     Ok(())
 }
