@@ -1,7 +1,9 @@
 use crate::gui::state::AppState;
 use crate::settings::SettingsApp;
 use crate::types::languages::LanguageHint;
-use eframe::egui::{self, ComboBox, Context, DragValue, Grid, RichText, ScrollArea, Slider, TextEdit, Ui};
+use eframe::egui::{
+    self, ComboBox, Context, DragValue, Grid, RichText, ScrollArea, Slider, TextEdit, Ui,
+};
 use eframe::epaint::Color32;
 use egui_notify::Toasts;
 use std::time::Duration;
@@ -115,11 +117,7 @@ fn ui_section_api(ui: &mut Ui, settings: &mut SettingsApp) {
                                 .selected_text(hint.to_string())
                                 .show_ui(ui, |ui| {
                                     for lang in LanguageHint::all() {
-                                        ui.selectable_value(
-                                            hint,
-                                            *lang,
-                                            lang.to_string(),
-                                        );
+                                        ui.selectable_value(hint, *lang, lang.to_string());
                                     }
                                 });
                             if ui.button("🗑").clicked() {
@@ -198,35 +196,60 @@ fn ui_section_position(ui: &mut Ui, ctx: &Context, settings: &mut SettingsApp) {
                 let h = 350.0;
                 let pad = 30.0;
 
-                let x_left   = pad;
+                let x_left = pad;
                 let x_center = (screen_w / 2.0) - (w / 2.0);
-                let x_right  = screen_w - w - pad;
+                let x_right = screen_w - w - pad;
 
-                let y_top    = pad;
-                let y_mid    = (screen_h / 2.0) - (h / 2.0);
-                let y_bot    = screen_h - h - pad;
+                let y_top = pad;
+                let y_mid = (screen_h / 2.0) - (h / 2.0);
+                let y_bot = screen_h - h - pad;
 
-                Grid::new("snap_buttons").spacing([5.0, 5.0]).show(ui, |ui| {
-                    let btn = |ui: &mut Ui, text: &str| {
-                        ui.add(egui::Button::new(RichText::new(text).size(16.0))
-                            .min_size(egui::vec2(30.0, 30.0)))
-                    };
+                Grid::new("snap_buttons")
+                    .spacing([5.0, 5.0])
+                    .show(ui, |ui| {
+                        let btn = |ui: &mut Ui, text: &str| {
+                            ui.add(
+                                egui::Button::new(RichText::new(text).size(16.0))
+                                    .min_size(egui::vec2(30.0, 30.0)),
+                            )
+                        };
 
-                    if btn(ui, "↖").clicked() { settings.position = (x_left, y_top); }
-                    else if btn(ui, "⬆").clicked() { settings.position = (x_center, y_top); }
-                    else if btn(ui, "↗").clicked() { settings.position = (x_right, y_top); }
-                    ui.end_row();
+                        if btn(ui, "↖").clicked() {
+                            settings.position = (x_left, y_top);
+                        } else if btn(ui, "⬆").clicked() {
+                            settings.position = (x_center, y_top);
+                        } else if btn(ui, "↗").clicked() {
+                            settings.position = (x_right, y_top);
+                        }
+                        ui.end_row();
 
-                    if btn(ui, "⬅").clicked() { settings.position = (x_left, y_mid); }
-                    else if btn(ui, "◎").clicked() { settings.position = (x_center, y_mid); }
-                    else if btn(ui, "➡").clicked() { settings.position = (x_right, y_mid); }
-                    ui.end_row();
+                        if btn(ui, "⬅").clicked() {
+                            settings.position = (x_left, y_mid);
+                        } else if btn(ui, "◎").clicked() {
+                            settings.position = (x_center, y_mid);
+                        } else if btn(ui, "➡").clicked() {
+                            settings.position = (x_right, y_mid);
+                        }
+                        ui.end_row();
 
-                    if btn(ui, "↙").on_hover_text(format!("Y: {:.0}", y_bot)).clicked() { settings.position = (x_left, y_bot); }
-                    else if btn(ui, "⬇").on_hover_text(format!("Y: {:.0}", y_bot)).clicked() { settings.position = (x_center, y_bot); }
-                    else if btn(ui, "↘").on_hover_text(format!("Y: {:.0}", y_bot)).clicked() { settings.position = (x_right, y_bot); }
-                    ui.end_row();
-                });
+                        if btn(ui, "↙")
+                            .on_hover_text(format!("Y: {:.0}", y_bot))
+                            .clicked()
+                        {
+                            settings.position = (x_left, y_bot);
+                        } else if btn(ui, "⬇")
+                            .on_hover_text(format!("Y: {:.0}", y_bot))
+                            .clicked()
+                        {
+                            settings.position = (x_center, y_bot);
+                        } else if btn(ui, "↘")
+                            .on_hover_text(format!("Y: {:.0}", y_bot))
+                            .clicked()
+                        {
+                            settings.position = (x_right, y_bot);
+                        }
+                        ui.end_row();
+                    });
             });
             ui.end_row();
         });
