@@ -15,7 +15,7 @@ async fn run() -> Result<(), SonioxWindowsErrors> {
                 tracing::warn!("Bytes of icon is incorrect...");
                 IconData::default()
             }))
-            .with_inner_size([500., 700.])
+            .with_inner_size([400., 600.])
             .with_resizable(false)
             .with_decorations(true)
             .with_always_on_top()
