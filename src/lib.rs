@@ -1,6 +1,5 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::gui::app::SubtitlesApp;
-use crate::transcription::service::TranscriptionService;
 use settings::SettingsApp;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
