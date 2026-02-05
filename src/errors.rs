@@ -1,5 +1,11 @@
 #[derive(thiserror::Error, Debug)]
 pub enum SonioxWindowsErrors {
+    #[error("Error in builder stream")]
+    BuildStream(#[from] cpal::BuildStreamError),
+    #[error("Error in player stream")]
+    PlayStream(#[from] cpal::PlayStreamError),
+    #[error("Error in stream config")]
+    DefaultStreamConfig(#[from] cpal::DefaultStreamConfigError),
     #[error("Error in WEB: {0}")]
     Websocket(#[from] tungstenite::Error),
     #[error("Error in JSON: {0}")]
