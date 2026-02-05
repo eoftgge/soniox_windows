@@ -3,7 +3,7 @@ use crate::gui::app::SubtitlesApp;
 use crate::soniox::stream::start_soniox_stream;
 use crate::types::audio::{AudioMessage, AudioSample};
 use crate::types::soniox::SonioxTranscriptionResponse;
-use crate::windows::audio::start_capture_audio;
+use crate::audio::audio::start_capture_audio;
 use settings::SettingsApp;
 use tokio::sync::mpsc::channel;
 use tracing_subscriber::filter::LevelFilter;
@@ -15,7 +15,7 @@ pub mod gui;
 pub mod settings;
 pub mod soniox;
 pub mod types;
-pub mod windows;
+pub mod audio;
 
 pub const ICON_BYTES: &[u8] = include_bytes!("../assets/icon.png");
 

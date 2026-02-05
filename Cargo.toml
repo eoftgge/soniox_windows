@@ -6,7 +6,6 @@ repository = "https://github.com/eoftgge/soniox_windows"
 rust-version = "1.89.0"
 
 [dependencies]
-wasapi = "0.22.0"
 thiserror = "2.0.16"
 tungstenite = { version = "0.28.0", features = ["native-tls"] }
 serde = { version = "1.0.219", features = ["derive"] }
@@ -22,7 +21,6 @@ config = "0.15.19"
 bytemuck = "1.24.0"
 toml = "0.9.7"
 egui-notify = "0.21.0"
-windows = { version = "0.62.2", features = ["Win32_System_Threading", "Win32_Security", "Win32_Foundation"] }
 
 [profile.release]
 lto = true

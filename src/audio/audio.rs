@@ -5,7 +5,7 @@ use tokio::sync::mpsc::{Receiver, Sender};
 use wasapi::{DeviceEnumerator, Direction, StreamMode, initialize_mta};
 use windows::Win32::Foundation::WAIT_OBJECT_0;
 use windows::Win32::System::Threading::{CreateEventA, WaitForSingleObject};
-use crate::windows::wrapper::HandleWrapper;
+use crate::audio::wrapper::HandleWrapper;
 
 pub fn start_capture_audio(
     tx_audio: Sender<AudioMessage>,
