@@ -49,7 +49,7 @@ where
                 writer
                     .send(Message::Binary(Bytes::copy_from_slice(byte_buffer_pool)))
                     .await?;
-                let _ = tx_recycle.send(buffer);
+                let _ = tx_recycle.send(buffer).await;
             }
             Ok(StreamAction::Continue)
         }
