@@ -1,6 +1,6 @@
 #![windows_subsystem = "windows"]
 
-use eframe::egui::ViewportBuilder;
+use eframe::egui::{IconData, ViewportBuilder};
 use eframe::icon_data::from_png_bytes;
 use soniox_windows::errors::SonioxWindowsErrors;
 use soniox_windows::gui::font::setup_custom_fonts;
@@ -13,7 +13,10 @@ async fn run() -> Result<(), SonioxWindowsErrors> {
     let native_options = eframe::NativeOptions {
         viewport: ViewportBuilder::default()
             .with_app_id("sublive")
-            .with_icon(from_png_bytes(ICON_BYTES).expect("Failed to load icon"))
+            .with_icon(from_png_bytes(ICON_BYTES).unwrap_or_else(|_| {
+                tracing::warn!("Bytes of icon is incorrect...");
+                IconData::default()
+            }))
             .with_inner_size([500., 700.])
             .with_resizable(false)
             .with_decorations(true)
