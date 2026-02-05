@@ -54,12 +54,14 @@ fn ui_bottom_panel(
                             Ok(_) => {
                                 toasts
                                     .success("Settings saved successfully!")
-                                    .duration(Duration::from_secs(3));
+                                    .duration(Duration::from_secs(3))
+                                    .closable(false);
                             }
                             Err(e) => {
                                 toasts
                                     .error(format!("Failed to save: {}", e))
-                                    .duration(Duration::from_secs(5));
+                                    .duration(Duration::from_secs(5))
+                                    .closable(false);
                             }
                         }
                     }
@@ -71,7 +73,8 @@ fn ui_bottom_panel(
                         .clicked()
                     {
                         manager.switch(PendingState::Overlay);
-                        toasts.info("Starting subtitles overlay...");
+                        toasts.info("Starting subtitles overlay...")
+                            .closable(false);
                     }
                 });
             });
