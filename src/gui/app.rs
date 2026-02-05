@@ -2,14 +2,14 @@ use crate::gui::draw::draw_subtitles;
 use crate::gui::settings::show_settings_window;
 use crate::gui::state::AppState;
 use crate::settings::SettingsApp;
-use crate::soniox::transcription::TranscriptionStore;
+use crate::transcription::store::TranscriptionStore;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use eframe::egui::{Align, Area, Context, Id, Layout, Order, Visuals};
 use eframe::{App, Frame};
 use egui_notify::Toasts;
 use std::time::Duration;
 use tokio::sync::mpsc::Receiver;
-use crate::audio::AudioSession;
+use crate::transcription::audio::AudioSession;
 
 const MAX_FPS: u64 = 30;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);

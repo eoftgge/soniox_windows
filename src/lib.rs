@@ -8,15 +8,15 @@ use tokio::sync::mpsc::channel;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use audio::AudioSession;
 use crate::soniox::request::create_request;
+use crate::transcription::audio::AudioSession;
 
 pub mod errors;
 pub mod gui;
 pub mod settings;
 pub mod soniox;
 pub mod types;
-pub mod audio;
+pub mod transcription;
 
 pub const ICON_BYTES: &[u8] = include_bytes!("../assets/icon.png");
 

@@ -1,4 +1,4 @@
-use crate::soniox::transcription::TranscriptionStore;
+use crate::transcription::store::TranscriptionStore;
 
 pub struct VisualReplica {
     pub speaker: Option<String>,
