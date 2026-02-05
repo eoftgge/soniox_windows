@@ -9,6 +9,7 @@ use tokio::sync::mpsc::channel;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
+use crate::soniox::request::create_request;
 
 pub mod errors;
 pub mod gui;
@@ -47,22 +48,18 @@ pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindo
 
     let (tx_audio, rx_audio) = channel::<AudioMessage>(256);
     let (tx_transcription, rx_transcription) = channel::<SonioxTranscriptionResponse>(256);
-    let (tx_exit, rx_exit) = channel::<bool>(1);
     let (tx_recycle, rx_recycle) = channel::<AudioSample>(256);
+    let (stream, stream_config) = start_capture_audio(tx_audio.clone(), rx_recycle)?;
+    let request_stream = create_request(&settings, &stream_config)?;
     let app = SubtitlesApp::new(
         rx_transcription,
-        tx_exit,
-        tx_audio.clone(),
-        settings.clone(),
+        tx_audio,
+        settings,
+        stream,
     );
-    std::thread::spawn(move || {
-        if let Err(err) = start_capture_audio(tx_audio, rx_exit, rx_recycle) {
-            tracing::error!("{}", err);
-        }
-    });
     tokio::spawn(async move {
         if let Err(err) =
-            start_soniox_stream(&settings, tx_transcription, rx_audio, tx_recycle).await
+            start_soniox_stream(request_stream, tx_transcription, rx_audio, tx_recycle).await
         {
             tracing::error!("{}", err);
         }

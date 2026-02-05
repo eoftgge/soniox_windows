@@ -9,6 +9,7 @@ use eframe::egui::{Align, Area, Context, Id, Layout, Order, Visuals};
 use eframe::{App, Frame};
 use egui_notify::Toasts;
 use std::time::Duration;
+use cpal::Stream;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 const MAX_FPS: u64 = 30;
@@ -17,27 +18,27 @@ const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
 pub struct SubtitlesApp {
     rx_transcription: Receiver<SonioxTranscriptionResponse>,
     tx_audio: Sender<AudioMessage>,
-    tx_exit: Sender<bool>,
     settings: SettingsApp,
     state: AppState,
     last_state: Option<AppState>,
     transcription_store: TranscriptionStore,
     toasts: Toasts,
+    _stream: Stream,
 }
 
 impl SubtitlesApp {
     pub fn new(
         rx_transcription: Receiver<SonioxTranscriptionResponse>,
-        tx_exit: Sender<bool>,
         tx_audio: Sender<AudioMessage>,
         settings: SettingsApp,
+        stream: Stream
     ) -> Self {
         Self {
             transcription_store: TranscriptionStore::new(settings.max_blocks()),
             rx_transcription,
-            tx_exit,
             tx_audio,
             settings,
+            _stream: stream,
             toasts: Toasts::new(),
             state: AppState::Config,
             last_state: None,
@@ -91,7 +92,6 @@ impl App for SubtitlesApp {
 
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
         let _ = self.tx_audio.send(AudioMessage::Stop);
-        let _ = self.tx_exit.send(true);
         self.rx_transcription.close();
     }
 

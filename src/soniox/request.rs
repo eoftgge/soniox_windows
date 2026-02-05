@@ -1,25 +1,19 @@
+use cpal::StreamConfig;
 use crate::errors::SonioxWindowsErrors;
 use crate::settings::SettingsApp;
 use crate::soniox::MODEL;
 use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranslationObject};
-use wasapi::{DeviceEnumerator, Direction, initialize_mta};
 
 pub(crate) fn create_request(
-    settings: &'_ SettingsApp,
-) -> Result<SonioxTranscriptionRequest<'_>, SonioxWindowsErrors> {
-    initialize_mta().ok().expect("mta setup failed");
-    let enumerator = DeviceEnumerator::new()?;
-    let device = enumerator.get_default_device(&Direction::Render)?;
-    let audio_client = device.get_iaudioclient()?;
-    let format = audio_client.get_mixformat()?;
-    let sample_rate = format.get_samplespersec();
-    let channels = format.get_nchannels();
+    settings: &SettingsApp,
+    stream_config: &StreamConfig,
+) -> Result<SonioxTranscriptionRequest, SonioxWindowsErrors> {
     let mut request = SonioxTranscriptionRequest {
         api_key: settings.api_key(),
         model: MODEL,
         audio_format: "pcm_s16le",
-        sample_rate: Some(sample_rate),
-        num_channels: Some(channels as u32),
+        sample_rate: Some(stream_config.sample_rate),
+        num_channels: Some(stream_config.channels as u32),
         context: Some(settings.context()),
         language_hints: settings.language_hints(),
         enable_speaker_diarization: Some(settings.enable_speakers()),

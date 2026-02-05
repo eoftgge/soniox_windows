@@ -1,9 +1,7 @@
 use crate::errors::SonioxWindowsErrors;
-use crate::settings::SettingsApp;
 use crate::soniox::URL;
-use crate::soniox::request::create_request;
 use crate::types::audio::{AudioMessage, AudioSample};
-use crate::types::soniox::SonioxTranscriptionResponse;
+use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranscriptionResponse};
 use futures_util::{SinkExt, StreamExt};
 use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -205,12 +203,11 @@ async fn listen_soniox_stream(
 }
 
 pub async fn start_soniox_stream(
-    settings: &SettingsApp,
+    request: SonioxTranscriptionRequest,
     tx_ws: Sender<SonioxTranscriptionResponse>,
     rx_audio: Receiver<AudioMessage>,
     tx_recycle: Sender<AudioSample>,
 ) -> Result<(), SonioxWindowsErrors> {
-    let request = create_request(settings)?;
     let bytes = serde_json::to_vec(&request)?;
 
     tracing::info!("Started Soniox stream!");
