@@ -20,7 +20,7 @@ pub mod audio;
 
 pub const ICON_BYTES: &[u8] = include_bytes!("../assets/icon.png");
 
-fn setup_logging(level: LevelFilter) -> tracing_appender::non_blocking::WorkerGuard {
+fn setup_tracing(level: LevelFilter) -> tracing_appender::non_blocking::WorkerGuard {
     let file_appender = tracing_appender::rolling::daily("logs", "soniox.log");
     let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
 
@@ -44,7 +44,7 @@ fn setup_logging(level: LevelFilter) -> tracing_appender::non_blocking::WorkerGu
 
 pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxWindowsErrors> {
     let level = settings.level()?;
-    let _ = setup_logging(level);
+    let _guard = setup_tracing(level);
 
     let (tx_audio, rx_audio) = channel::<AudioMessage>(256);
     let (tx_transcription, rx_transcription) = channel::<SonioxTranscriptionResponse>(256);
