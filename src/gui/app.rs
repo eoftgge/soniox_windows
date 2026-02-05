@@ -3,41 +3,35 @@ use crate::gui::settings::show_settings_window;
 use crate::gui::state::AppState;
 use crate::settings::SettingsApp;
 use crate::transcription::store::TranscriptionStore;
-use crate::types::soniox::SonioxTranscriptionResponse;
 use eframe::egui::{Align, Area, Context, Id, Layout, Order, Visuals};
 use eframe::{App, Frame};
 use egui_notify::Toasts;
 use std::time::Duration;
-use tokio::sync::mpsc::Receiver;
-use crate::transcription::audio::AudioSession;
+use crate::transcription::service::TranscriptionService;
 
 const MAX_FPS: u64 = 30;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
 
 pub struct SubtitlesApp {
-    rx_transcription: Receiver<SonioxTranscriptionResponse>,
     settings: SettingsApp,
     state: AppState,
     last_state: Option<AppState>,
-    transcription_store: TranscriptionStore,
+    store: TranscriptionStore,
     toasts: Toasts,
-    session: AudioSession,
+    service: Option<TranscriptionService>,
 }
 
 impl SubtitlesApp {
     pub fn new(
-        rx_transcription: Receiver<SonioxTranscriptionResponse>,
         settings: SettingsApp,
-        session: AudioSession,
     ) -> Self {
         Self {
-            transcription_store: TranscriptionStore::new(settings.max_blocks()),
-            rx_transcription,
-            settings,
-            session,
+            store: TranscriptionStore::new(settings.max_blocks()),
             toasts: Toasts::new(),
             state: AppState::Config,
             last_state: None,
+            service: None,
+            settings,
         }
     }
 }
@@ -49,8 +43,11 @@ impl App for SubtitlesApp {
                 .apply_window_state(ctx, self.settings.enable_high_priority());
 
             if self.state == AppState::Overlay {
-                self.transcription_store.resize(self.settings.max_blocks);
-                self.session.play().unwrap(); // todo
+                self.store.resize(self.settings.max_blocks);
+                match TranscriptionService::start(&self.settings) {
+                    Ok(service) => self.service = Some(service),
+                    Err(err) => tracing::error!("Failed to start service: {:?}", err),
+                }
             }
 
             self.last_state = Some(self.state);
@@ -61,10 +58,13 @@ impl App for SubtitlesApp {
                 show_settings_window(ctx, &mut self.settings, &mut self.state, &mut self.toasts)
             }
             AppState::Overlay => {
-                self.transcription_store
+                self.store
                     .clear_if_silent(Duration::from_secs(15));
-                while let Ok(transcription) = self.rx_transcription.try_recv() {
-                    self.transcription_store.update(transcription);
+
+                if let Some(service) = &mut self.service {
+                    while let Ok(response) = service.transcription.try_recv() {
+                        self.store.update(response);
+                    }
                 }
 
                 Area::new(Id::from("subtitles_area"))
@@ -74,7 +74,7 @@ impl App for SubtitlesApp {
                         ui.with_layout(Layout::top_down(Align::LEFT), |ui| {
                             draw_subtitles(
                                 ui,
-                                &self.transcription_store,
+                                &self.store,
                                 self.settings.font_size,
                                 self.settings.text_color(),
                                 self.settings.get_background_color(),
@@ -88,7 +88,7 @@ impl App for SubtitlesApp {
     }
 
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
-        self.rx_transcription.close();
+        self.service = None;
     }
 
     fn clear_color(&self, _visuals: &Visuals) -> [f32; 4] {

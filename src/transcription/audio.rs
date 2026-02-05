@@ -3,7 +3,7 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use tokio::sync::mpsc::error::TrySendError;
 use tokio::sync::mpsc::{Receiver, Sender};
 use crate::errors::SonioxWindowsErrors;
-use crate::types::audio::{AudioMessage, AudioSample};
+use crate::types::audio::AudioSample;
 
 pub struct AudioSession {
     stream: Stream,
@@ -17,7 +17,7 @@ impl AudioSession {
         }
     }
 
-    pub fn open(tx_audio: Sender<AudioMessage>, mut rx_recycle: Receiver<AudioSample>) -> Result<Self, SonioxWindowsErrors> {
+    pub fn open(tx_audio: Sender<AudioSample>, mut rx_recycle: Receiver<AudioSample>) -> Result<Self, SonioxWindowsErrors> {
         let host = cpal::default_host();
         let device = host.default_output_device()
             .ok_or_else(|| SonioxWindowsErrors::Internal("Output device is not found"))?;
@@ -36,7 +36,7 @@ impl AudioSession {
 
                 buffer.extend_from_slice(data);
 
-                match tx_audio.try_send(AudioMessage::Audio(buffer)) {
+                match tx_audio.try_send(buffer) {
                     Ok(_) => {},
                     Err(TrySendError::Full(_)) => {
                         tracing::debug!("Audio buffer is full");

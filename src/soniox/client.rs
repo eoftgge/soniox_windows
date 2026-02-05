@@ -1,0 +1,145 @@
+use std::time::Duration;
+use futures_util::{SinkExt, StreamExt};
+use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::time::sleep;
+use tokio_tungstenite::connect_async;
+use tungstenite::{Bytes, Message, Utf8Bytes};
+use tungstenite::client::IntoClientRequest;
+use crate::errors::SonioxWindowsErrors;
+use crate::soniox::action::StreamAction;
+use crate::soniox::URL;
+use crate::soniox::utils::convert_audio_chunk;
+use crate::types::audio::AudioSample;
+use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranscriptionResponse};
+
+const MAX_RETRIES: u32 = 5;
+const RECONNECT_DELAY: u64 = 1000; // ms
+
+pub struct SonioxClient {
+    tx_transcription: Sender<SonioxTranscriptionResponse>,
+    rx_audio: Receiver<AudioSample>,
+    tx_recycle: Sender<AudioSample>,
+    byte_buffer_pool: Vec<u8>,
+}
+
+impl SonioxClient {
+    pub fn new(
+        tx_transcription: Sender<SonioxTranscriptionResponse>,
+        tx_recycle: Sender<AudioSample>,
+        rx_audio: Receiver<AudioSample>,
+    ) -> Self {
+        Self {
+            tx_transcription,
+            rx_audio,
+            tx_recycle,
+            byte_buffer_pool: Vec::with_capacity(16 * 1024),
+        }
+    }
+
+    pub async fn start(&mut self, request: &SonioxTranscriptionRequest) -> Result<(), SonioxWindowsErrors> {
+        let init_bytes = serde_json::to_vec(request)?;
+        let mut retry_count = 0;
+
+        loop {
+            let url = URL.into_client_request().map_err(|_| SonioxWindowsErrors::WssConnectionError)?;
+            tracing::debug!("Connecting to Soniox... (Attempt {})", retry_count + 1);
+
+            match connect_async(url).await {
+                Ok((ws_stream, _)) => {
+                    retry_count = 0;
+                    let action = self.run_session(ws_stream, &init_bytes).await?;
+
+                    if let StreamAction::Stop = action {
+                        return Ok(());
+                    }
+                }
+                Err(e) => tracing::error!("Connection failed: {}", e),
+            }
+
+            sleep(Duration::from_millis(RECONNECT_DELAY)).await;
+            retry_count += 1;
+            if retry_count > MAX_RETRIES {
+                return Err(SonioxWindowsErrors::WssConnectionError);
+            }
+        }
+    }
+
+    async fn run_session(
+        &mut self,
+        ws_stream: tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
+        init_bytes: &[u8]
+    ) -> Result<StreamAction, SonioxWindowsErrors> {
+        let (mut write, mut read) = ws_stream.split();
+        write.send(Message::Text(Utf8Bytes::try_from(init_bytes.to_vec())?)).await?;
+
+        loop {
+            tokio::select! {
+                audio_event = self.rx_audio.recv() => {
+                    let action = self.handle_audio(audio_event, &mut write).await?;
+                    if !matches!(action, StreamAction::Continue) { return Ok(action); }
+                }
+                ws_event = read.next() => {
+                    let action = self.handle_ws(ws_event, &mut write).await;
+                    if !matches!(action, StreamAction::Continue) { return Ok(action); }
+                }
+            }
+        }
+    }
+
+    async fn handle_audio<W>(&mut self, msg: Option<AudioSample>, writer: &mut W) -> Result<StreamAction, SonioxWindowsErrors>
+    where W: SinkExt<Message, Error = tungstenite::Error> + Unpin
+    {
+        match msg {
+            Some(buffer) => {
+                if !buffer.is_empty() {
+                    convert_audio_chunk(&buffer, &mut self.byte_buffer_pool);
+                    writer
+                        .send(Message::Binary(Bytes::copy_from_slice(self.byte_buffer_pool.as_slice())))
+                        .await?;
+                    let _ = self.tx_recycle.send(buffer).await;
+                }
+                Ok(StreamAction::Continue)
+            }
+            None => {
+                tracing::debug!("Audio channel closed.");
+                Ok(StreamAction::Stop)
+            }
+        }
+    }
+
+    async fn handle_ws<W>(&mut self, msg: Option<Result<Message, tungstenite::Error>>, writer: &mut W) -> StreamAction
+    where W: SinkExt<Message, Error = tungstenite::Error> + Unpin
+    {
+        match msg {
+            Some(Ok(message)) => match message {
+                Message::Text(txt) => {
+                    let response = serde_json::from_str::<SonioxTranscriptionResponse>(&txt);
+                    if let Ok(r) = response
+                        && self.tx_transcription.send(r).await.is_err()
+                    {
+                        tracing::error!("UI channel closed");
+                        return StreamAction::Stop;
+                    }
+                    StreamAction::Continue
+                }
+                Message::Ping(data) => {
+                    let _ = writer.send(Message::Pong(data)).await;
+                    StreamAction::Continue
+                }
+                Message::Close(_) => {
+                    tracing::warn!("Server closed connection");
+                    StreamAction::Reconnect
+                }
+                _ => StreamAction::Continue,
+            },
+            Some(Err(e)) => {
+                tracing::error!("WS Read Error: {}", e);
+                StreamAction::Reconnect
+            }
+            None => {
+                tracing::warn!("WS Stream ended");
+                StreamAction::Reconnect
+            }
+        }
+    }
+}
