@@ -1,16 +1,16 @@
-use std::time::Duration;
-use futures_util::{SinkExt, StreamExt};
-use tokio::sync::mpsc::{Receiver, Sender};
-use tokio::time::sleep;
-use tokio_tungstenite::connect_async;
-use tungstenite::{Bytes, Message, Utf8Bytes};
-use tungstenite::client::IntoClientRequest;
 use crate::errors::SonioxWindowsErrors;
-use crate::soniox::action::StreamAction;
 use crate::soniox::URL;
+use crate::soniox::action::StreamAction;
 use crate::soniox::utils::convert_audio_chunk;
 use crate::types::audio::AudioSample;
 use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranscriptionResponse};
+use futures_util::{SinkExt, StreamExt};
+use std::time::Duration;
+use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::time::sleep;
+use tokio_tungstenite::connect_async;
+use tungstenite::client::IntoClientRequest;
+use tungstenite::{Bytes, Message, Utf8Bytes};
 
 const MAX_RETRIES: u32 = 5;
 const RECONNECT_DELAY: u64 = 1000; // ms
@@ -36,12 +36,17 @@ impl SonioxClient {
         }
     }
 
-    pub async fn start(&mut self, request: &SonioxTranscriptionRequest) -> Result<(), SonioxWindowsErrors> {
+    pub async fn start(
+        &mut self,
+        request: &SonioxTranscriptionRequest,
+    ) -> Result<(), SonioxWindowsErrors> {
         let init_bytes = serde_json::to_vec(request)?;
         let mut retry_count = 0;
 
         loop {
-            let url = URL.into_client_request().map_err(|_| SonioxWindowsErrors::WssConnectionError)?;
+            let url = URL
+                .into_client_request()
+                .map_err(|_| SonioxWindowsErrors::WssConnectionError)?;
             tracing::debug!("Connecting to Soniox... (Attempt {})", retry_count + 1);
 
             match connect_async(url).await {
@@ -66,11 +71,15 @@ impl SonioxClient {
 
     async fn run_session(
         &mut self,
-        ws_stream: tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
-        init_bytes: &[u8]
+        ws_stream: tokio_tungstenite::WebSocketStream<
+            tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+        >,
+        init_bytes: &[u8],
     ) -> Result<StreamAction, SonioxWindowsErrors> {
         let (mut write, mut read) = ws_stream.split();
-        write.send(Message::Text(Utf8Bytes::try_from(init_bytes.to_vec())?)).await?;
+        write
+            .send(Message::Text(Utf8Bytes::try_from(init_bytes.to_vec())?))
+            .await?;
 
         loop {
             tokio::select! {
@@ -86,15 +95,22 @@ impl SonioxClient {
         }
     }
 
-    async fn handle_audio<W>(&mut self, msg: Option<AudioSample>, writer: &mut W) -> Result<StreamAction, SonioxWindowsErrors>
-    where W: SinkExt<Message, Error = tungstenite::Error> + Unpin
+    async fn handle_audio<W>(
+        &mut self,
+        msg: Option<AudioSample>,
+        writer: &mut W,
+    ) -> Result<StreamAction, SonioxWindowsErrors>
+    where
+        W: SinkExt<Message, Error = tungstenite::Error> + Unpin,
     {
         match msg {
             Some(buffer) => {
                 if !buffer.is_empty() {
                     convert_audio_chunk(&buffer, &mut self.byte_buffer_pool);
                     writer
-                        .send(Message::Binary(Bytes::copy_from_slice(self.byte_buffer_pool.as_slice())))
+                        .send(Message::Binary(Bytes::copy_from_slice(
+                            self.byte_buffer_pool.as_slice(),
+                        )))
                         .await?;
                     let _ = self.tx_recycle.send(buffer).await;
                 }
@@ -107,8 +123,13 @@ impl SonioxClient {
         }
     }
 
-    async fn handle_ws<W>(&mut self, msg: Option<Result<Message, tungstenite::Error>>, writer: &mut W) -> StreamAction
-    where W: SinkExt<Message, Error = tungstenite::Error> + Unpin
+    async fn handle_ws<W>(
+        &mut self,
+        msg: Option<Result<Message, tungstenite::Error>>,
+        writer: &mut W,
+    ) -> StreamAction
+    where
+        W: SinkExt<Message, Error = tungstenite::Error> + Unpin,
     {
         match msg {
             Some(Ok(message)) => match message {

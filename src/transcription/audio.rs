@@ -1,9 +1,9 @@
-use cpal::{Stream, StreamConfig};
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use tokio::sync::mpsc::error::TrySendError;
-use tokio::sync::mpsc::{Receiver, Sender};
 use crate::errors::SonioxWindowsErrors;
 use crate::types::audio::AudioSample;
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::{Stream, StreamConfig};
+use tokio::sync::mpsc::error::TrySendError;
+use tokio::sync::mpsc::{Receiver, Sender};
 
 pub struct AudioSession {
     stream: Stream,
@@ -12,14 +12,16 @@ pub struct AudioSession {
 
 impl AudioSession {
     pub fn new(config: StreamConfig, stream: Stream) -> Self {
-        Self {
-            config, stream,
-        }
+        Self { config, stream }
     }
 
-    pub fn open(tx_audio: Sender<AudioSample>, mut rx_recycle: Receiver<AudioSample>) -> Result<Self, SonioxWindowsErrors> {
+    pub fn open(
+        tx_audio: Sender<AudioSample>,
+        mut rx_recycle: Receiver<AudioSample>,
+    ) -> Result<Self, SonioxWindowsErrors> {
         let host = cpal::default_host();
-        let device = host.default_output_device()
+        let device = host
+            .default_output_device()
             .ok_or_else(|| SonioxWindowsErrors::Internal("Output device is not found"))?;
 
         let config = device.default_output_config()?.config();
@@ -37,10 +39,10 @@ impl AudioSession {
                 buffer.extend_from_slice(data);
 
                 match tx_audio.try_send(buffer) {
-                    Ok(_) => {},
+                    Ok(_) => {}
                     Err(TrySendError::Full(_)) => {
                         tracing::debug!("Audio buffer is full");
-                    },
+                    }
                     Err(TrySendError::Closed(_)) => {
                         tracing::debug!("Capture channel closed");
                     }
@@ -54,7 +56,7 @@ impl AudioSession {
 
         Ok(Self::new(config, stream))
     }
-    
+
     pub fn config(&self) -> &StreamConfig {
         &self.config
     }
@@ -62,6 +64,8 @@ impl AudioSession {
     pub fn play(&self) -> Result<(), cpal::PlayStreamError> {
         self.stream.play()
     }
-    
-    pub fn pause(&self) -> Result<(), cpal::PauseStreamError> { self.stream.pause() }
+
+    pub fn pause(&self) -> Result<(), cpal::PauseStreamError> {
+        self.stream.pause()
+    }
 }

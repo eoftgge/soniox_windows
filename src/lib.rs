@@ -1,17 +1,17 @@
 use crate::errors::SonioxWindowsErrors;
 use crate::gui::app::SubtitlesApp;
+use crate::transcription::service::TranscriptionService;
 use settings::SettingsApp;
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use crate::transcription::service::TranscriptionService;
 
 pub mod errors;
 pub mod gui;
 pub mod settings;
 pub mod soniox;
-pub mod types;
 pub mod transcription;
+pub mod types;
 
 pub const ICON_BYTES: &[u8] = include_bytes!("../assets/icon.png");
 

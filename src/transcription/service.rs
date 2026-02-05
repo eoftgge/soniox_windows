@@ -1,4 +1,3 @@
-use tokio::sync::mpsc::{channel, Sender, Receiver};
 use crate::errors::SonioxWindowsErrors;
 use crate::settings::SettingsApp;
 use crate::soniox::client::SonioxClient;
@@ -6,6 +5,7 @@ use crate::soniox::request::create_request;
 use crate::transcription::audio::AudioSession;
 use crate::types::audio::AudioSample;
 use crate::types::soniox::SonioxTranscriptionResponse;
+use tokio::sync::mpsc::{Receiver, Sender, channel};
 
 pub struct TranscriptionService {
     pub(crate) audio: AudioSession,
@@ -23,7 +23,7 @@ impl TranscriptionService {
         let request = create_request(settings_app, audio.config())?;
         let mut ws = SonioxClient::new(tx_transcription, tx_recycle, rx_audio);
         audio.play()?;
-        
+
         let handle = tokio::spawn(async move {
             if let Err(e) = ws.start(&request).await {
                 tracing::error!("WebSocket error: {:?}", e);

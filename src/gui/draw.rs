@@ -1,7 +1,7 @@
 use crate::gui::color::get_interim_color;
 use crate::gui::replicas::{VisualReplica, prepare_replicas};
-use eframe::egui::{Color32, Frame, RichText, Ui};
 use crate::transcription::store::TranscriptionStore;
+use eframe::egui::{Color32, Frame, RichText, Ui};
 
 pub fn draw_subtitles(
     ui: &mut Ui,

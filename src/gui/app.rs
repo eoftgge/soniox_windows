@@ -2,12 +2,12 @@ use crate::gui::draw::draw_subtitles;
 use crate::gui::settings::show_settings_window;
 use crate::gui::state::AppState;
 use crate::settings::SettingsApp;
+use crate::transcription::service::TranscriptionService;
 use crate::transcription::store::TranscriptionStore;
 use eframe::egui::{Align, Area, Context, Id, Layout, Order, Visuals};
 use eframe::{App, Frame};
 use egui_notify::Toasts;
 use std::time::Duration;
-use crate::transcription::service::TranscriptionService;
 
 const MAX_FPS: u64 = 30;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
@@ -22,9 +22,7 @@ pub struct SubtitlesApp {
 }
 
 impl SubtitlesApp {
-    pub fn new(
-        settings: SettingsApp,
-    ) -> Self {
+    pub fn new(settings: SettingsApp) -> Self {
         Self {
             store: TranscriptionStore::new(settings.max_blocks()),
             toasts: Toasts::new(),
@@ -58,8 +56,7 @@ impl App for SubtitlesApp {
                 show_settings_window(ctx, &mut self.settings, &mut self.state, &mut self.toasts)
             }
             AppState::Overlay => {
-                self.store
-                    .clear_if_silent(Duration::from_secs(15));
+                self.store.clear_if_silent(Duration::from_secs(15));
 
                 if let Some(service) = &mut self.service {
                     while let Ok(response) = service.transcription.try_recv() {
