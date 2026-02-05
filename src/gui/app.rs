@@ -3,42 +3,38 @@ use crate::gui::settings::show_settings_window;
 use crate::gui::state::AppState;
 use crate::settings::SettingsApp;
 use crate::soniox::transcription::TranscriptionStore;
-use crate::types::audio::AudioMessage;
 use crate::types::soniox::SonioxTranscriptionResponse;
 use eframe::egui::{Align, Area, Context, Id, Layout, Order, Visuals};
 use eframe::{App, Frame};
 use egui_notify::Toasts;
 use std::time::Duration;
-use cpal::Stream;
-use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::sync::mpsc::Receiver;
+use crate::audio::AudioSession;
 
 const MAX_FPS: u64 = 30;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
 
 pub struct SubtitlesApp {
     rx_transcription: Receiver<SonioxTranscriptionResponse>,
-    tx_audio: Sender<AudioMessage>,
     settings: SettingsApp,
     state: AppState,
     last_state: Option<AppState>,
     transcription_store: TranscriptionStore,
     toasts: Toasts,
-    _stream: Stream,
+    session: AudioSession,
 }
 
 impl SubtitlesApp {
     pub fn new(
         rx_transcription: Receiver<SonioxTranscriptionResponse>,
-        tx_audio: Sender<AudioMessage>,
         settings: SettingsApp,
-        stream: Stream
+        session: AudioSession,
     ) -> Self {
         Self {
             transcription_store: TranscriptionStore::new(settings.max_blocks()),
             rx_transcription,
-            tx_audio,
             settings,
-            _stream: stream,
+            session,
             toasts: Toasts::new(),
             state: AppState::Config,
             last_state: None,
@@ -54,6 +50,7 @@ impl App for SubtitlesApp {
 
             if self.state == AppState::Overlay {
                 self.transcription_store.resize(self.settings.max_blocks);
+                self.session.play().unwrap(); // todo
             }
 
             self.last_state = Some(self.state);
@@ -91,7 +88,6 @@ impl App for SubtitlesApp {
     }
 
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
-        let _ = self.tx_audio.send(AudioMessage::Stop);
         self.rx_transcription.close();
     }
 
