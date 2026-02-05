@@ -10,4 +10,9 @@ ci = "github"
 # The installers to generate for each app
 installers = []
 # Target platforms to build apps for (Rust target-triple syntax)
-targets = ["aarch64-pc-windows-msvc", "x86_64-pc-windows-gnu", "x86_64-pc-windows-msvc", "i686-pc-windows-msvc"]
+targets = [
+    "x86_64-pc-windows-msvc",   # Windows 64-bit
+    "aarch64-pc-windows-msvc",  # Windows ARM
+    "x86_64-unknown-linux-gnu", # Linux Desktop
+    "aarch64-apple-darwin",     # macOS Apple Silicon
+]
