@@ -19,7 +19,7 @@ pub struct SonioxClient {
     tx_transcription: Sender<SonioxTranscriptionResponse>,
     rx_audio: Receiver<AudioSample>,
     tx_recycle: Sender<AudioSample>,
-    byte_buffer_pool: Vec<u8>,
+    byte_buffer_pool: Vec<i16>,
 }
 
 impl SonioxClient {
@@ -107,9 +107,10 @@ impl SonioxClient {
             Some(buffer) => {
                 if !buffer.is_empty() {
                     convert_audio_chunk(&buffer, &mut self.byte_buffer_pool);
+                    let slice = self.byte_buffer_pool.as_slice();
                     writer
                         .send(Message::Binary(Bytes::copy_from_slice(
-                            self.byte_buffer_pool.as_slice(),
+                            bytemuck::cast_slice(slice),
                         )))
                         .await?;
                     let _ = self.tx_recycle.send(buffer).await;
