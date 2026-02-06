@@ -167,7 +167,6 @@ fn ui_section_api(ui: &mut Ui, settings: &mut SettingsApp) {
                 ui.checkbox(&mut settings.enable_speakers, "Enable Speakers ID");
                 ui.end_row();
             });
-        ui.small("To change configuration Soniox you need restart application.");
     });
 }
 
@@ -188,6 +187,7 @@ fn ui_section_position(ui: &mut Ui, ctx: &Context, settings: &mut SettingsApp) {
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
                 ui.add(egui::Label::new("Snap to:").extend());
             });
+            ui.end_row();
             ui.vertical(|ui| {
                 let (screen_w, screen_h) = match ctx.input(|i| i.viewport().monitor_size) {
                     Some(size) => (size.x, size.y),
@@ -227,7 +227,7 @@ fn ui_section_position(ui: &mut Ui, ctx: &Context, settings: &mut SettingsApp) {
 
                         if btn(ui, "⬅").clicked() {
                             settings.position = (x_left, y_mid);
-                        } else if btn(ui, "◎").clicked() {
+                        } else if btn(ui, "X").clicked() {
                             settings.position = (x_center, y_mid);
                         } else if btn(ui, "➡").clicked() {
                             settings.position = (x_right, y_mid);
