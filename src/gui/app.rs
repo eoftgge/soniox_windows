@@ -3,7 +3,7 @@ use crate::gui::settings::show_settings_window;
 use crate::gui::state::{AppState, StateManager};
 use crate::settings::SettingsApp;
 use crate::transcription::store::TranscriptionStore;
-use eframe::egui::{Align, Area, Context, Id, Layout, Order, Visuals};
+use eframe::egui::{Align, Area, Context, Id, Layout, Order, ViewportCommand, Visuals, WindowLevel};
 use eframe::{App, Frame};
 use egui_notify::Toasts;
 use std::time::Duration;
@@ -17,6 +17,7 @@ pub struct SubtitlesApp {
     store: TranscriptionStore,
     toasts: Toasts,
     manager: StateManager,
+    frame_counter: u64,
     _guard: WorkerGuard,
 }
 
@@ -27,6 +28,7 @@ impl SubtitlesApp {
             toasts: Toasts::new(),
             manager: StateManager::new(),
             settings,
+            frame_counter: 0,
             _guard: guard,
         }
     }
@@ -49,6 +51,11 @@ impl App for SubtitlesApp {
                     self.store.update(response);
                 }
 
+                if self.settings.enable_high_priority() && self.frame_counter >= 100 {
+                    ctx.send_viewport_cmd(ViewportCommand::WindowLevel(WindowLevel::AlwaysOnTop));
+                    self.frame_counter = 0;
+                }
+
                 Area::new(Id::from("subtitles_area"))
                     .fixed_pos(self.settings.get_position())
                     .order(Order::Foreground)
@@ -66,7 +73,9 @@ impl App for SubtitlesApp {
                     });
             }
         }
+
         self.toasts.show(ctx);
+        self.frame_counter += 1;
     }
 
     fn clear_color(&self, _visuals: &Visuals) -> [f32; 4] {
