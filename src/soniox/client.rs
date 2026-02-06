@@ -44,8 +44,7 @@ impl SonioxClient {
         let mut retry_count = 0;
 
         loop {
-            let url = URL
-                .into_client_request()?;
+            let url = URL.into_client_request()?;
             tracing::debug!("Connecting to Soniox... (Attempt {})", retry_count + 1);
 
             match connect_async(url).await {

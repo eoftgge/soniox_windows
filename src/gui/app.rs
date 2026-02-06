@@ -3,7 +3,9 @@ use crate::gui::settings::show_settings_window;
 use crate::gui::state::{AppState, StateManager};
 use crate::settings::SettingsApp;
 use crate::transcription::store::TranscriptionStore;
-use eframe::egui::{Align, Area, Context, Id, Layout, Order, ViewportCommand, Visuals, WindowLevel};
+use eframe::egui::{
+    Align, Area, Context, Id, Layout, Order, ViewportCommand, Visuals, WindowLevel,
+};
 use eframe::{App, Frame};
 use egui_notify::Toasts;
 use std::time::Duration;
