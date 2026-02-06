@@ -173,10 +173,8 @@ fn ui_section_api(ui: &mut Ui, settings: &mut SettingsApp) {
 fn ui_section_position(ui: &mut Ui, ctx: &Context, settings: &mut SettingsApp) {
     ui.collapsing("Position", |ui| {
         Grid::new("pos_grid").spacing([10.0, 10.0]).show(ui, |ui| {
-            ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
-                ui.add(egui::Label::new("Coordinates:").extend());
-            });
             ui.horizontal(|ui| {
+                ui.add(egui::Label::new("Coordinates:").extend());
                 ui.label("X:");
                 ui.add(DragValue::new(&mut settings.position.0));
                 ui.label("Y:");
