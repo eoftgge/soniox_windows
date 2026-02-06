@@ -77,7 +77,7 @@ impl SettingsApp {
 
     pub fn level(&self) -> Result<LevelFilter, SonioxLiveErrors> {
         LevelFilter::from_str(&self.level).map_err(|_| {
-            SonioxLiveErrors::Internal(
+            SonioxLiveErrors::from(
                 "field `level` isn't valid. did u mean `trace`, `debug` and `warn`?",
             )
         })

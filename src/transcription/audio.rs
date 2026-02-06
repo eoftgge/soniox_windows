@@ -22,7 +22,7 @@ impl AudioSession {
         let host = cpal::default_host();
         let device = host
             .default_output_device()
-            .ok_or_else(|| SonioxLiveErrors::Internal("Output device is not found"))?;
+            .ok_or_else(|| SonioxLiveErrors::NotFoundOutputDevice)?;
 
         let config = device.default_output_config()?.config();
         let stream = device.build_input_stream(

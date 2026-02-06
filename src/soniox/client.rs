@@ -45,8 +45,7 @@ impl SonioxClient {
 
         loop {
             let url = URL
-                .into_client_request()
-                .map_err(|_| SonioxLiveErrors::WssConnectionError)?;
+                .into_client_request()?;
             tracing::debug!("Connecting to Soniox... (Attempt {})", retry_count + 1);
 
             match connect_async(url).await {
@@ -64,7 +63,7 @@ impl SonioxClient {
             sleep(Duration::from_millis(RECONNECT_DELAY)).await;
             retry_count += 1;
             if retry_count > MAX_RETRIES {
-                return Err(SonioxLiveErrors::WssConnectionError);
+                return Err(SonioxLiveErrors::ConnectionLost);
             }
         }
     }
