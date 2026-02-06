@@ -48,11 +48,11 @@ impl StateManager {
             return Ok(());
         };
 
-        resolved.apply_window_state(ctx, settings.enable_high_priority);
+        resolved.apply_window_state(ctx, settings.enable_high_priority());
         match resolved {
             PendingState::Config => self.app_state = AppState::Config,
             PendingState::Overlay => {
-                let service = TranscriptionService::start(&settings)?;
+                let service = TranscriptionService::start(settings)?;
                 store.resize(settings.max_blocks);
                 self.app_state = AppState::Overlay(service);
             }
