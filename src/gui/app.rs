@@ -7,6 +7,7 @@ use eframe::egui::{Align, Area, Context, Id, Layout, Order, Visuals};
 use eframe::{App, Frame};
 use egui_notify::Toasts;
 use std::time::Duration;
+use tracing_appender::non_blocking::WorkerGuard;
 
 const MAX_FPS: u64 = 30;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
@@ -16,15 +17,17 @@ pub struct SubtitlesApp {
     store: TranscriptionStore,
     toasts: Toasts,
     manager: StateManager,
+    _guard: WorkerGuard,
 }
 
 impl SubtitlesApp {
-    pub fn new(settings: SettingsApp) -> Self {
+    pub fn new(settings: SettingsApp, guard: WorkerGuard) -> Self {
         Self {
             store: TranscriptionStore::new(settings.max_blocks()),
             toasts: Toasts::new(),
             manager: StateManager::new(),
             settings,
+            _guard: guard,
         }
     }
 }

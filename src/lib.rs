@@ -32,7 +32,7 @@ fn setup_tracing(level: LevelFilter) -> tracing_appender::non_blocking::WorkerGu
 
 pub fn initialize_app(settings: SettingsApp) -> Result<SubtitlesApp, SonioxLiveErrors> {
     let level = settings.level()?;
-    let _guard = setup_tracing(level);
-    let app = SubtitlesApp::new(settings);
+    let guard = setup_tracing(level);
+    let app = SubtitlesApp::new(settings, guard);
     Ok(app)
 }
