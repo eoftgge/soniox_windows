@@ -14,6 +14,10 @@ pub enum SonioxLiveErrors {
     Graphics(#[from] eframe::Error),
     #[error("Error in config: {0}")]
     Config(#[from] config::ConfigError),
+    #[error("Error in serialize TOML: {0}")]
+    SerializeToml(#[from] toml::ser::Error),
+    #[error("Error in deserialize TOML: {0}")]
+    DeserializeToml(#[from] toml::de::Error),
     #[error("Error in IO: {0}")]
     Io(#[from] std::io::Error),
     #[error("Error in string UTF-8: {0}")]

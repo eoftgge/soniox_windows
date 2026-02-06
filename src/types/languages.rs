@@ -191,6 +191,12 @@ impl LanguageHint {
     }
 }
 
+impl Default for LanguageHint {
+    fn default() -> Self {
+        Self::English
+    }
+}
+
 impl std::fmt::Display for LanguageHint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)

@@ -1,13 +1,13 @@
+use std::path::Path;
 use crate::errors::SonioxLiveErrors;
 use crate::types::languages::LanguageHint;
-use config::{Config, ConfigError, File};
 use eframe::egui::{Color32, Pos2, pos2};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use std::sync::Arc;
 use tracing_subscriber::filter::LevelFilter;
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Default, Deserialize, Serialize, Clone)]
 pub struct SettingsApp {
     pub(crate) language_hints: Vec<LanguageHint>,
     pub(crate) context: String,
@@ -25,11 +25,18 @@ pub struct SettingsApp {
 }
 
 impl SettingsApp {
-    pub fn new(path: &str) -> Result<Self, ConfigError> {
-        let s = Config::builder()
-            .add_source(File::with_name(path))
-            .build()?;
-        s.try_deserialize()
+    pub fn new(path: &str) -> Result<Self, SonioxLiveErrors> {
+        let path = Path::new(path);
+        if !path.exists() {
+            let s = Self::default();
+            let content = toml::to_string(&s)?;
+            std::fs::write(path, content)?;
+            return Ok(s);
+        }
+
+        let content = std::fs::read_to_string(path)?;
+        let s = toml::from_str(&content)?;
+        Ok(s)
     }
 
     pub fn language_hints(&self) -> Arc<[LanguageHint]> {
@@ -92,10 +99,8 @@ impl SettingsApp {
     }
 
     pub fn save(&self, path: &str) -> Result<(), SonioxLiveErrors> {
-        let toml_string = toml::to_string_pretty(self)
-            .map_err(|_| SonioxLiveErrors::Internal("Failed to serialize settings"))?;
-        std::fs::write(path, toml_string)
-            .map_err(|_| SonioxLiveErrors::Internal("Failed to write settings file"))?;
+        let toml_string = toml::to_string(self)?;
+        std::fs::write(path, toml_string)?;
 
         Ok(())
     }
