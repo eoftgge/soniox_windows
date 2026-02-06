@@ -292,7 +292,7 @@ fn ui_section_appearance(ui: &mut Ui, settings: &mut SettingsApp) {
                 ui.label("Text Color:");
                 ui.horizontal(|ui| {
                     if ui
-                        .button("↺ Reset")
+                        .button("↺ Reset to default")
                         .on_hover_text("Reset to Yellow")
                         .clicked()
                     {
@@ -313,10 +313,6 @@ fn ui_section_appearance(ui: &mut Ui, settings: &mut SettingsApp) {
                 ui.add(Slider::new(&mut settings.text_color.2, 0..=255));
                 ui.end_row();
             });
-
-        if ui.button("Reset Color").clicked() {
-            settings.text_color = (255, 255, 0);
-        }
 
         let p_col = Color32::from_rgb(
             settings.text_color.0,
