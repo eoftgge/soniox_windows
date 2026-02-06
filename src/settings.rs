@@ -7,7 +7,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use tracing_subscriber::filter::LevelFilter;
 
-#[derive(Default, Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct SettingsApp {
     pub(crate) language_hints: Vec<LanguageHint>,
     pub(crate) context: String,
@@ -17,11 +17,31 @@ pub struct SettingsApp {
     pub(crate) enable_high_priority: bool,
     pub(crate) enable_speakers: bool,
     pub(crate) enable_background: bool,
-    pub(crate) level: String,
+    pub(crate) level: String, // maybe to make it an enum
     pub(crate) position: (f32, f32),
-    pub(crate) font_size: f32,
+    pub(crate) font_size: usize,
     pub(crate) text_color: (u8, u8, u8),
     pub(crate) max_blocks: usize,
+}
+
+impl Default for SettingsApp {
+    fn default() -> Self {
+        Self {
+            language_hints: vec![LanguageHint::default()],
+            context: String::from("some kind context"),
+            api_key: String::new(),
+            target_language: LanguageHint::default(),
+            enable_translate: false,
+            enable_high_priority: true,
+            enable_speakers: true,
+            enable_background: true,
+            level: "info".into(),
+            position: (100., 100.),
+            font_size: 18,
+            text_color: (255, 255, 0), // yellow
+            max_blocks: 3,
+        }
+    }
 }
 
 impl SettingsApp {
@@ -68,7 +88,7 @@ impl SettingsApp {
     }
 
     pub fn font_size(&self) -> f32 {
-        self.font_size
+        self.font_size as f32
     }
 
     pub fn max_blocks(&self) -> usize {

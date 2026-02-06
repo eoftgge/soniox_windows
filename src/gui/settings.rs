@@ -266,7 +266,7 @@ fn ui_section_appearance(ui: &mut Ui, settings: &mut SettingsApp) {
                 ui.end_row();
 
                 ui.label("Font size:");
-                ui.add(Slider::new(&mut settings.font_size, 10.0..=80.0));
+                ui.add(Slider::new(&mut settings.font_size, 10..=80));
                 ui.end_row();
 
                 ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
@@ -334,7 +334,7 @@ fn ui_section_appearance(ui: &mut Ui, settings: &mut SettingsApp) {
                 ui.label(
                     RichText::new(format!("Preview ({:.0}px)", settings.font_size))
                         .color(text_col)
-                        .size(settings.font_size),
+                        .size(settings.font_size()),
                 );
             });
     });
