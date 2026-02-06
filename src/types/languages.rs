@@ -127,7 +127,6 @@ pub enum LanguageHint {
 impl LanguageHint {
     pub fn all() -> &'static [LanguageHint] {
         &[
-            Self::Russian,
             Self::English,
             Self::German,
             Self::French,
@@ -175,6 +174,7 @@ impl LanguageHint {
             Self::Portuguese,
             Self::Punjabi,
             Self::Romanian,
+            Self::Russian,
             Self::Serbian,
             Self::Slovak,
             Self::Slovenian,
