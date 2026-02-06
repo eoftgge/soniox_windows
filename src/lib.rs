@@ -2,8 +2,6 @@ use crate::errors::SonioxLiveErrors;
 use crate::gui::app::SubtitlesApp;
 use settings::SettingsApp;
 use tracing_subscriber::filter::LevelFilter;
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::util::SubscriberInitExt;
 
 pub mod errors;
 pub mod gui;
