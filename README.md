@@ -18,12 +18,10 @@ For build and start, you need [Rust Compiler](https://rust-lang.org/tools/instal
 >>> cd soniox_live
 >>> cargo build --release
 // in directory target/release appear file .exe, and move it file to the your directory
-// and you should to create new configuration file (soniox.toml), example in repository.
 // and run normally execution file. maybe, the antivirus will complain. it's normal
 ```
 
 And you can also use binaries from [GitHub Releases](https://github.com/eoftgge/soniox_windows/releases) <br>
-To run, you need a corresponding configuration file, an example is in the repository. Create it and fill in the config.
 And run. Enjoy :)
 
 If you have any problems, don't hesitate to ask in the Issues section
