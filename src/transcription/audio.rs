@@ -30,7 +30,7 @@ impl AudioSession {
             &config,
             move |data: &[f32], _: &cpal::InputCallbackInfo| {
                 let mut buffer = match rx_recycle.try_recv() {
-                    Ok(mut sample) => std::mem::take(&mut sample),
+                    Ok(sample) => sample,
                     Err(_) => Vec::with_capacity(data.len()),
                 };
                 convert_audio_chunk(data, &mut buffer);
