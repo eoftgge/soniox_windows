@@ -115,13 +115,7 @@ fn ui_section_api(ui: &mut Ui, settings: &mut SettingsApp) {
                     for (i, hint) in settings.language_hints.iter_mut().enumerate() {
                         ui.horizontal(|ui| {
                             ui.label(format!("{}.", i + 1));
-                            ComboBox::from_id_salt(format!("hint_{}", i))
-                                .selected_text(hint.to_string())
-                                .show_ui(ui, |ui| {
-                                    for lang in LanguageHint::all() {
-                                        ui.selectable_value(hint, *lang, lang.to_string());
-                                    }
-                                });
+                            ui_language_searchable_combo(ui, format!("hint_{}", i), hint);
                             if ui.button("🗑").clicked() {
                                 to_remove = Some(i);
                             }
@@ -142,17 +136,7 @@ fn ui_section_api(ui: &mut Ui, settings: &mut SettingsApp) {
                 ui.vertical(|ui| {
                     ui.checkbox(&mut settings.enable_translate, "Enable");
                     if settings.enable_translate {
-                        ComboBox::from_id_salt("target_lang")
-                            .selected_text(settings.target_language.to_string())
-                            .show_ui(ui, |ui| {
-                                for lang in LanguageHint::all() {
-                                    ui.selectable_value(
-                                        &mut settings.target_language,
-                                        *lang,
-                                        lang.to_string(),
-                                    );
-                                }
-                            });
+                        ui_language_searchable_combo(ui, "target_lang", &mut settings.target_language);
                     }
                 });
                 ui.end_row();
@@ -254,6 +238,44 @@ fn ui_section_position(ui: &mut Ui, ctx: &Context, settings: &mut SettingsApp) {
             ui.end_row();
         });
     });
+}
+
+fn ui_language_searchable_combo(
+    ui: &mut Ui,
+    id_salt: impl std::hash::Hash,
+    selected: &mut LanguageHint,
+) {
+    let id = ui.make_persistent_id(id_salt);
+    let mut search_term = ui.data_mut(|d| d.get_temp::<String>(id).unwrap_or_default());
+
+    ComboBox::from_id_salt(id)
+        .selected_text(selected.to_string())
+        .height(250.)
+        .show_ui(ui, |ui| {
+            ui.set_min_width(180.0);
+            ui.set_min_height(250.0);
+            let text_edit_response = ui.add(
+                TextEdit::singleline(&mut search_term)
+                    .hint_text("🔍 Search...")
+                    .desired_width(150.0),
+            );
+
+            if !text_edit_response.has_focus() {
+                text_edit_response.request_focus();
+            }
+
+            ui.separator();
+            let query = search_term.to_lowercase();
+            for lang in LanguageHint::all() {
+                let lang_name = lang.to_string();
+                if (query.is_empty() || lang_name.to_lowercase().contains(&query))
+                    && ui.selectable_value(selected, *lang, lang_name).clicked() {
+                    search_term.clear();
+                }
+            }
+        });
+
+    ui.data_mut(|d| d.insert_temp(id, search_term));
 }
 
 fn ui_section_appearance(ui: &mut Ui, settings: &mut SettingsApp) {
