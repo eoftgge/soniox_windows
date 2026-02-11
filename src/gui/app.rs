@@ -67,9 +67,10 @@ impl App for SubtitlesApp {
                     ctx.send_viewport_cmd(ViewportCommand::WindowLevel(WindowLevel::AlwaysOnTop));
                     self.frame_counter = 0;
                 }
-
+                
+                let (anchor, offset) = self.settings.get_anchor();
                 Area::new(Id::from("subtitles_area"))
-                    .fixed_pos(self.settings.get_position())
+                    .anchor(anchor, offset)
                     .order(Order::Foreground)
                     .show(ctx, |ui| {
                         ui.with_layout(Layout::top_down(Align::LEFT), |ui| {

@@ -1,6 +1,6 @@
 use crate::errors::SonioxLiveErrors;
 use crate::types::languages::LanguageHint;
-use eframe::egui::{Color32, Pos2, pos2};
+use eframe::egui::{Color32, Align2, Vec2, vec2};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::str::FromStr;
@@ -18,7 +18,8 @@ pub struct SettingsApp {
     pub(crate) enable_speakers: bool,
     pub(crate) enable_background: bool,
     pub(crate) level: String, // maybe to make it an enum
-    pub(crate) position: (f32, f32),
+    pub(crate) offset: (f32, f32),
+    pub(crate) anchor: usize,
     pub(crate) font_size: usize,
     pub(crate) text_color: (u8, u8, u8),
     pub(crate) max_blocks: usize,
@@ -36,7 +37,8 @@ impl Default for SettingsApp {
             enable_speakers: true,
             enable_background: true,
             level: "info".into(),
-            position: (100., 100.),
+            offset: (0.0, -30.0),
+            anchor: 7,
             font_size: 18,
             text_color: (255, 255, 0), // yellow
             max_blocks: 3,
@@ -114,8 +116,20 @@ impl SettingsApp {
         Color32::TRANSPARENT
     }
 
-    pub fn get_position(&self) -> Pos2 {
-        pos2(self.position.0, self.position.1)
+    pub fn get_anchor(&self) -> (Align2, Vec2) {
+        let align = match self.anchor {
+            0 => Align2::LEFT_TOP,
+            1 => Align2::CENTER_TOP,
+            2 => Align2::RIGHT_TOP,
+            3 => Align2::LEFT_CENTER,
+            4 => Align2::CENTER_CENTER,
+            5 => Align2::RIGHT_CENTER,
+            6 => Align2::LEFT_BOTTOM,
+            7 => Align2::CENTER_BOTTOM,
+            8 => Align2::RIGHT_BOTTOM,
+            _ => Align2::CENTER_BOTTOM,
+        };
+        (align, vec2(self.offset.0, self.offset.1))
     }
 
     pub fn save(&self, path: &str) -> Result<(), SonioxLiveErrors> {

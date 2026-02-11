@@ -1,9 +1,7 @@
 use crate::gui::state::{PendingState, StateManager};
 use crate::settings::SettingsApp;
 use crate::types::languages::LanguageHint;
-use eframe::egui::{
-    self, ComboBox, Context, DragValue, Grid, RichText, ScrollArea, Slider, TextEdit, Ui,
-};
+use eframe::egui::{self, vec2, Button, ComboBox, Context, DragValue, Grid, RichText, ScrollArea, Slider, TextEdit, Ui};
 use eframe::epaint::Color32;
 use egui_notify::Toasts;
 use std::time::Duration;
@@ -19,7 +17,7 @@ pub fn show_settings_window(
     egui::CentralPanel::default()
         .frame(egui::Frame::central_panel(&ctx.style()).inner_margin(15.0))
         .show(ctx, |ui| {
-            ui.spacing_mut().item_spacing = egui::vec2(8.0, 12.0);
+            ui.spacing_mut().item_spacing = vec2(8.0, 12.0);
             ui.heading("Settings");
             ui.separator();
 
@@ -28,7 +26,7 @@ pub fn show_settings_window(
                 ui_section_api(ui, settings);
                 ui_section_position(ui, ctx, settings);
                 ui_section_appearance(ui, settings);
-                ui.allocate_space(egui::vec2(0.0, 60.0));
+                ui.allocate_space(vec2(0.0, 60.0));
             });
         });
 }
@@ -47,7 +45,7 @@ fn ui_bottom_panel(
             ui.columns(2, |cols| {
                 cols[0].vertical_centered_justified(|ui| {
                     if ui
-                        .add(egui::Button::new("💾 Save").min_size(egui::vec2(0.0, 40.0)))
+                        .add(Button::new("💾 Save").min_size(vec2(0.0, 40.0)))
                         .clicked()
                     {
                         match settings.save("soniox.toml") {
@@ -69,7 +67,7 @@ fn ui_bottom_panel(
 
                 cols[1].vertical_centered_justified(|ui| {
                     if ui
-                        .add(egui::Button::new("🚀 Start").min_size(egui::vec2(0.0, 40.0)))
+                        .add(Button::new("🚀 Start").min_size(vec2(0.0, 40.0)))
                         .clicked()
                     {
                         manager.switch(PendingState::Overlay);
@@ -158,11 +156,11 @@ fn ui_section_position(ui: &mut Ui, ctx: &Context, settings: &mut SettingsApp) {
     ui.collapsing("Position", |ui| {
         Grid::new("pos_grid").spacing([10.0, 10.0]).show(ui, |ui| {
             ui.horizontal(|ui| {
-                ui.add(egui::Label::new("Coordinates:").extend());
+                ui.add(egui::Label::new("Offset (X, Y):").extend());
                 ui.label("X:");
-                ui.add(DragValue::new(&mut settings.position.0));
+                ui.add(DragValue::new(&mut settings.offset.0).speed(1.0));
                 ui.label("Y:");
-                ui.add(DragValue::new(&mut settings.position.1));
+                ui.add(DragValue::new(&mut settings.offset.1).speed(1.0));
             });
             ui.end_row();
 
@@ -171,67 +169,39 @@ fn ui_section_position(ui: &mut Ui, ctx: &Context, settings: &mut SettingsApp) {
             });
             ui.end_row();
             ui.vertical(|ui| {
-                let (screen_w, screen_h) = match ctx.input(|i| i.viewport().monitor_size) {
-                    Some(size) => (size.x, size.y),
-                    None => (1920.0, 1080.0),
-                };
-
-                let w = 800.0;
-                let h = 350.0;
-                let pad = 30.0;
-
-                let x_left = pad;
-                let x_center = (screen_w / 2.0) - (w / 2.0);
-                let x_right = screen_w - w - pad;
-
-                let y_top = pad;
-                let y_mid = (screen_h / 2.0) - (h / 2.0);
-                let y_bot = screen_h - h - pad;
-
                 Grid::new("snap_buttons")
                     .spacing([5.0, 5.0])
                     .show(ui, |ui| {
-                        let btn = |ui: &mut Ui, text: &str| {
-                            ui.add(
-                                egui::Button::new(RichText::new(text).size(16.0))
-                                    .min_size(egui::vec2(30.0, 30.0)),
-                            )
+                        let mut btn = |ui: &mut Ui, text: &str, anchor_val: usize, default_offset: (f32, f32)| {
+                            let is_selected = settings.anchor == anchor_val;
+                            let button = Button::new(RichText::new(text).size(16.0))
+                                .min_size(vec2(30.0, 30.0));
+
+                            let response = if is_selected {
+                                ui.add(button.fill(ctx.style().visuals.selection.bg_fill))
+                            } else {
+                                ui.add(button)
+                            };
+                            if response.clicked() {
+                                settings.anchor = anchor_val;
+                                settings.offset = default_offset;
+                            }
                         };
 
-                        if btn(ui, "↖").clicked() {
-                            settings.position = (x_left, y_top);
-                        } else if btn(ui, "⬆").clicked() {
-                            settings.position = (x_center, y_top);
-                        } else if btn(ui, "↗").clicked() {
-                            settings.position = (x_right, y_top);
-                        }
+                        let pad = 30.0;
+                        btn(ui, "↖", 0, (pad, pad));
+                        btn(ui, "⬆", 1, (0.0, pad));
+                        btn(ui, "↗", 2, (-pad, pad));
                         ui.end_row();
 
-                        if btn(ui, "⬅").clicked() {
-                            settings.position = (x_left, y_mid);
-                        } else if btn(ui, "X").clicked() {
-                            settings.position = (x_center, y_mid);
-                        } else if btn(ui, "➡").clicked() {
-                            settings.position = (x_right, y_mid);
-                        }
+                        btn(ui, "←", 3, (pad, 0.0));
+                        btn(ui, "X", 4, (0.0, 0.0));
+                        btn(ui, "→", 5, (-pad, 0.0));
                         ui.end_row();
 
-                        if btn(ui, "↙")
-                            .on_hover_text(format!("Y: {:.0}", y_bot))
-                            .clicked()
-                        {
-                            settings.position = (x_left, y_bot);
-                        } else if btn(ui, "⬇")
-                            .on_hover_text(format!("Y: {:.0}", y_bot))
-                            .clicked()
-                        {
-                            settings.position = (x_center, y_bot);
-                        } else if btn(ui, "↘")
-                            .on_hover_text(format!("Y: {:.0}", y_bot))
-                            .clicked()
-                        {
-                            settings.position = (x_right, y_bot);
-                        }
+                        btn(ui, "↙", 6, (pad, -pad));
+                        btn(ui, "⬇", 7, (0.0, -pad));
+                        btn(ui, "↘", 8, (-pad, -pad));
                         ui.end_row();
                     });
             });
@@ -312,7 +282,7 @@ fn ui_section_appearance(ui: &mut Ui, settings: &mut SettingsApp) {
                 ui.label("Text Color:");
                 ui.horizontal(|ui| {
                     if ui
-                        .button("↺ Reset to default")
+                        .button("🔄 Reset to default")
                         .on_hover_text("Reset to Yellow")
                         .clicked()
                     {
