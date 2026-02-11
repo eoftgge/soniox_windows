@@ -42,8 +42,11 @@ fn run() -> Result<(), SonioxLiveErrors> {
     Ok(())
 }
 
-#[tokio::main]
-async fn main() {
+fn main() {
+    let rt = tokio::runtime::Runtime::new()
+        .expect("Should be able to get rt main thread");
+    let _e = rt.enter();
+
     if let Err(err) = run() {
         tracing::error!("Soniox Live {:?}", err);
         std::process::exit(1);
