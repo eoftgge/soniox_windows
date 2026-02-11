@@ -4,24 +4,24 @@ use crate::soniox::client::SonioxClient;
 use crate::soniox::request::create_request;
 use crate::transcription::audio::AudioSession;
 use crate::types::audio::AudioSample;
-use crate::types::soniox::SonioxTranscriptionResponse;
-use tokio::sync::mpsc::{Receiver, channel};
+use tokio::sync::mpsc::{channel, Receiver};
+use crate::types::events::SonioxEvent;
 
 pub struct TranscriptionService {
     pub(crate) _audio: AudioSession,
-    pub transcription: Receiver<SonioxTranscriptionResponse>,
+    pub receiver: Receiver<SonioxEvent>,
     handle: tokio::task::JoinHandle<()>,
 }
 
 impl TranscriptionService {
     pub fn start(settings_app: &SettingsApp) -> Result<Self, SonioxLiveErrors> {
+        let (tx_event, rx_event) = channel::<SonioxEvent>(128);
         let (tx_audio, rx_audio) = channel::<AudioSample>(256);
-        let (tx_transcription, rx_transcription) = channel::<SonioxTranscriptionResponse>(256);
         let (tx_recycle, rx_recycle) = channel::<AudioSample>(256);
-
+        
         let audio = AudioSession::open(tx_audio, rx_recycle)?;
         let request = create_request(settings_app, audio.config())?;
-        let mut ws = SonioxClient::new(tx_transcription, tx_recycle, rx_audio);
+        let mut ws = SonioxClient::new(tx_event, tx_recycle, rx_audio);
         audio.play()?;
 
         let handle = tokio::spawn(async move {
@@ -33,7 +33,7 @@ impl TranscriptionService {
         Ok(Self {
             _audio: audio,
             handle,
-            transcription: rx_transcription,
+            receiver: rx_event,
         })
     }
 }

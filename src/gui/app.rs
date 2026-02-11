@@ -10,6 +10,7 @@ use eframe::{App, Frame};
 use egui_notify::Toasts;
 use std::time::Duration;
 use tracing_appender::non_blocking::WorkerGuard;
+use crate::types::events::SonioxEvent;
 
 const MAX_FPS: u64 = 30;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
@@ -41,16 +42,25 @@ impl App for SubtitlesApp {
         if let Err(err) = self.manager.resolve(ctx, &mut self.store, &self.settings) {
             self.toasts.error(format!("{:?}", err));
         }
+        let manager = &mut self.manager;
 
-        match self.manager.app_state_mut() {
+        match manager.app_state_mut() {
             AppState::Config => {
                 show_settings_window(ctx, &mut self.settings, &mut self.manager, &mut self.toasts)
             }
             AppState::Overlay(service) => {
                 self.store.clear_if_silent(Duration::from_secs(15));
 
-                while let Ok(response) = service.transcription.try_recv() {
-                    self.store.update(response);
+                while let Ok(event) = service.receiver.try_recv() {
+                    match event {
+                        SonioxEvent::Transcription(r) => self.store.update(r),
+                        SonioxEvent::Warning(s) => {
+                            self.toasts.warning(s.to_string()).duration(Duration::from_secs(3));
+                        },
+                        SonioxEvent::Error(e) => {
+                            self.toasts.error(e.to_string()).duration(Duration::from_secs(3));
+                        },
+                    };
                 }
 
                 if self.settings.enable_high_priority() && self.frame_counter >= 100 {

@@ -1,7 +1,6 @@
 use crate::errors::SonioxLiveErrors;
 use crate::soniox::URL;
 use crate::soniox::action::StreamAction;
-use crate::transcription::utils::convert_audio_chunk;
 use crate::types::audio::AudioSample;
 use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranscriptionResponse};
 use futures_util::{SinkExt, StreamExt};
@@ -11,24 +10,25 @@ use tokio::time::sleep;
 use tokio_tungstenite::connect_async;
 use tungstenite::client::IntoClientRequest;
 use tungstenite::{Bytes, Message, Utf8Bytes};
+use crate::types::events::SonioxEvent;
 
 const MAX_RETRIES: u32 = 5;
 const RECONNECT_DELAY: u64 = 1000; // ms
 
 pub struct SonioxClient {
-    tx_transcription: Sender<SonioxTranscriptionResponse>,
+    tx_event: Sender<SonioxEvent>,
     rx_audio: Receiver<AudioSample>,
     tx_recycle: Sender<AudioSample>,
 }
 
 impl SonioxClient {
     pub fn new(
-        tx_transcription: Sender<SonioxTranscriptionResponse>,
+        tx_event: Sender<SonioxEvent>,
         tx_recycle: Sender<AudioSample>,
         rx_audio: Receiver<AudioSample>,
     ) -> Self {
         Self {
-            tx_transcription,
+            tx_event,
             rx_audio,
             tx_recycle,
         }
@@ -60,6 +60,7 @@ impl SonioxClient {
             sleep(Duration::from_millis(RECONNECT_DELAY)).await;
             retry_count += 1;
             if retry_count > MAX_RETRIES {
+                let _ = self.tx_event.send(SonioxEvent::Error(SonioxLiveErrors::ConnectionLost)).await;
                 return Err(SonioxLiveErrors::ConnectionLost);
             }
         }
@@ -131,7 +132,7 @@ impl SonioxClient {
                 Message::Text(txt) => {
                     let response = serde_json::from_str::<SonioxTranscriptionResponse>(&txt);
                     if let Ok(r) = response
-                        && self.tx_transcription.send(r).await.is_err()
+                        && self.tx_event.send(SonioxEvent::Transcription(r)).await.is_err()
                     {
                         tracing::error!("UI channel closed");
                         return StreamAction::Stop;
@@ -144,16 +145,19 @@ impl SonioxClient {
                 }
                 Message::Close(_) => {
                     tracing::warn!("Server closed connection");
+                    let _ = self.tx_event.send(SonioxEvent::Warning("Server closed connection. Reconnection...")).await;
                     StreamAction::Reconnect
                 }
                 _ => StreamAction::Continue,
             },
             Some(Err(e)) => {
                 tracing::error!("WS Read Error: {}", e);
+                let _ = self.tx_event.send(SonioxEvent::Warning("WS read error... Reconnection")).await;
                 StreamAction::Reconnect
             }
             None => {
                 tracing::warn!("WS Stream ended");
+                let _ = self.tx_event.send(SonioxEvent::Warning("WS stream ended... Reconnection")).await;
                 StreamAction::Reconnect
             }
         }
