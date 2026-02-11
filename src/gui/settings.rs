@@ -257,7 +257,7 @@ fn ui_language_searchable_combo(
             let text_edit_response = ui.add(
                 TextEdit::singleline(&mut search_term)
                     .hint_text("🔍 Search...")
-                    .desired_width(150.0),
+                    .desired_width(f32::INFINITY),
             );
 
             if !text_edit_response.has_focus() {
