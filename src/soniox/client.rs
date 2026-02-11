@@ -106,7 +106,7 @@ impl SonioxClient {
                     let slice: &[u8] = bytemuck::cast_slice(&buffer);
 
                     writer
-                        .send(Message::Binary(Bytes::from(slice.to_owned())))
+                        .send(Message::Binary(Bytes::copy_from_slice(slice)))
                         .await?;
                     buffer.clear();
                     let _ = self.tx_recycle.send(buffer).await;
