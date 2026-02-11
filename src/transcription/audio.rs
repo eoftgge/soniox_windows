@@ -1,10 +1,10 @@
 use crate::errors::SonioxLiveErrors;
+use crate::transcription::utils::convert_audio_chunk;
 use crate::types::audio::AudioSample;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{Stream, StreamConfig};
 use tokio::sync::mpsc::error::TrySendError;
 use tokio::sync::mpsc::{Receiver, Sender};
-use crate::transcription::utils::convert_audio_chunk;
 
 pub struct AudioSession {
     stream: Stream,

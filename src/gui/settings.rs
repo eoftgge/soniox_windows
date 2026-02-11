@@ -1,7 +1,10 @@
 use crate::gui::state::{PendingState, StateManager};
 use crate::settings::SettingsApp;
 use crate::types::languages::LanguageHint;
-use eframe::egui::{self, vec2, Button, ComboBox, Context, DragValue, Grid, RichText, ScrollArea, Slider, TextEdit, Ui};
+use eframe::egui::{
+    self, Button, ComboBox, Context, DragValue, Grid, RichText, ScrollArea, Slider, TextEdit, Ui,
+    vec2,
+};
 use eframe::epaint::Color32;
 use egui_notify::Toasts;
 use std::time::Duration;
@@ -134,7 +137,11 @@ fn ui_section_api(ui: &mut Ui, settings: &mut SettingsApp) {
                 ui.vertical(|ui| {
                     ui.checkbox(&mut settings.enable_translate, "Enable");
                     if settings.enable_translate {
-                        ui_language_searchable_combo(ui, "target_lang", &mut settings.target_language);
+                        ui_language_searchable_combo(
+                            ui,
+                            "target_lang",
+                            &mut settings.target_language,
+                        );
                     }
                 });
                 ui.end_row();
@@ -172,21 +179,25 @@ fn ui_section_position(ui: &mut Ui, ctx: &Context, settings: &mut SettingsApp) {
                 Grid::new("snap_buttons")
                     .spacing([5.0, 5.0])
                     .show(ui, |ui| {
-                        let mut btn = |ui: &mut Ui, text: &str, anchor_val: usize, default_offset: (f32, f32)| {
-                            let is_selected = settings.anchor == anchor_val;
-                            let button = Button::new(RichText::new(text).size(16.0))
-                                .min_size(vec2(30.0, 30.0));
+                        let mut btn =
+                            |ui: &mut Ui,
+                             text: &str,
+                             anchor_val: usize,
+                             default_offset: (f32, f32)| {
+                                let is_selected = settings.anchor == anchor_val;
+                                let button = Button::new(RichText::new(text).size(16.0))
+                                    .min_size(vec2(30.0, 30.0));
 
-                            let response = if is_selected {
-                                ui.add(button.fill(ctx.style().visuals.selection.bg_fill))
-                            } else {
-                                ui.add(button)
+                                let response = if is_selected {
+                                    ui.add(button.fill(ctx.style().visuals.selection.bg_fill))
+                                } else {
+                                    ui.add(button)
+                                };
+                                if response.clicked() {
+                                    settings.anchor = anchor_val;
+                                    settings.offset = default_offset;
+                                }
                             };
-                            if response.clicked() {
-                                settings.anchor = anchor_val;
-                                settings.offset = default_offset;
-                            }
-                        };
 
                         let pad = 30.0;
                         btn(ui, "↖", 0, (pad, pad));
@@ -239,7 +250,8 @@ fn ui_language_searchable_combo(
             for lang in LanguageHint::all() {
                 let lang_name = lang.to_string();
                 if (query.is_empty() || lang_name.to_lowercase().contains(&query))
-                    && ui.selectable_value(selected, *lang, lang_name).clicked() {
+                    && ui.selectable_value(selected, *lang, lang_name).clicked()
+                {
                     search_term.clear();
                 }
             }

@@ -3,6 +3,7 @@ use crate::gui::settings::show_settings_window;
 use crate::gui::state::{AppState, StateManager};
 use crate::settings::SettingsApp;
 use crate::transcription::store::TranscriptionStore;
+use crate::types::events::SonioxEvent;
 use eframe::egui::{
     Align, Area, Context, Id, Layout, Order, ViewportCommand, Visuals, WindowLevel,
 };
@@ -10,7 +11,6 @@ use eframe::{App, Frame};
 use egui_notify::Toasts;
 use std::time::Duration;
 use tracing_appender::non_blocking::WorkerGuard;
-use crate::types::events::SonioxEvent;
 
 const MAX_FPS: u64 = 30;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
@@ -55,11 +55,15 @@ impl App for SubtitlesApp {
                     match event {
                         SonioxEvent::Transcription(r) => self.store.update(r),
                         SonioxEvent::Warning(s) => {
-                            self.toasts.warning(s.to_string()).duration(Duration::from_secs(3));
-                        },
+                            self.toasts
+                                .warning(s.to_string())
+                                .duration(Duration::from_secs(3));
+                        }
                         SonioxEvent::Error(e) => {
-                            self.toasts.error(e.to_string()).duration(Duration::from_secs(3));
-                        },
+                            self.toasts
+                                .error(e.to_string())
+                                .duration(Duration::from_secs(3));
+                        }
                     };
                 }
 
@@ -67,7 +71,7 @@ impl App for SubtitlesApp {
                     ctx.send_viewport_cmd(ViewportCommand::WindowLevel(WindowLevel::AlwaysOnTop));
                     self.frame_counter = 0;
                 }
-                
+
                 let (anchor, offset) = self.settings.get_anchor();
                 Area::new(Id::from("subtitles_area"))
                     .anchor(anchor, offset)

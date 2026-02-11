@@ -43,8 +43,7 @@ fn run() -> Result<(), SonioxLiveErrors> {
 }
 
 fn main() {
-    let rt = tokio::runtime::Runtime::new()
-        .expect("Should be able to get rt main thread");
+    let rt = tokio::runtime::Runtime::new().expect("Should be able to get rt main thread");
     let _e = rt.enter();
 
     if let Err(err) = run() {

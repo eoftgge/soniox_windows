@@ -1,6 +1,6 @@
 use crate::errors::SonioxLiveErrors;
 use crate::types::languages::LanguageHint;
-use eframe::egui::{Color32, Align2, Vec2, vec2};
+use eframe::egui::{Align2, Color32, Vec2, vec2};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::str::FromStr;

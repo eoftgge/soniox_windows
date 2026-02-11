@@ -1,6 +1,6 @@
-use std::sync::Arc;
 use eframe::egui::{Context, FontData, FontDefinitions};
 use eframe::epaint::FontFamily;
+use std::sync::Arc;
 
 const FONTS: [&[u8]; 8] = [
     include_bytes!("../../assets/fonts/NotoSans-Medium.ttf"),
@@ -16,11 +16,11 @@ const FONTS: [&[u8]; 8] = [
 pub fn setup_custom_fonts(ctx: &Context) {
     let mut fonts = FontDefinitions::default();
     for (n, font) in FONTS.iter().enumerate() {
-        fonts.font_data.insert(
-            n.to_string(),
-            Arc::new(FontData::from_static(font))
-        );
-        fonts.families
+        fonts
+            .font_data
+            .insert(n.to_string(), Arc::new(FontData::from_static(font)));
+        fonts
+            .families
             .entry(FontFamily::Proportional)
             .or_default()
             .push(n.to_string());
