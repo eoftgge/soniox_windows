@@ -1,9 +1,8 @@
+use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::errors::SonioxLiveErrors;
-use crate::types::audio::AudioSample;
 
 #[derive(Debug)]
-pub enum AppEvents {
-    Audio(AudioSample),
-    Recycle(AudioSample),
+pub enum AppEvent {
+    Transcription(SonioxTranscriptionResponse),
     Error(SonioxLiveErrors)
 }
