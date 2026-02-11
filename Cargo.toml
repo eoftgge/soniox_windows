@@ -22,6 +22,10 @@ egui-notify = "0.21.0"
 cpal = "0.17.1"
 bytemuck = "1.25.0"
 
+[build-dependencies]
+winres = "0.1.12"
+image = "0.25.9"
+
 [profile.release]
 lto = true
 strip = true
