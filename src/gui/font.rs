@@ -1,23 +1,30 @@
-use eframe::egui::{Context, FontData, FontDefinitions, FontFamily};
 use std::sync::Arc;
+use eframe::egui::{Context, FontData, FontDefinitions};
+use eframe::epaint::FontFamily;
 
-const FONT_BYTES: &[u8] = include_bytes!("../../assets/MPLUSRounded1c-Medium.ttf");
+const FONTS: [&[u8]; 8] = [
+    include_bytes!("../../assets/fonts/NotoSans-Medium.ttf"),
+    include_bytes!("../../assets/fonts/NotoSansSC-Medium.ttf"),
+    include_bytes!("../../assets/fonts/NotoSansJP-Medium.ttf"),
+    include_bytes!("../../assets/fonts/NotoSansArabic-Medium.ttf"),
+    include_bytes!("../../assets/fonts/NotoSansKR-Medium.ttf"),
+    include_bytes!("../../assets/fonts/NotoSansTC-Medium.ttf"),
+    include_bytes!("../../assets/fonts/NotoSansGunjalaGondi-Medium.ttf"),
+    include_bytes!("../../assets/fonts/NotoEmoji-Medium.ttf"),
+];
 
 pub fn setup_custom_fonts(ctx: &Context) {
     let mut fonts = FontDefinitions::default();
-    fonts.font_data.insert(
-        "mplus".to_owned(),
-        Arc::new(FontData::from_static(FONT_BYTES)),
-    );
-    fonts
-        .families
-        .entry(FontFamily::Proportional)
-        .or_default()
-        .insert(0, "mplus".to_owned());
-    fonts
-        .families
-        .entry(FontFamily::Monospace)
-        .or_default()
-        .push("mplus".to_owned());
+    for (n, font) in FONTS.iter().enumerate() {
+        fonts.font_data.insert(
+            n.to_string(),
+            Arc::new(FontData::from_static(font))
+        );
+        fonts.families
+            .entry(FontFamily::Proportional)
+            .or_default()
+            .push(n.to_string());
+    }
+
     ctx.set_fonts(fonts);
 }
