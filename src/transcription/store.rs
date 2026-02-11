@@ -30,6 +30,9 @@ impl TranscriptionStore {
             self.last_activity = Instant::now();
         }
 
+        self.interim_blocks.clear();
+        let mut current_interim_block: Option<SubtitleBlock> = None;
+
         for token in &response.tokens {
             tracing::debug!("{:?}", token);
             if token.translation_status.as_deref() == Some("original") {
@@ -53,14 +56,7 @@ impl TranscriptionStore {
                 if let Some(block) = self.blocks.back_mut() {
                     block.final_text.push_str(&token.text);
                 }
-            }
-        }
-
-        self.interim_blocks.clear();
-        let mut current_interim_block: Option<SubtitleBlock> = None;
-
-        for token in &response.tokens {
-            if !token.is_final && token.translation_status.as_deref() != Some("original") {
+            } else {
                 let speaker = token.speaker.clone();
                 let speaker_changed = match &current_interim_block {
                     Some(block) => block.speaker != speaker,
