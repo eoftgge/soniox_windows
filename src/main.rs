@@ -7,7 +7,7 @@ use soniox_live::gui::font::setup_custom_fonts;
 use soniox_live::settings::SettingsApp;
 use soniox_live::{ICON_BYTES, initialize_app};
 
-async fn run() -> Result<(), SonioxLiveErrors> {
+fn run() -> Result<(), SonioxLiveErrors> {
     let settings = SettingsApp::new("soniox.toml")?;
     let app = initialize_app(settings)?;
     let native_options = eframe::NativeOptions {
@@ -41,7 +41,7 @@ async fn run() -> Result<(), SonioxLiveErrors> {
 
 #[tokio::main]
 async fn main() {
-    if let Err(err) = run().await {
+    if let Err(err) = run() {
         tracing::error!("Soniox Live {:?}", err);
         std::process::exit(1);
     }
