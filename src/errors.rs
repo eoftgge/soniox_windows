@@ -24,8 +24,6 @@ pub enum SonioxLiveErrors {
     Utf8(#[from] std::str::Utf8Error),
     #[error("Filesystem I/O error: {0}")]
     Io(#[from] std::io::Error),
-    #[error("GUI framework error: {0}")]
-    Graphics(#[from] eframe::Error),
     #[error("Internal application error: {0}")]
     Internal(String),
 }

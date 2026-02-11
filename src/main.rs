@@ -27,14 +27,17 @@ fn run() -> Result<(), SonioxLiveErrors> {
     };
 
     tracing::info!("Starting application");
-    eframe::run_native(
+    let res = eframe::run_native(
         "Soniox Live",
         native_options,
         Box::new(move |cc| {
             setup_custom_fonts(&cc.egui_ctx);
             Ok(Box::new(app))
         }),
-    )?;
+    );
+    if let Err(e) = res {
+        tracing::error!("err: {}", e);
+    }
 
     Ok(())
 }
