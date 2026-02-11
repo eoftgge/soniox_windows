@@ -1,1 +1,1 @@
-pub type AudioSample = Vec<f32>;
+pub type AudioSample = Vec<i16>;

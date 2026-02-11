@@ -1,7 +1,7 @@
 use crate::errors::SonioxLiveErrors;
 use crate::soniox::URL;
 use crate::soniox::action::StreamAction;
-use crate::soniox::utils::convert_audio_chunk;
+use crate::transcription::utils::convert_audio_chunk;
 use crate::types::audio::AudioSample;
 use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranscriptionResponse};
 use futures_util::{SinkExt, StreamExt};
@@ -19,7 +19,6 @@ pub struct SonioxClient {
     tx_transcription: Sender<SonioxTranscriptionResponse>,
     rx_audio: Receiver<AudioSample>,
     tx_recycle: Sender<AudioSample>,
-    byte_buffer_pool: Vec<i16>,
 }
 
 impl SonioxClient {
@@ -32,7 +31,6 @@ impl SonioxClient {
             tx_transcription,
             rx_audio,
             tx_recycle,
-            byte_buffer_pool: Vec::with_capacity(16 * 1024),
         }
     }
 
@@ -102,13 +100,11 @@ impl SonioxClient {
         W: SinkExt<Message, Error = tungstenite::Error> + Unpin,
     {
         match msg {
-            Some(buffer) => {
+            Some(mut buffer) => {
                 if !buffer.is_empty() {
-                    convert_audio_chunk(&buffer, &mut self.byte_buffer_pool);
-                    let slice = self.byte_buffer_pool.as_slice();
                     writer
-                        .send(Message::Binary(Bytes::copy_from_slice(
-                            bytemuck::cast_slice(slice),
+                        .send(Message::Binary(Bytes::from(
+                            bytemuck::cast_vec(std::mem::take(&mut buffer)),
                         )))
                         .await?;
                     let _ = self.tx_recycle.send(buffer).await;

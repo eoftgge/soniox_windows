@@ -4,6 +4,7 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{Stream, StreamConfig};
 use tokio::sync::mpsc::error::TrySendError;
 use tokio::sync::mpsc::{Receiver, Sender};
+use crate::transcription::utils::convert_audio_chunk;
 
 pub struct AudioSession {
     stream: Stream,
@@ -29,15 +30,10 @@ impl AudioSession {
             &config,
             move |data: &[f32], _: &cpal::InputCallbackInfo| {
                 let mut buffer = match rx_recycle.try_recv() {
-                    Ok(mut vec) => {
-                        vec.clear();
-                        vec
-                    }
+                    Ok(mut sample) => std::mem::take(&mut sample),
                     Err(_) => Vec::with_capacity(data.len()),
                 };
-
-                buffer.extend_from_slice(data);
-
+                convert_audio_chunk(data, &mut buffer);
                 match tx_audio.try_send(buffer) {
                     Ok(_) => {}
                     Err(TrySendError::Full(_)) => {
