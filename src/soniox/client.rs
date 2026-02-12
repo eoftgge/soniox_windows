@@ -3,7 +3,7 @@ use crate::soniox::URL;
 use crate::soniox::action::StreamAction;
 use crate::types::audio::AudioSample;
 use crate::types::events::SonioxEvent;
-use crate::types::soniox::{SonioxTranscriptionMessage, SonioxTranscriptionRequest, SonioxTranscriptionResponse};
+use crate::types::soniox::{SonioxTranscriptionMessage, SonioxTranscriptionRequest};
 use futures_util::{SinkExt, StreamExt};
 use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
