@@ -146,18 +146,31 @@ impl SonioxClient {
                                 tracing::error!("UI channel closed");
                                 return StreamAction::Stop;
                             }
-                        },
+                        }
                         Ok(SonioxTranscriptionMessage::Error(e)) => {
-                            tracing::error!("Soniox API Error {}: {}", e.error_code, e.error_message);
-                            let _ = self.tx_event.send(SonioxEvent::Error(
-                                SonioxLiveErrors::Internal( // maybe add handle error code
-                                    format!("API Error {}: {}\nStopping server...", e.error_code, e.error_message)
-                                )
-                            )).await;
+                            tracing::error!(
+                                "Soniox API Error {}: {}",
+                                e.error_code,
+                                e.error_message
+                            );
+                            let _ = self
+                                .tx_event
+                                .send(SonioxEvent::Error(SonioxLiveErrors::Internal(
+                                    // maybe add handle error code
+                                    format!(
+                                        "API Error {}: {}\nStopping server...",
+                                        e.error_code, e.error_message
+                                    ),
+                                )))
+                                .await;
                             return StreamAction::Stop;
                         }
                         Err(e) => {
-                            tracing::warn!("Failed to parse Soniox message: {}. Raw text: {}", e, txt);
+                            tracing::warn!(
+                                "Failed to parse Soniox message: {}. Raw text: {}",
+                                e,
+                                txt
+                            );
                         }
                     }
 
