@@ -26,6 +26,8 @@ pub enum SonioxLiveErrors {
     Io(#[from] std::io::Error),
     #[error("Internal application error: {0}")]
     Internal(String),
+    #[error("API error {0}: {1}\nStopping audio...")]
+    API(usize, String),
 }
 
 impl From<&str> for SonioxLiveErrors {

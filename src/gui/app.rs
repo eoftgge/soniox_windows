@@ -57,12 +57,12 @@ impl App for SubtitlesApp {
                         SonioxEvent::Warning(s) => {
                             self.toasts
                                 .warning(s.to_string())
-                                .duration(Duration::from_secs(3));
+                                .duration(Duration::from_secs(4));
                         }
                         SonioxEvent::Error(e) => {
                             self.toasts
                                 .error(e.to_string())
-                                .duration(Duration::from_secs(3));
+                                .duration(Duration::from_secs(4));
                         }
                     };
                 }
