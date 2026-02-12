@@ -12,7 +12,7 @@ use egui_notify::Toasts;
 use std::time::Duration;
 use tracing_appender::non_blocking::WorkerGuard;
 
-const MAX_FPS: u64 = 30;
+const MAX_FPS: u64 = 60;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
 
 pub struct SubtitlesApp {
@@ -86,9 +86,9 @@ impl App for SubtitlesApp {
                                 self.settings.get_background_color(),
                             );
                         });
-                        ctx.request_repaint_after(FRAME_TIME);
                     });
-            }
+
+                ctx.request_repaint_after(FRAME_TIME);            }
         }
 
         self.toasts.show(ctx);
