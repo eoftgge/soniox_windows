@@ -43,10 +43,23 @@ pub struct SonioxTranscriptionToken {
 }
 
 #[derive(Debug, Deserialize, Default)]
-#[serde(default)]
 pub struct SonioxTranscriptionResponse {
     pub tokens: Vec<SonioxTranscriptionToken>,
     pub final_audio_proc_ms: f64,
     pub total_audio_proc_ms: f64,
     pub finished: Option<bool>,
+}
+
+#[derive(Debug, Deserialize, Default)]
+#[serde(default)]
+pub struct SonioxTranscriptionError {
+    pub error_code: usize,
+    pub error_message: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum SonioxTranscriptionMessage {
+    Error(SonioxTranscriptionError),
+    Response(SonioxTranscriptionResponse),
 }

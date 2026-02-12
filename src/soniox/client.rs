@@ -3,7 +3,7 @@ use crate::soniox::URL;
 use crate::soniox::action::StreamAction;
 use crate::types::audio::AudioSample;
 use crate::types::events::SonioxEvent;
-use crate::types::soniox::{SonioxTranscriptionRequest, SonioxTranscriptionResponse};
+use crate::types::soniox::{SonioxTranscriptionMessage, SonioxTranscriptionRequest, SonioxTranscriptionResponse};
 use futures_util::{SinkExt, StreamExt};
 use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -134,17 +134,33 @@ impl SonioxClient {
         match msg {
             Some(Ok(message)) => match message {
                 Message::Text(txt) => {
-                    let response = serde_json::from_str::<SonioxTranscriptionResponse>(&txt);
-                    if let Ok(r) = response
-                        && self
-                            .tx_event
-                            .send(SonioxEvent::Transcription(r))
-                            .await
-                            .is_err()
-                    {
-                        tracing::error!("UI channel closed");
-                        return StreamAction::Stop;
+                    let response = serde_json::from_str::<SonioxTranscriptionMessage>(&txt);
+                    match response {
+                        Ok(SonioxTranscriptionMessage::Response(r)) => {
+                            if self
+                                .tx_event
+                                .send(SonioxEvent::Transcription(r))
+                                .await
+                                .is_err()
+                            {
+                                tracing::error!("UI channel closed");
+                                return StreamAction::Stop;
+                            }
+                        },
+                        Ok(SonioxTranscriptionMessage::Error(e)) => {
+                            tracing::error!("Soniox API Error {}: {}", e.error_code, e.error_message);
+                            let _ = self.tx_event.send(SonioxEvent::Error(
+                                SonioxLiveErrors::Internal( // maybe add handle error code
+                                    format!("API Error {}: {}\nStopping server...", e.error_code, e.error_message)
+                                )
+                            )).await;
+                            return StreamAction::Stop;
+                        }
+                        Err(e) => {
+                            tracing::warn!("Failed to parse Soniox message: {}. Raw text: {}", e, txt);
+                        }
                     }
+
                     StreamAction::Continue
                 }
                 Message::Ping(data) => {
