@@ -1,5 +1,5 @@
 use crate::gui::color::get_interim_color;
-use crate::gui::replicas::{VisualReplica, prepare_replicas};
+use crate::soniox::replicas::{VisualReplica, prepare_replicas};
 use crate::transcription::store::TranscriptionStore;
 use eframe::egui::{Color32, Frame, RichText, Ui};
 
