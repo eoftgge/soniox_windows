@@ -51,7 +51,6 @@ pub struct SonioxTranscriptionResponse {
 }
 
 #[derive(Debug, Deserialize, Default)]
-#[serde(default)]
 pub struct SonioxTranscriptionError {
     pub error_code: usize,
     pub error_message: String,
