@@ -25,11 +25,11 @@ impl<'a> VisualReplica<'a> {
 
 pub fn prepare_replicas(store: &'_ TranscriptionStore) -> Vec<VisualReplica<'_>> {
     let mut replicas: Vec<VisualReplica> = Vec::with_capacity(store.max_blocks());
-    let final_blocks = store.blocks.iter().map(|b| (b, true));
-    let interim_blocks = store.interim_blocks.iter().map(|b| (b, false));
+    let final_blocks = store.blocks.iter().map(|b| (b, false));
+    let interim_blocks = store.interim_blocks.iter().map(|b| (b, true));
     let all_blocks = final_blocks.chain(interim_blocks);
 
-    for (block, is_final) in all_blocks {
+    for (block, is_interim) in all_blocks {
         if block.text.is_empty() {
             continue;
         }
@@ -49,7 +49,7 @@ pub fn prepare_replicas(store: &'_ TranscriptionStore) -> Vec<VisualReplica<'_>>
             continue;
         };
         if !block.text.is_empty() {
-            target.add_text(&block.text, is_final);
+            target.add_text(&block.text, is_interim);
         }
     }
 
