@@ -1,8 +1,8 @@
 use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::types::subtitles::SubtitleBlock;
+use eframe::egui::Context;
 use std::collections::VecDeque;
 use std::time::Duration;
-use eframe::egui::Context;
 use tokio::time::Instant;
 
 pub struct TranscriptionStore {
@@ -93,7 +93,9 @@ impl TranscriptionStore {
     }
 
     pub fn clear_if_silent(&mut self, timeout: Duration) {
-        if let Some(last_activity) = self.last_activity && last_activity.elapsed() >= timeout {
+        if let Some(last_activity) = self.last_activity
+            && last_activity.elapsed() >= timeout
+        {
             self.blocks.clear();
             self.interim_blocks.clear();
             self.last_activity = None;

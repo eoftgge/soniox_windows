@@ -1,7 +1,7 @@
 use crate::errors::SonioxLiveErrors;
 use crate::soniox::WsStream;
-use futures_util::{SinkExt, StreamExt};
 use futures_util::stream::{SplitSink, SplitStream};
+use futures_util::{SinkExt, StreamExt};
 use tungstenite::{Bytes, Message, Utf8Bytes};
 
 pub struct SonioxSessionReader(pub(super) SplitStream<WsStream>);
@@ -12,7 +12,7 @@ impl SonioxSessionReader {
         match self.0.next().await {
             Some(Ok(msg)) => Ok(msg),
             Some(Err(e)) => Err(e.into()),
-            None => Err(SonioxLiveErrors::ConnectionLost)
+            None => Err(SonioxLiveErrors::ConnectionLost),
         }
     }
 }

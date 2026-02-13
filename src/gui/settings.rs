@@ -2,8 +2,8 @@ use crate::gui::state::{PendingState, StateManager};
 use crate::settings::SettingsApp;
 use crate::types::languages::LanguageHint;
 use eframe::egui::{
-    self, Button, ComboBox, Context, DragValue, Grid, RichText, ScrollArea, Slider, TextEdit, Ui,
-    vec2,
+    self, vec2, Button, ComboBox, Context, DragValue, Grid, RichText, ScrollArea, Slider, TextEdit,
+    Ui,
 };
 use eframe::epaint::Color32;
 use egui_notify::Toasts;

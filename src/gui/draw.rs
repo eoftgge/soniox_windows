@@ -1,5 +1,5 @@
 use crate::gui::color::get_interim_color;
-use crate::transcription::replicas::{VisualReplica, prepare_replicas};
+use crate::transcription::replicas::{prepare_replicas, VisualReplica};
 use crate::transcription::store::TranscriptionStore;
 use eframe::egui::{Color32, Frame, LayerId, Order, Rect, RichText, Stroke, Ui, Vec2};
 use eframe::epaint::StrokeKind;

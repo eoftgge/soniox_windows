@@ -1,7 +1,3 @@
-use std::time::Duration;
-use tokio::sync::mpsc::{Receiver, Sender};
-use tokio::time::sleep;
-use tungstenite::{Bytes, Message};
 use crate::errors::SonioxLiveErrors;
 use crate::soniox::action::StreamAction;
 use crate::soniox::connection::SonioxConnection;
@@ -10,6 +6,10 @@ use crate::soniox::URL;
 use crate::types::audio::AudioSample;
 use crate::types::events::SonioxEvent;
 use crate::types::soniox::{SonioxTranscriptionMessage, SonioxTranscriptionRequest};
+use std::time::Duration;
+use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::time::sleep;
+use tungstenite::{Bytes, Message};
 
 const MAX_RETRIES: u32 = 5;
 const RECONNECT_DELAY: u64 = 1000;
@@ -25,12 +25,19 @@ impl SonioxWorker {
     pub(crate) fn new(
         rx_audio: Receiver<AudioSample>,
         tx_recycle: Sender<AudioSample>,
-        tx_event: Sender<SonioxEvent>
+        tx_event: Sender<SonioxEvent>,
     ) -> Self {
-        Self { rx_audio, tx_event, tx_recycle }
+        Self {
+            rx_audio,
+            tx_event,
+            tx_recycle,
+        }
     }
 
-    pub(crate) async fn run(mut self, request: &SonioxTranscriptionRequest) -> Result<(), SonioxLiveErrors> {
+    pub(crate) async fn run(
+        mut self,
+        request: &SonioxTranscriptionRequest,
+    ) -> Result<(), SonioxLiveErrors> {
         let mut retry_count = 0;
         let mut flag_first_connection = false;
 
@@ -72,7 +79,9 @@ impl SonioxWorker {
                 }
             };
 
-            if !first_packet.is_empty() && let Err(e) = self.handle_audio(first_packet, &mut writer).await {
+            if !first_packet.is_empty()
+                && let Err(e) = self.handle_audio(first_packet, &mut writer).await
+            {
                 tracing::error!("Failed to send initial audio: {}", e);
             }
 
@@ -153,15 +162,13 @@ impl SonioxWorker {
         writer: &mut SonioxSessionWriter,
     ) -> StreamAction {
         match message {
-            Message::Text(txt) => {
-                match serde_json::from_str::<SonioxTranscriptionMessage>(&txt) {
-                    Ok(parsed_msg) => self.process_transcription_msg(parsed_msg).await,
-                    Err(e) => {
-                        tracing::warn!("JSON parse error: {}. Raw: {}", e, txt);
-                        StreamAction::Continue
-                    }
+            Message::Text(txt) => match serde_json::from_str::<SonioxTranscriptionMessage>(&txt) {
+                Ok(parsed_msg) => self.process_transcription_msg(parsed_msg).await,
+                Err(e) => {
+                    tracing::warn!("JSON parse error: {}. Raw: {}", e, txt);
+                    StreamAction::Continue
                 }
-            }
+            },
             Message::Ping(data) => {
                 let _ = writer.send_pong(data).await;
                 StreamAction::Continue
@@ -177,21 +184,31 @@ impl SonioxWorker {
     async fn process_transcription_msg(&self, msg: SonioxTranscriptionMessage) -> StreamAction {
         match msg {
             SonioxTranscriptionMessage::Response(r) => {
-                if self.tx_event.send(SonioxEvent::Transcription(r)).await.is_err() {
+                if self
+                    .tx_event
+                    .send(SonioxEvent::Transcription(r))
+                    .await
+                    .is_err()
+                {
                     return StreamAction::Stop;
                 }
                 StreamAction::Continue
             }
-            SonioxTranscriptionMessage::Error(e) if ERROR_CODES_RECONNECT.contains(&e.error_code) => {
+            SonioxTranscriptionMessage::Error(e)
+                if ERROR_CODES_RECONNECT.contains(&e.error_code) =>
+            {
                 tracing::warn!("Temporary API Error {}: {}", e.error_code, e.error_message);
                 StreamAction::Reconnect
             }
             SonioxTranscriptionMessage::Error(e) => {
                 tracing::error!("Fatal API Error {}: {}", e.error_code, e.error_message);
-                let _ = self.tx_event.send(SonioxEvent::Error(SonioxLiveErrors::API(
-                    e.error_code,
-                    e.error_message
-                ))).await;
+                let _ = self
+                    .tx_event
+                    .send(SonioxEvent::Error(SonioxLiveErrors::API(
+                        e.error_code,
+                        e.error_message,
+                    )))
+                    .await;
                 StreamAction::Stop
             }
         }
@@ -202,7 +219,10 @@ impl SonioxWorker {
         *retry_count += 1;
 
         if *retry_count > MAX_RETRIES {
-            let _ = self.tx_event.send(SonioxEvent::Error(SonioxLiveErrors::ConnectionLost)).await;
+            let _ = self
+                .tx_event
+                .send(SonioxEvent::Error(SonioxLiveErrors::ConnectionLost))
+                .await;
             return Err(());
         }
         Ok(())

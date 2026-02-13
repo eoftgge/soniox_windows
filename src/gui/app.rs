@@ -2,8 +2,8 @@ use crate::gui::draw::draw_subtitles;
 use crate::gui::settings::show_settings_window;
 use crate::gui::state::{AppState, StateManager};
 use crate::settings::SettingsApp;
-use crate::transcription::store::TranscriptionStore;
 use crate::transcription::service::TranscriptionService;
+use crate::transcription::store::TranscriptionStore;
 use crate::types::events::SonioxEvent;
 use eframe::egui::{
     Align, Area, Context, Id, Layout, Order, ViewportCommand, Visuals, WindowLevel,
@@ -13,12 +13,16 @@ use egui_notify::Toasts;
 use std::time::Duration;
 use tracing_appender::non_blocking::WorkerGuard;
 
-fn process_events(service: &mut TranscriptionService, store: &mut TranscriptionStore, toasts: &mut Toasts) {
+fn process_events(
+    service: &mut TranscriptionService,
+    store: &mut TranscriptionStore,
+    toasts: &mut Toasts,
+) {
     while let Ok(event) = service.receiver.try_recv() {
         match event {
             SonioxEvent::Transcription(r) => {
                 store.update(r);
-            },
+            }
             SonioxEvent::Warning(s) => {
                 toasts
                     .warning(s.to_string())
@@ -30,9 +34,10 @@ fn process_events(service: &mut TranscriptionService, store: &mut TranscriptionS
                     .error(e.to_string())
                     .duration(Duration::from_secs(4))
                     .closable(false);
-            },
+            }
             SonioxEvent::Connected => {
-                toasts.info("Connected to Soniox!")
+                toasts
+                    .info("Connected to Soniox!")
                     .duration(Duration::from_secs(4))
                     .closable(false);
             }

@@ -1,12 +1,12 @@
 use crate::errors::SonioxLiveErrors;
 use crate::settings::SettingsApp;
-use crate::soniox::worker::SonioxWorker;
 use crate::soniox::request::create_request;
+use crate::soniox::worker::SonioxWorker;
 use crate::transcription::audio::AudioSession;
 use crate::types::audio::AudioSample;
 use crate::types::events::SonioxEvent;
-use tokio::sync::mpsc::{Receiver, channel};
 use eframe::egui::Context;
+use tokio::sync::mpsc::{channel, Receiver};
 
 pub struct TranscriptionService {
     pub(crate) _audio: AudioSession,
@@ -20,13 +20,13 @@ impl TranscriptionService {
         let (tx_event, rx_event) = channel::<SonioxEvent>(128);
         let (tx_audio, rx_audio) = channel::<AudioSample>(256);
         let (tx_recycle, rx_recycle) = channel::<AudioSample>(256);
-        
+
         let tx_worker_2 = tx_worker.clone();
         let worker = SonioxWorker::new(rx_audio, tx_recycle, tx_worker_2);
         let audio = AudioSession::open(tx_audio, rx_recycle)?;
         let request = create_request(settings_app, audio.config())?;
         audio.play()?;
-        
+
         let handle = tokio::spawn(async move {
             if let Err(e) = worker.run(&request).await {
                 tracing::error!("WebSocket error: {:?}", e);
@@ -49,9 +49,7 @@ impl TranscriptionService {
         })
     }
 
-    pub fn listen() {
-
-    }
+    pub fn listen() {}
 }
 
 impl Drop for TranscriptionService {
