@@ -79,15 +79,14 @@ impl SonioxWorker {
                 }
             };
 
+            tracing::info!("Connected to Soniox");
+            retry_count = 0;
             if !first_packet.is_empty()
                 && let Err(e) = self.handle_audio(first_packet, &mut writer).await
             {
                 tracing::error!("Failed to send initial audio: {}", e);
-            }
-
-            tracing::info!("Connected to Soniox");
-            retry_count = 0;
-            if !flag_first_connection {
+                continue;
+            } else if !flag_first_connection {
                 let _ = self.tx_event.send(SonioxEvent::Connected).await;
                 flag_first_connection = true;
             }
