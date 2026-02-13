@@ -6,6 +6,7 @@ pub enum SonioxEvent {
     Transcription(SonioxTranscriptionResponse),
     Warning(String),
     Error(SonioxLiveErrors),
+    Connected,
 }
 
 impl From<&str> for SonioxEvent {

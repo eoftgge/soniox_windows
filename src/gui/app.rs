@@ -36,6 +36,12 @@ fn listen(service: &mut TranscriptionService, store: &mut TranscriptionStore, to
                     .duration(Duration::from_secs(4))
                     .closable(false);
                 true
+            },
+            SonioxEvent::Connected => {
+                toasts.info("Connected to Soniox!")
+                    .duration(Duration::from_secs(4))
+                    .closable(false);
+                true
             }
         };
     }
