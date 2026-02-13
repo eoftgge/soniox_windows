@@ -40,7 +40,7 @@ impl SubtitlesApp {
 impl App for SubtitlesApp {
     fn update(&mut self, ctx: &Context, _: &mut Frame) {
         if let Err(err) = self.manager.resolve(ctx, &mut self.store, &self.settings) {
-            self.toasts.error(format!("{:?}", err));
+            self.toasts.error(format!("{:?}", err)).closable(false);
         }
         let manager = &mut self.manager;
 
@@ -57,12 +57,14 @@ impl App for SubtitlesApp {
                         SonioxEvent::Warning(s) => {
                             self.toasts
                                 .warning(s.to_string())
-                                .duration(Duration::from_secs(4));
+                                .duration(Duration::from_secs(4))
+                                .closable(false);
                         }
                         SonioxEvent::Error(e) => {
                             self.toasts
                                 .error(e.to_string())
-                                .duration(Duration::from_secs(4));
+                                .duration(Duration::from_secs(4))
+                                .closable(false);
                         }
                     };
                 }
