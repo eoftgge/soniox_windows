@@ -4,7 +4,7 @@ use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 pub mod action;
 pub mod session;
 pub mod request;
-mod client;
+mod connection;
 
 pub const URL: &str = "wss://stt-rt.soniox.com/transcribe-websocket";
 pub const MODEL: &str = "stt-rt-v4";

@@ -7,11 +7,11 @@ use crate::soniox::session::{SonioxSessionReader, SonioxSessionWriter};
 use crate::soniox::WsStream;
 use crate::types::soniox::SonioxTranscriptionRequest;
 
-pub struct SonioxClient {
+pub struct SonioxConnection {
     ws_stream: WsStream,
 }
 
-impl SonioxClient {
+impl SonioxConnection {
     pub async fn connect(url: impl IntoClientRequest) -> Result<Self, SonioxLiveErrors> {
         let request = url.into_client_request()?;
         let (ws_stream, _) = connect_async(request).await?;
