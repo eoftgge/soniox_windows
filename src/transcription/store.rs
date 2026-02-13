@@ -2,8 +2,7 @@ use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::types::subtitles::SubtitleBlock;
 use eframe::egui::Context;
 use std::collections::VecDeque;
-use std::time::Duration;
-use tokio::time::Instant;
+use std::time::{Duration, Instant};
 
 pub struct TranscriptionStore {
     pub blocks: VecDeque<SubtitleBlock>,
