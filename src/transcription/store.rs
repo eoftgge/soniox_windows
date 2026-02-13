@@ -38,7 +38,7 @@ impl TranscriptionStore {
             if token.is_final {
                 let speaker = token.speaker.clone();
                 let needs_new = match self.blocks.back() {
-                    Some(last) => last.speaker != speaker || last.final_text.len() > 200,
+                    Some(last) => last.speaker != speaker || last.text.len() > 200,
                     None => true,
                 };
 
@@ -50,7 +50,7 @@ impl TranscriptionStore {
                 }
 
                 if let Some(block) = self.blocks.back_mut() {
-                    block.final_text.push_str(&token.text);
+                    block.text.push_str(&token.text);
                 }
             } else {
                 let speaker = token.speaker.clone();
@@ -64,10 +64,10 @@ impl TranscriptionStore {
                         self.interim_blocks.push(block);
                     }
                     let mut new_block = SubtitleBlock::new(speaker);
-                    new_block.interim_text.push_str(&token.text);
+                    new_block.text.push_str(&token.text);
                     current_interim_block = Some(new_block);
                 } else if let Some(block) = &mut current_interim_block {
-                    block.interim_text.push_str(&token.text);
+                    block.text.push_str(&token.text);
                 }
             }
         }
