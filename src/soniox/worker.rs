@@ -12,8 +12,8 @@ use crate::types::events::SonioxEvent;
 use crate::types::soniox::{SonioxTranscriptionMessage, SonioxTranscriptionRequest};
 
 const MAX_RETRIES: u32 = 5;
-const RECONNECT_DELAY: u64 = 1000; 
-const ERROR_CODES_RECONNECT: &[usize] = &[408, 502, 503]; 
+const RECONNECT_DELAY: u64 = 1000;
+const ERROR_CODES_RECONNECT: &[usize] = &[408, 502, 503];
 
 pub(crate) struct SonioxWorker {
     rx_audio: Receiver<AudioSample>,
@@ -32,6 +32,7 @@ impl SonioxWorker {
 
     pub(crate) async fn run(mut self, request: &SonioxTranscriptionRequest) -> Result<(), SonioxLiveErrors> {
         let mut retry_count = 0;
+        let mut flag_first_connection = false;
 
         loop {
             tracing::debug!("Connecting to Soniox... (Attempt {})", retry_count + 1);
@@ -46,7 +47,7 @@ impl SonioxWorker {
                     continue;
                 }
             };
-            let session_result = conn.into_session(&request).await;
+            let session_result = conn.into_session(request).await;
             let (writer, reader) = match session_result {
                 Ok((w, r)) => (w, r),
                 Err(e) => {
@@ -60,9 +61,11 @@ impl SonioxWorker {
 
             tracing::info!("Connected to Soniox");
             retry_count = 0;
-            let _ = self.tx_event.send(SonioxEvent::Connected).await;
+            if !flag_first_connection {
+                let _ = self.tx_event.send(SonioxEvent::Connected).await;
+                flag_first_connection = true;
+            }
             let action = self.run_session_loop(writer, reader).await;
-
             match action {
                 StreamAction::Stop => {
                     tracing::info!("Worker stopped normally");
@@ -70,9 +73,8 @@ impl SonioxWorker {
                 }
                 StreamAction::Reconnect => {
                     tracing::warn!("Session lost, reconnecting...");
-                    let _ = self.tx_event.send(SonioxEvent::Warning("Reconnecting...".to_string())).await;
                     sleep(Duration::from_millis(RECONNECT_DELAY)).await;
-                    retry_count += 1; 
+                    retry_count += 1;
                 }
                 StreamAction::Continue => {}
             }
@@ -122,7 +124,7 @@ impl SonioxWorker {
         if buffer.is_empty() {
             return Ok(());
         }
-        
+
         let slice: &[u8] = bytemuck::cast_slice(&buffer);
         writer.send_bytes(Bytes::copy_from_slice(slice)).await?;
         buffer.clear();
@@ -179,7 +181,7 @@ impl SonioxWorker {
             }
         }
     }
-    
+
     async fn handle_reconnect(&self, retry_count: &mut u32) -> Result<(), ()> {
         sleep(Duration::from_millis(RECONNECT_DELAY)).await;
         *retry_count += 1;
