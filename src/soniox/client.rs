@@ -156,7 +156,8 @@ impl SonioxClient {
                             let _ = self
                                 .tx_event
                                 .send(SonioxEvent::Error(SonioxLiveErrors::API(
-                                    e.error_code, e.error_message,
+                                    e.error_code,
+                                    e.error_message,
                                     // maybe add handle error code
                                 )))
                                 .await;

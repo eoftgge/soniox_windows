@@ -29,8 +29,12 @@ pub fn draw_subtitles(
 
     let id = ui.id().with("subtitles_anim_box");
     let last_target_size = ui.data(|d| d.get_temp::<Vec2>(id)).unwrap_or(Vec2::ZERO);
-    let anim_w = ui.ctx().animate_value_with_time(id.with("w"), last_target_size.x, ANIM_TIME);
-    let anim_h = ui.ctx().animate_value_with_time(id.with("h"), last_target_size.y, ANIM_TIME);
+    let anim_w = ui
+        .ctx()
+        .animate_value_with_time(id.with("w"), last_target_size.x, ANIM_TIME);
+    let anim_h = ui
+        .ctx()
+        .animate_value_with_time(id.with("h"), last_target_size.y, ANIM_TIME);
     let current_animated_size = Vec2::new(anim_w, anim_h);
 
     let response = Frame::new()

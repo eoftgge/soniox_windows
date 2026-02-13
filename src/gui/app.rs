@@ -88,7 +88,8 @@ impl App for SubtitlesApp {
                         });
                     });
 
-                ctx.request_repaint_after(FRAME_TIME);            }
+                ctx.request_repaint_after(FRAME_TIME);
+            }
         }
 
         self.toasts.show(ctx);
