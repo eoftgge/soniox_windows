@@ -2,8 +2,8 @@ use crate::gui::draw::draw_subtitles;
 use crate::gui::settings::show_settings_window;
 use crate::gui::state::{AppState, StateManager};
 use crate::settings::SettingsApp;
-use crate::transcription::store::TranscriptionStore;
 use crate::transcription::service::TranscriptionService;
+use crate::transcription::store::TranscriptionStore;
 use crate::types::events::SonioxEvent;
 use eframe::egui::{
     Align, Area, Context, Id, Layout, Order, ViewportCommand, Visuals, WindowLevel,
@@ -13,29 +13,33 @@ use egui_notify::Toasts;
 use std::time::Duration;
 use tracing_appender::non_blocking::WorkerGuard;
 
-const MAX_FPS: u64 = 60;
-const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
-
-fn listen(service: &mut TranscriptionService, store: &mut TranscriptionStore, toasts: &mut Toasts) {
+fn process_events(
+    service: &mut TranscriptionService,
+    store: &mut TranscriptionStore,
+    toasts: &mut Toasts,
+) {
     while let Ok(event) = service.receiver.try_recv() {
         match event {
             SonioxEvent::Transcription(r) => {
                 store.update(r);
-                true
-            },
+            }
             SonioxEvent::Warning(s) => {
                 toasts
                     .warning(s.to_string())
                     .duration(Duration::from_secs(4))
                     .closable(false);
-                true
             }
             SonioxEvent::Error(e) => {
                 toasts
                     .error(e.to_string())
                     .duration(Duration::from_secs(4))
                     .closable(false);
-                true
+            }
+            SonioxEvent::Connected => {
+                toasts
+                    .info("Connected to Soniox!")
+                    .duration(Duration::from_secs(4))
+                    .closable(false);
             }
         };
     }
@@ -75,14 +79,16 @@ impl App for SubtitlesApp {
                 show_settings_window(ctx, &mut self.settings, &mut self.manager, &mut self.toasts)
             }
             AppState::Overlay(service) => {
-                listen(service, &mut self.store, &mut self.toasts);
-                self.store.clear_if_silent(Duration::from_secs(15));
+                let timeout = Duration::from_secs(15);
+                let ctx_for_plan = ctx.clone();
+                self.store.clear_if_silent(timeout);
+                self.store.schedule(ctx_for_plan, timeout);
 
+                process_events(service, &mut self.store, &mut self.toasts);
                 if self.settings.enable_high_priority() && self.frame_counter >= 100 {
                     ctx.send_viewport_cmd(ViewportCommand::WindowLevel(WindowLevel::AlwaysOnTop));
                     self.frame_counter = 0;
                 }
-
                 let (anchor, offset) = self.settings.get_anchor();
                 Area::new(Id::from("subtitles_area"))
                     .anchor(anchor, offset)
@@ -99,12 +105,11 @@ impl App for SubtitlesApp {
                         });
                     });
 
-                ctx.request_repaint_after(FRAME_TIME);
+                self.frame_counter += 1;
             }
         }
 
         self.toasts.show(ctx);
-        self.frame_counter += 1;
     }
 
     fn clear_color(&self, _visuals: &Visuals) -> [f32; 4] {

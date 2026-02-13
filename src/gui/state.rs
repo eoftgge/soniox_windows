@@ -52,7 +52,8 @@ impl StateManager {
         match resolved {
             PendingState::Config => self.app_state = AppState::Config,
             PendingState::Overlay => {
-                let service = TranscriptionService::start(settings)?;
+                let ctx = ctx.clone();
+                let service = TranscriptionService::start(ctx, settings)?;
                 store.resize(settings.max_blocks);
                 self.app_state = AppState::Overlay(service);
             }
