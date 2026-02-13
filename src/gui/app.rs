@@ -36,6 +36,7 @@ fn process_events(
                     .closable(false);
             }
             SonioxEvent::Connected => {
+                store.ensure_separator();
                 toasts
                     .info("Connected to Soniox!")
                     .duration(Duration::from_secs(4))

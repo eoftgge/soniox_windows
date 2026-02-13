@@ -21,10 +21,6 @@ impl TranscriptionStore {
         }
     }
 
-    pub fn max_blocks(&self) -> usize {
-        self.max_blocks
-    }
-
     pub fn update(&mut self, response: SonioxTranscriptionResponse) {
         self.interim_blocks.clear();
         let mut current_interim_block: Option<SubtitleBlock> = None;
@@ -44,9 +40,7 @@ impl TranscriptionStore {
 
                 if needs_new {
                     self.blocks.push_back(SubtitleBlock::new(speaker.clone()));
-                    if self.blocks.len() > self.max_blocks {
-                        self.blocks.pop_front();
-                    }
+                    self.pop_if_overflow();
                 }
 
                 if let Some(block) = self.blocks.back_mut() {
@@ -80,11 +74,38 @@ impl TranscriptionStore {
         }
     }
 
-    pub fn resize(&mut self, new_max_blocks: usize) {
-        self.max_blocks = new_max_blocks;
+    pub fn ensure_separator(&mut self) {
+        for block in self.interim_blocks.drain(..) {
+            let mut new_block = SubtitleBlock::new(block.speaker);
+            new_block.text = block.text;
+            self.blocks.push_back(new_block);
+        }
+        
+        self.pop_if_overflow();
+        if let Some(block) = self.blocks.back_mut() {
+            if block.text.is_empty() {
+                return;
+            }
+            let trimmed_len = block.text.trim_end().len();
+            block.text.truncate(trimmed_len);
+            block.text.push(' ');
+            self.last_activity = Some(Instant::now());
+        }
+    }
+
+    pub fn max_blocks(&self) -> usize {
+        self.max_blocks
+    }
+
+    pub fn pop_if_overflow(&mut self) {
         while self.blocks.len() > self.max_blocks {
             self.blocks.pop_front();
         }
+    }
+
+    pub fn resize(&mut self, new_max_blocks: usize) {
+        self.max_blocks = new_max_blocks;
+        self.pop_if_overflow();
     }
 
     pub fn last_activity(&self) -> Option<Instant> {
