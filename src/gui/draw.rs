@@ -1,8 +1,8 @@
 use crate::gui::color::get_interim_color;
 use crate::transcription::replicas::{VisualReplica, prepare_replicas};
 use crate::transcription::store::TranscriptionStore;
-use eframe::egui::{Color32, FontId, Frame, LayerId, Order, Rect, Stroke, TextFormat, Ui, Vec2};
 use eframe::egui::text::LayoutJob;
+use eframe::egui::{Color32, FontId, Frame, LayerId, Order, Rect, Stroke, TextFormat, Ui, Vec2};
 use eframe::epaint::StrokeKind;
 
 const ANIM_TIME: f32 = 0.08;
@@ -99,7 +99,11 @@ fn draw_replica_row(
     for elem in replica.elements.iter() {
         let format = TextFormat {
             font_id: FontId::proportional(font_size),
-            color: if elem.is_interim { interim_color } else { text_color },
+            color: if elem.is_interim {
+                interim_color
+            } else {
+                text_color
+            },
             ..Default::default()
         };
         let mut text = elem.text;

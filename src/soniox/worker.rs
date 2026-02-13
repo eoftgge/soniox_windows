@@ -88,7 +88,10 @@ impl SonioxWorker {
                 continue;
             }
 
-            let _ = self.tx_event.send(SonioxEvent::Connected(flag_first_connection)).await;
+            let _ = self
+                .tx_event
+                .send(SonioxEvent::Connected(flag_first_connection))
+                .await;
             if flag_first_connection {
                 flag_first_connection = false;
             }
