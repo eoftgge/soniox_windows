@@ -4,22 +4,13 @@ use futures_util::{SinkExt, StreamExt};
 use futures_util::stream::{SplitSink, SplitStream};
 use tungstenite::{Bytes, Message, Utf8Bytes};
 
-// const MAX_RETRIES: u32 = 5;
-// const RECONNECT_DELAY: u64 = 1000; // ms
-// const ERROR_CODES_RECONNECT: &[usize] = &[408, 502, 503];
-
 pub struct SonioxSessionReader(pub(super) SplitStream<WsStream>);
 pub struct SonioxSessionWriter(pub(super) SplitSink<WsStream, Message>);
 
 impl SonioxSessionReader {
-    pub async fn next(&mut self) -> Result<Utf8Bytes, SonioxLiveErrors> {
+    pub async fn recv_message(&mut self) -> Result<Message, SonioxLiveErrors> {
         match self.0.next().await {
-            Some(Ok(msg)) => {
-                if let Message::Text(text) = msg {
-                    return Ok(text);
-                }
-                Ok(Utf8Bytes::default())
-            }
+            Some(Ok(msg)) => Ok(msg),
             Some(Err(e)) => Err(e.into()),
             None => Err(SonioxLiveErrors::ConnectionLost)
         }
@@ -27,6 +18,12 @@ impl SonioxSessionReader {
 }
 
 impl SonioxSessionWriter {
+    pub async fn send_pong(&mut self, data: Bytes) -> Result<(), SonioxLiveErrors> {
+        tracing::debug!("Sending pong");
+        self.0.send(Message::Pong(data)).await?;
+        Ok(())
+    }
+
     pub async fn send_text(&mut self, data: impl Into<Utf8Bytes>) -> Result<(), SonioxLiveErrors> {
         let message = Message::text(data.into());
         self.0.send(message).await?;
