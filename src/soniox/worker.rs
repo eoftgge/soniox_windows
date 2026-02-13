@@ -1,8 +1,8 @@
 use crate::errors::SonioxLiveErrors;
+use crate::soniox::URL;
 use crate::soniox::action::StreamAction;
 use crate::soniox::connection::SonioxConnection;
 use crate::soniox::session::{SonioxSessionReader, SonioxSessionWriter};
-use crate::soniox::URL;
 use crate::types::audio::AudioSample;
 use crate::types::events::SonioxEvent;
 use crate::types::soniox::{SonioxTranscriptionMessage, SonioxTranscriptionRequest};
