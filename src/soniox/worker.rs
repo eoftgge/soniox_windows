@@ -35,6 +35,19 @@ impl SonioxWorker {
         let mut flag_first_connection = false;
 
         loop {
+            let first_packet = if retry_count == 0 {
+                tracing::debug!("Waiting for audio input to connect...");
+                match self.rx_audio.recv().await {
+                    Some(packet) => packet,
+                    None => {
+                        tracing::info!("Audio channel closed. Exiting worker.");
+                        return Ok(());
+                    }
+                }
+            } else {
+                Vec::new()
+            };
+
             tracing::debug!("Connecting to Soniox... (Attempt {})", retry_count + 1);
             let conn_result = SonioxConnection::connect(URL).await;
             let conn = match conn_result {
@@ -48,7 +61,7 @@ impl SonioxWorker {
                 }
             };
             let session_result = conn.into_session(request).await;
-            let (writer, reader) = match session_result {
+            let (mut writer, reader) = match session_result {
                 Ok((w, r)) => (w, r),
                 Err(e) => {
                     tracing::warn!("Handshake failed: {}", e);
@@ -58,6 +71,10 @@ impl SonioxWorker {
                     continue;
                 }
             };
+
+            if !first_packet.is_empty() && let Err(e) = self.handle_audio(first_packet, &mut writer).await {
+                tracing::error!("Failed to send initial audio: {}", e);
+            }
 
             tracing::info!("Connected to Soniox");
             retry_count = 0;
@@ -72,9 +89,7 @@ impl SonioxWorker {
                     return Ok(());
                 }
                 StreamAction::Reconnect => {
-                    tracing::warn!("Session lost, reconnecting...");
-                    sleep(Duration::from_millis(RECONNECT_DELAY)).await;
-                    retry_count += 1;
+                    tracing::warn!("Session ended. Going to standby...");
                 }
                 StreamAction::Continue => {}
             }
