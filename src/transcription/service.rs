@@ -1,6 +1,6 @@
 use crate::errors::SonioxLiveErrors;
 use crate::settings::SettingsApp;
-use crate::soniox::session::SonioxClient;
+use crate::soniox::worker::SonioxWorker;
 use crate::soniox::request::create_request;
 use crate::transcription::audio::AudioSession;
 use crate::types::audio::AudioSample;
@@ -21,11 +21,11 @@ impl TranscriptionService {
 
         let audio = AudioSession::open(tx_audio, rx_recycle)?;
         let request = create_request(settings_app, audio.config())?;
-        let mut ws = SonioxClient::new(tx_event, tx_recycle, rx_audio);
+        let worker = SonioxWorker::new(rx_audio, tx_recycle, tx_event);
         audio.play()?;
 
         let handle = tokio::spawn(async move {
-            if let Err(e) = ws.start(&request).await {
+            if let Err(e) = worker.run(&request).await {
                 tracing::error!("WebSocket error: {:?}", e);
             }
         });
