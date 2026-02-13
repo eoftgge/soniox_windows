@@ -1,6 +1,6 @@
 use crate::errors::SonioxLiveErrors;
 use crate::settings::SettingsApp;
-use crate::soniox::client::SonioxClient;
+use crate::soniox::session::SonioxClient;
 use crate::soniox::request::create_request;
 use crate::transcription::audio::AudioSession;
 use crate::types::audio::AudioSample;
