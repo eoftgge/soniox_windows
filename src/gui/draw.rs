@@ -1,7 +1,8 @@
 use crate::gui::color::get_interim_color;
 use crate::transcription::replicas::{VisualReplica, prepare_replicas};
 use crate::transcription::store::TranscriptionStore;
-use eframe::egui::{Color32, Frame, LayerId, Order, Rect, RichText, Stroke, Ui, Vec2};
+use eframe::egui::{Color32, FontId, Frame, LayerId, Order, Rect, Stroke, TextFormat, Ui, Vec2};
+use eframe::egui::text::LayoutJob;
 use eframe::epaint::StrokeKind;
 
 const ANIM_TIME: f32 = 0.08;
@@ -37,7 +38,7 @@ pub fn draw_subtitles(
         .animate_value_with_time(id.with("h"), last_target_size.y, ANIM_TIME);
     let current_animated_size = Vec2::new(anim_w, anim_h);
 
-    let response = Frame::new()
+    let inner = Frame::new()
         .fill(Color32::TRANSPARENT)
         .corner_radius(12.0)
         .inner_margin(16.0)
@@ -51,7 +52,7 @@ pub fn draw_subtitles(
             });
         });
 
-    let target_rect = response.response.rect;
+    let target_rect = inner.response.rect;
     let target_size = target_rect.size();
 
     if background_color != Color32::TRANSPARENT {
@@ -81,31 +82,34 @@ fn draw_replica_row(
     text_color: Color32,
     interim_color: Color32,
 ) {
-    ui.horizontal_wrapped(|ui| {
-        ui.spacing_mut().item_spacing.x = 0.0;
+    let mut job = LayoutJob::default();
+    let mut last_ends_with_space = false;
+    job.wrap.break_anywhere = false;
+    if let Some(id) = &replica.speaker {
+        let speaker_format = TextFormat {
+            font_id: FontId::proportional(font_size),
+            color: text_color,
+            ..Default::default()
+        };
+        job.append(id, 0.0, speaker_format.clone());
+        job.append(": ", 0.0, speaker_format);
+        last_ends_with_space = true;
+    }
 
-        if let Some(id) = &replica.speaker {
-            ui.label(
-                RichText::new(format!("{}: ", id))
-                    .size(font_size)
-                    .color(text_color)
-                    .strong(),
-            );
+    for elem in replica.elements.iter() {
+        let format = TextFormat {
+            font_id: FontId::proportional(font_size),
+            color: if elem.is_interim { interim_color } else { text_color },
+            ..Default::default()
+        };
+        let mut text = elem.text;
+        if last_ends_with_space && text.starts_with(' ') {
+            text = text.trim_start();
         }
 
-        for elem in replica.elements.iter() {
-            let color = if elem.is_interim {
-                interim_color
-            } else {
-                text_color
-            };
+        job.append(text, 0.0, format);
+        last_ends_with_space = text.ends_with(' ');
+    }
 
-            ui.label(
-                RichText::new(elem.text.trim())
-                    .size(font_size)
-                    .strong()
-                    .color(color),
-            );
-        }
-    });
+    ui.label(job);
 }
