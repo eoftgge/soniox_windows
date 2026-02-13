@@ -3,6 +3,7 @@ use crate::gui::settings::show_settings_window;
 use crate::gui::state::{AppState, StateManager};
 use crate::settings::SettingsApp;
 use crate::transcription::store::TranscriptionStore;
+use crate::transcription::service::TranscriptionService;
 use crate::types::events::SonioxEvent;
 use eframe::egui::{
     Align, Area, Context, Id, Layout, Order, ViewportCommand, Visuals, WindowLevel,
@@ -14,6 +15,31 @@ use tracing_appender::non_blocking::WorkerGuard;
 
 const MAX_FPS: u64 = 60;
 const FRAME_TIME: Duration = Duration::from_millis(1000 / MAX_FPS);
+
+fn listen(service: &mut TranscriptionService, store: &mut TranscriptionStore, toasts: &mut Toasts) {
+    while let Ok(event) = service.receiver.try_recv() {
+        match event {
+            SonioxEvent::Transcription(r) => {
+                store.update(r);
+                true
+            },
+            SonioxEvent::Warning(s) => {
+                toasts
+                    .warning(s.to_string())
+                    .duration(Duration::from_secs(4))
+                    .closable(false);
+                true
+            }
+            SonioxEvent::Error(e) => {
+                toasts
+                    .error(e.to_string())
+                    .duration(Duration::from_secs(4))
+                    .closable(false);
+                true
+            }
+        };
+    }
+}
 
 pub struct SubtitlesApp {
     settings: SettingsApp,
@@ -49,25 +75,8 @@ impl App for SubtitlesApp {
                 show_settings_window(ctx, &mut self.settings, &mut self.manager, &mut self.toasts)
             }
             AppState::Overlay(service) => {
+                listen(service, &mut self.store, &mut self.toasts);
                 self.store.clear_if_silent(Duration::from_secs(15));
-
-                while let Ok(event) = service.receiver.try_recv() {
-                    match event {
-                        SonioxEvent::Transcription(r) => self.store.update(r),
-                        SonioxEvent::Warning(s) => {
-                            self.toasts
-                                .warning(s.to_string())
-                                .duration(Duration::from_secs(4))
-                                .closable(false);
-                        }
-                        SonioxEvent::Error(e) => {
-                            self.toasts
-                                .error(e.to_string())
-                                .duration(Duration::from_secs(4))
-                                .closable(false);
-                        }
-                    };
-                }
 
                 if self.settings.enable_high_priority() && self.frame_counter >= 100 {
                     ctx.send_viewport_cmd(ViewportCommand::WindowLevel(WindowLevel::AlwaysOnTop));
