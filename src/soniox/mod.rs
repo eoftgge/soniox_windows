@@ -1,6 +1,5 @@
 pub mod action;
 pub mod client;
-pub mod replicas;
 pub mod request;
 
 pub const URL: &str = "wss://stt-rt.soniox.com/transcribe-websocket";
