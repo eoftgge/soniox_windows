@@ -4,7 +4,7 @@ use crate::transcription::store::TranscriptionStore;
 use eframe::egui::{Color32, Frame, LayerId, Order, Rect, RichText, Stroke, Ui, Vec2};
 use eframe::epaint::StrokeKind;
 
-const ANIM_TIME: f32 = 0.1;
+const ANIM_TIME: f32 = 0.08;
 
 pub fn draw_subtitles(
     ui: &mut Ui,
