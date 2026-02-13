@@ -14,6 +14,7 @@ use tungstenite::{Bytes, Message, Utf8Bytes};
 
 const MAX_RETRIES: u32 = 5;
 const RECONNECT_DELAY: u64 = 1000; // ms
+const ERROR_CODES_RECONNECT: &[usize] = &[408, 502, 503];
 
 pub struct SonioxClient {
     tx_event: Sender<SonioxEvent>,
@@ -123,6 +124,44 @@ impl SonioxClient {
         }
     }
 
+    async fn handle_message(&mut self, message: SonioxTranscriptionMessage) -> StreamAction {
+        match message {
+            SonioxTranscriptionMessage::Response(r) => {
+                let result = self.tx_event
+                    .send(SonioxEvent::Transcription(r))
+                    .await;
+                if result.is_err() {
+                    tracing::error!("UI channel closed");
+                    return StreamAction::Stop;
+                }
+                StreamAction::Continue
+            },
+            SonioxTranscriptionMessage::Error(e) if ERROR_CODES_RECONNECT.contains(&e.error_code)  => {
+                tracing::warn!("Soniox Temporary Error {}: {}. Reconnecting...", e.error_code, e.error_message);
+
+                let _ = self.tx_event.send(SonioxEvent::Warning(
+                    format!("Connection unstable ({}). Reconnecting...", e.error_code)
+                )).await;
+                StreamAction::Reconnect
+            }
+            SonioxTranscriptionMessage::Error(e) => {
+                tracing::error!(
+                    "Soniox API Error {}: {}",
+                    e.error_code,
+                    e.error_message
+                );
+                let _ = self
+                    .tx_event
+                    .send(SonioxEvent::Error(SonioxLiveErrors::API(
+                        e.error_code,
+                        e.error_message,
+                    )))
+                    .await;
+                StreamAction::Stop
+            },
+        }
+    }
+
     async fn handle_ws<W>(
         &mut self,
         msg: Option<Result<Message, tungstenite::Error>>,
@@ -134,45 +173,14 @@ impl SonioxClient {
         match msg {
             Some(Ok(message)) => match message {
                 Message::Text(txt) => {
-                    let response = serde_json::from_str::<SonioxTranscriptionMessage>(&txt);
-                    match response {
-                        Ok(SonioxTranscriptionMessage::Response(r)) => {
-                            if self
-                                .tx_event
-                                .send(SonioxEvent::Transcription(r))
-                                .await
-                                .is_err()
-                            {
-                                tracing::error!("UI channel closed");
-                                return StreamAction::Stop;
-                            }
-                        }
-                        Ok(SonioxTranscriptionMessage::Error(e)) => {
-                            tracing::error!(
-                                "Soniox API Error {}: {}",
-                                e.error_code,
-                                e.error_message
-                            );
-                            let _ = self
-                                .tx_event
-                                .send(SonioxEvent::Error(SonioxLiveErrors::API(
-                                    e.error_code,
-                                    e.error_message,
-                                    // maybe add handle error code
-                                )))
-                                .await;
-                            return StreamAction::Stop;
-                        }
-                        Err(e) => {
-                            tracing::warn!(
-                                "Failed to parse Soniox message: {}. Raw text: {}",
-                                e,
-                                txt
-                            );
-                        }
-                    }
-
-                    StreamAction::Continue
+                    let Ok(message) = serde_json::from_str::<SonioxTranscriptionMessage>(&txt) else {
+                        tracing::warn!(
+                            "Failed to parse Soniox message, raw text: {}",
+                            txt
+                        );
+                        return StreamAction::Continue;
+                    };
+                    self.handle_message(message).await
                 }
                 Message::Ping(data) => {
                     let _ = writer.send(Message::Pong(data)).await;
@@ -182,7 +190,7 @@ impl SonioxClient {
                     tracing::warn!("Server closed connection");
                     let _ = self
                         .tx_event
-                        .send(SonioxEvent::Warning(
+                        .send(SonioxEvent::from(
                             "Server closed connection. Reconnection...",
                         ))
                         .await;
@@ -194,7 +202,7 @@ impl SonioxClient {
                 tracing::error!("WS Read Error: {}", e);
                 let _ = self
                     .tx_event
-                    .send(SonioxEvent::Warning("WS read error... Reconnection"))
+                    .send(SonioxEvent::from("WS read error... Reconnection"))
                     .await;
                 StreamAction::Reconnect
             }
@@ -202,7 +210,7 @@ impl SonioxClient {
                 tracing::warn!("WS Stream ended");
                 let _ = self
                     .tx_event
-                    .send(SonioxEvent::Warning("WS stream ended... Reconnection"))
+                    .send(SonioxEvent::from("WS stream ended... Reconnection"))
                     .await;
                 StreamAction::Reconnect
             }
