@@ -80,7 +80,7 @@ impl TranscriptionStore {
             new_block.text = block.text;
             self.blocks.push_back(new_block);
         }
-        
+
         self.pop_if_overflow();
         if let Some(block) = self.blocks.back_mut() {
             if block.text.is_empty() {
@@ -88,7 +88,7 @@ impl TranscriptionStore {
             }
             let trimmed_len = block.text.trim_end().len();
             block.text.truncate(trimmed_len);
-            block.text.push(' ');
+            block.text.push_str("...    ");
             self.last_activity = Some(Instant::now());
         }
     }
