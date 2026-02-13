@@ -39,7 +39,7 @@ impl SonioxWorker {
         request: &SonioxTranscriptionRequest,
     ) -> Result<(), SonioxLiveErrors> {
         let mut retry_count = 0;
-        let mut flag_first_connection = false;
+        let mut flag_first_connection = true;
 
         loop {
             let first_packet = if retry_count == 0 {
@@ -86,10 +86,13 @@ impl SonioxWorker {
             {
                 tracing::error!("Failed to send initial audio: {}", e);
                 continue;
-            } else if !flag_first_connection {
-                let _ = self.tx_event.send(SonioxEvent::Connected).await;
-                flag_first_connection = true;
             }
+
+            let _ = self.tx_event.send(SonioxEvent::Connected(flag_first_connection)).await;
+            if flag_first_connection {
+                flag_first_connection = false;
+            }
+
             let action = self.run_session_loop(writer, reader).await;
             match action {
                 StreamAction::Stop => {

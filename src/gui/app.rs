@@ -35,12 +35,14 @@ fn process_events(
                     .duration(Duration::from_secs(4))
                     .closable(false);
             }
-            SonioxEvent::Connected => {
+            SonioxEvent::Connected(flag_first_connection) => {
                 store.ensure_separator();
-                toasts
-                    .info("Connected to Soniox!")
-                    .duration(Duration::from_secs(4))
-                    .closable(false);
+                if flag_first_connection {
+                    toasts
+                        .info("Connected to Soniox!")
+                        .duration(Duration::from_secs(4))
+                        .closable(false);
+                }
             }
         };
     }
