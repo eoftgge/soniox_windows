@@ -75,8 +75,6 @@ impl App for SubtitlesApp {
             }
             AppState::Overlay(service) => {
                 process_events(service, &mut self.store, &mut self.toasts);
-                self.store.clear_if_silent(Duration::from_secs(15));
-
                 if self.settings.enable_high_priority() && self.frame_counter >= 100 {
                     ctx.send_viewport_cmd(ViewportCommand::WindowLevel(WindowLevel::AlwaysOnTop));
                     self.frame_counter = 0;

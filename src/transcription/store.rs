@@ -1,14 +1,11 @@
 use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::types::subtitles::SubtitleBlock;
 use std::collections::VecDeque;
-use std::time::Duration;
-use tokio::time::Instant;
 
 pub struct TranscriptionStore {
     pub blocks: VecDeque<SubtitleBlock>,
     pub interim_blocks: Vec<SubtitleBlock>,
     max_blocks: usize,
-    last_activity: Instant,
 }
 
 impl TranscriptionStore {
@@ -16,7 +13,6 @@ impl TranscriptionStore {
         Self {
             blocks: VecDeque::with_capacity(max_blocks),
             interim_blocks: Vec::with_capacity(max_blocks),
-            last_activity: Instant::now(),
             max_blocks,
         }
     }
@@ -26,10 +22,6 @@ impl TranscriptionStore {
     }
 
     pub fn update(&mut self, response: SonioxTranscriptionResponse) {
-        if !response.tokens.is_empty() {
-            self.last_activity = Instant::now();
-        }
-
         self.interim_blocks.clear();
         let mut current_interim_block: Option<SubtitleBlock> = None;
 
@@ -78,15 +70,6 @@ impl TranscriptionStore {
 
         if let Some(block) = current_interim_block {
             self.interim_blocks.push(block);
-        }
-    }
-
-    pub fn clear_if_silent(&mut self, timeout: Duration) {
-        if self.last_activity.elapsed() > timeout
-            && (!self.blocks.is_empty() || !self.interim_blocks.is_empty())
-        {
-            self.blocks.clear();
-            self.interim_blocks.clear();
         }
     }
 
