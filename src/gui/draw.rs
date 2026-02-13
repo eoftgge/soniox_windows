@@ -101,7 +101,7 @@ fn draw_replica_row(
             };
 
             ui.label(
-                RichText::new(&elem.text)
+                RichText::new(elem.text)
                     .size(font_size)
                     .strong()
                     .color(color),
