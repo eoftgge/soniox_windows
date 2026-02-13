@@ -6,6 +6,7 @@ use crate::transcription::audio::AudioSession;
 use crate::types::audio::AudioSample;
 use crate::types::events::SonioxEvent;
 use tokio::sync::mpsc::{Receiver, channel};
+use eframe::egui::Context;
 
 pub struct TranscriptionService {
     pub(crate) _audio: AudioSession,
@@ -14,19 +15,28 @@ pub struct TranscriptionService {
 }
 
 impl TranscriptionService {
-    pub fn start(settings_app: &SettingsApp) -> Result<Self, SonioxLiveErrors> {
+    pub fn start(ctx: Context, settings_app: &SettingsApp) -> Result<Self, SonioxLiveErrors> {
+        let (tx_worker, mut rx_worker) = channel::<SonioxEvent>(128);
         let (tx_event, rx_event) = channel::<SonioxEvent>(128);
         let (tx_audio, rx_audio) = channel::<AudioSample>(256);
         let (tx_recycle, rx_recycle) = channel::<AudioSample>(256);
 
         let audio = AudioSession::open(tx_audio, rx_recycle)?;
         let request = create_request(settings_app, audio.config())?;
-        let worker = SonioxWorker::new(rx_audio, tx_recycle, tx_event);
+        let worker = SonioxWorker::new(rx_audio, tx_recycle, tx_worker);
         audio.play()?;
 
         let handle = tokio::spawn(async move {
             if let Err(e) = worker.run(&request).await {
                 tracing::error!("WebSocket error: {:?}", e);
+            }
+        });
+        tokio::spawn(async move {
+            while let Some(event) = rx_worker.recv().await {
+                if tx_event.send(event).await.is_err() {
+                    break;
+                }
+                ctx.request_repaint();
             }
         });
 
@@ -35,6 +45,10 @@ impl TranscriptionService {
             handle,
             receiver: rx_event,
         })
+    }
+
+    pub fn listen() {
+
     }
 }
 
