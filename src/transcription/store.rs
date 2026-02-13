@@ -1,11 +1,15 @@
 use crate::types::soniox::SonioxTranscriptionResponse;
 use crate::types::subtitles::SubtitleBlock;
 use std::collections::VecDeque;
+use std::time::Duration;
+use eframe::egui::Context;
+use tokio::time::Instant;
 
 pub struct TranscriptionStore {
     pub blocks: VecDeque<SubtitleBlock>,
     pub interim_blocks: Vec<SubtitleBlock>,
     max_blocks: usize,
+    last_activity: Option<Instant>,
 }
 
 impl TranscriptionStore {
@@ -14,6 +18,7 @@ impl TranscriptionStore {
             blocks: VecDeque::with_capacity(max_blocks),
             interim_blocks: Vec::with_capacity(max_blocks),
             max_blocks,
+            last_activity: None,
         }
     }
 
@@ -71,12 +76,36 @@ impl TranscriptionStore {
         if let Some(block) = current_interim_block {
             self.interim_blocks.push(block);
         }
+        if !response.tokens.is_empty() {
+            self.last_activity = Some(Instant::now());
+        }
     }
 
     pub fn resize(&mut self, new_max_blocks: usize) {
         self.max_blocks = new_max_blocks;
         while self.blocks.len() > self.max_blocks {
             self.blocks.pop_front();
+        }
+    }
+
+    pub fn last_activity(&self) -> Option<Instant> {
+        self.last_activity
+    }
+
+    pub fn clear_if_silent(&mut self, timeout: Duration) {
+        if let Some(last_activity) = self.last_activity && last_activity.elapsed() >= timeout {
+            self.blocks.clear();
+            self.interim_blocks.clear();
+            self.last_activity = None;
+        }
+    }
+
+    pub fn schedule(&mut self, ctx: Context, timeout: Duration) {
+        if let Some(last_activity) = self.last_activity() {
+            let elapsed = last_activity.elapsed();
+            if elapsed < timeout {
+                ctx.request_repaint_after(timeout - elapsed);
+            }
         }
     }
 }

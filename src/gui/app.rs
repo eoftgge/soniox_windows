@@ -74,12 +74,16 @@ impl App for SubtitlesApp {
                 show_settings_window(ctx, &mut self.settings, &mut self.manager, &mut self.toasts)
             }
             AppState::Overlay(service) => {
+                let timeout = Duration::from_secs(15);
+                let ctx_for_plan = ctx.clone();
+                self.store.clear_if_silent(timeout);
+                self.store.schedule(ctx_for_plan, timeout);
+
                 process_events(service, &mut self.store, &mut self.toasts);
                 if self.settings.enable_high_priority() && self.frame_counter >= 100 {
                     ctx.send_viewport_cmd(ViewportCommand::WindowLevel(WindowLevel::AlwaysOnTop));
                     self.frame_counter = 0;
                 }
-
                 let (anchor, offset) = self.settings.get_anchor();
                 Area::new(Id::from("subtitles_area"))
                     .anchor(anchor, offset)
